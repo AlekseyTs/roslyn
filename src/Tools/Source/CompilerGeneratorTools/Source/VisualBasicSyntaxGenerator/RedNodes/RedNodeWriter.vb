@@ -1084,6 +1084,11 @@ Friend Class RedNodeWriter
             Return
         End If
 
+        If String.Equals(nodeStructure.Name, "BinaryExpressionSyntax", StringComparison.Ordinal) Then
+            ' Skip method for BinaryExpressionSyntax, we provide manual implementation.
+            Return
+        End If
+
         Dim methodName = VisitorMethodName(nodeStructure)
         Dim structureName = StructureTypeName(nodeStructure)
 

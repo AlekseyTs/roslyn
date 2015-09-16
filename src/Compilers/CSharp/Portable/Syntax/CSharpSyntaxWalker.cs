@@ -41,6 +41,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override void DefaultVisit(SyntaxNode node)
         {
+            var binary = node as BinaryExpressionSyntax;
+
+            if (binary != null)
+            {
+                VisitBinaryExpressionInternal(binary);
+                return;
+            }
+            
             var childCnt = node.ChildNodesAndTokens().Count;
             int i = 0;
 
@@ -65,6 +73,51 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                 }
             } while (i < childCnt);
+        }
+
+        private void VisitBinaryExpressionInternal(BinaryExpressionSyntax node)
+        {
+            // Do not blow the stack due to a deep recursion on the left. 
+            // This is consistent with Parser.ParseSubExpressionCore implementation.
+
+            BinaryExpressionSyntax binary = node;
+            ExpressionSyntax child;
+
+            while (true)
+            {
+                child = binary.Left;
+                var childAsBinary = child as BinaryExpressionSyntax;
+
+                if (childAsBinary == null)
+                {
+                    break;
+                }
+
+                binary = childAsBinary;
+            }
+
+            if (this.Depth >= SyntaxWalkerDepth.Node)
+            {
+                this.Visit(child);
+            }
+
+            do
+            {
+                binary = (BinaryExpressionSyntax)child.Parent;
+
+                if (this.Depth >= SyntaxWalkerDepth.Token)
+                {
+                    this.VisitToken(binary.OperatorToken);
+                }
+
+                if (this.Depth >= SyntaxWalkerDepth.Node)
+                {
+                    this.Visit(binary.Right);
+                }
+
+                child = binary;
+            }
+            while ((object)child != node);
         }
 
         public virtual void VisitToken(SyntaxToken token)

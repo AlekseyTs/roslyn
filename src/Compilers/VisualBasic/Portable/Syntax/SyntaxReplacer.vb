@@ -147,12 +147,82 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Syntax
                         rewritten = MyBase.Visit(node)
                     End If
 
-                    If Me._nodeSet.Contains(node) AndAlso Me._computeReplacementNode IsNot Nothing Then
+                    If Me._computeReplacementNode IsNot Nothing AndAlso Me._nodeSet.Contains(node) Then
                         rewritten = Me._computeReplacementNode(DirectCast(node, TNode), DirectCast(rewritten, TNode))
                     End If
                 End If
 
                 Return rewritten
+            End Function
+
+            Public Overrides Function VisitBinaryExpression(node As BinaryExpressionSyntax) As SyntaxNode
+                ' Do not blow the stack due to a deep recursion on the left. 
+                ' This is consistent with Parser.ParseExpressionCore implementation.
+
+                Dim binary As BinaryExpressionSyntax = node
+                Dim child As ExpressionSyntax
+                Dim shouldVisitChild As Boolean = True
+
+                Do
+                    child = binary.Left
+
+                    If Not Me.ShouldVisit(child.FullSpan) Then
+                        shouldVisitChild = False
+                        Exit Do
+                    End If
+
+                    Dim childAsBinary = TryCast(child, BinaryExpressionSyntax)
+
+                    If childAsBinary Is Nothing Then
+                        Exit Do
+                    End If
+
+                    binary = childAsBinary
+                Loop
+
+                Dim anyChanges As Boolean = False
+
+                Dim newLeft = If(shouldVisitChild, DirectCast(MyBase.Visit(child), ExpressionSyntax), child)
+
+                If Me._computeReplacementNode IsNot Nothing AndAlso Me._nodeSet.Contains(child) Then
+                    newLeft = DirectCast(Me._computeReplacementNode(DirectCast(DirectCast(child, SyntaxNode), TNode), DirectCast(DirectCast(newLeft, SyntaxNode), TNode)), ExpressionSyntax)
+                End If
+
+                If child IsNot newLeft Then
+                    anyChanges = True
+                End If
+
+                Do
+                    binary = DirectCast(child.Parent, BinaryExpressionSyntax)
+
+                    Dim newOperatorToken = DirectCast(VisitToken(binary.OperatorToken).Node, InternalSyntax.SyntaxToken)
+                    If binary.OperatorToken.Node IsNot newOperatorToken Then
+                        anyChanges = True
+                    End If
+
+                    Dim newRight = DirectCast(Visit(binary.Right), ExpressionSyntax)
+                    If binary.Right IsNot newRight Then
+                        anyChanges = True
+                    End If
+
+                    If anyChanges Then
+                        newLeft = New BinaryExpressionSyntax(binary.Kind, binary.Green.GetDiagnostics, binary.Green.GetAnnotations, newLeft, newOperatorToken, newRight)
+                    Else
+                        newLeft = binary
+                    End If
+
+                    If Me._computeReplacementNode IsNot Nothing AndAlso Me._nodeSet.Contains(binary) Then
+                        newLeft = DirectCast(Me._computeReplacementNode(DirectCast(DirectCast(binary, SyntaxNode), TNode), DirectCast(DirectCast(newLeft, SyntaxNode), TNode)), ExpressionSyntax)
+
+                        If binary IsNot newLeft Then
+                            anyChanges = True
+                        End If
+                    End If
+
+                    child = binary
+                Loop While child IsNot node
+
+                Return newLeft
             End Function
 
             Public Overrides Function VisitToken(token As SyntaxToken) As SyntaxToken

@@ -177,27 +177,56 @@ namespace Microsoft.CodeAnalysis.CSharp.Simplification
 
             public override SyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
             {
-                bool isOrAsNode = node.Kind() == SyntaxKind.AsExpression || node.Kind() == SyntaxKind.IsExpression;
+                // Do not blow the stack due to a deep recursion on the left. 
+                
+                BinaryExpressionSyntax binary = node;
+                ExpressionSyntax child;
 
-                var result = (ExpressionSyntax)base.VisitBinaryExpression(node);
-
-                if (result != node && isOrAsNode)
+                while (true)
                 {
-                    // In order to handle cases in which simplifying a name would result in code
-                    // that parses different, we pre-emptively add parentheses that will be
-                    // simplified away later.
-                    //
-                    // For example, this code...
-                    //
-                    //     var x = y as Nullable<int> + 1;
-                    //
-                    // ...should simplify as...
-                    //
-                    //     var x = (y as int?) + 1;
-                    return result.Parenthesize().WithAdditionalAnnotations(Formatter.Annotation);
+                    child = binary.Left;
+                    var childAsBinary = child as BinaryExpressionSyntax;
+
+                    if (childAsBinary == null)
+                    {
+                        break;
+                    }
+
+                    binary = childAsBinary;
                 }
 
-                return result;
+                var left = (ExpressionSyntax)this.Visit(child);
+
+                do
+                {
+                    binary = (BinaryExpressionSyntax)child.Parent;
+                    bool isOrAsNode = binary.Kind() == SyntaxKind.AsExpression || binary.Kind() == SyntaxKind.IsExpression;
+
+                    var operatorToken = this.VisitToken(binary.OperatorToken);
+                    var right = (ExpressionSyntax)this.Visit(binary.Right);
+                    left = binary.Update(left, operatorToken, right);
+
+                    if (left != binary && isOrAsNode)
+                    {
+                        // In order to handle cases in which simplifying a name would result in code
+                        // that parses different, we pre-emptively add parentheses that will be
+                        // simplified away later.
+                        //
+                        // For example, this code...
+                        //
+                        //     var x = y as Nullable<int> + 1;
+                        //
+                        // ...should simplify as...
+                        //
+                        //     var x = (y as int?) + 1;
+                        left = left.Parenthesize().WithAdditionalAnnotations(Formatter.Annotation);
+                    }
+
+                    child = binary;
+                }
+                while ((object)child != node);
+
+                return left;
             }
         }
     }

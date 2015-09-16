@@ -99,5 +99,82 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Syntax.InternalSyntax
             Return list
         End Function
 
+        Public Overrides Function VisitBinaryExpression(ByVal node As BinaryExpressionSyntax) As VisualBasicSyntaxNode
+            ' Do not blow the stack due to a deep recursion on the left. 
+            ' This is consistent with Parser.ParseExpressionCore implementation.
+
+            Dim childAsBinary = TryCast(node.Left, BinaryExpressionSyntax)
+
+            If childAsBinary Is Nothing Then
+                Return VisitBinaryExpressionSimple(node)
+            End If
+
+            Dim stack = ArrayBuilder(Of BinaryExpressionSyntax).GetInstance()
+            stack.Push(node)
+
+            Dim binary As BinaryExpressionSyntax = childAsBinary
+            Dim child As ExpressionSyntax
+
+            Do
+                stack.Push(binary)
+                child = binary.Left
+                childAsBinary = TryCast(child, BinaryExpressionSyntax)
+
+                If childAsBinary Is Nothing Then
+                    Exit Do
+                End If
+
+                binary = childAsBinary
+            Loop
+
+            Dim anyChanges As Boolean = False
+
+            Dim newLeft = DirectCast(Visit(child), ExpressionSyntax)
+            If child IsNot newLeft Then
+                anyChanges = True
+            End If
+
+            Do
+                binary = stack.Pop()
+
+                Dim newOperatorToken = DirectCast(Visit(binary.OperatorToken), SyntaxToken)
+                If binary._operatorToken IsNot newOperatorToken Then
+                    anyChanges = True
+                End If
+
+                Dim newRight = DirectCast(Visit(binary._right), ExpressionSyntax)
+                If binary._right IsNot newRight Then
+                    anyChanges = True
+                End If
+
+                If anyChanges Then
+                    newLeft = New BinaryExpressionSyntax(binary.Kind, binary.GetDiagnostics, binary.GetAnnotations, newLeft, newOperatorToken, newRight)
+                Else
+                    newLeft = binary
+                End If
+            Loop While binary IsNot node
+
+            Debug.Assert(stack.Count = 0)
+            stack.Free()
+
+            Return newLeft
+        End Function
+
+        Friend Function VisitBinaryExpressionSimple(node As BinaryExpressionSyntax) As VisualBasicSyntaxNode
+            Dim anyChanges As Boolean = False
+
+            Dim newLeft = DirectCast(Visit(node._left), ExpressionSyntax)
+            If node._left IsNot newLeft Then anyChanges = True
+            Dim newOperatorToken = DirectCast(Visit(node.OperatorToken), SyntaxToken)
+            If node._operatorToken IsNot newOperatorToken Then anyChanges = True
+            Dim newRight = DirectCast(Visit(node._right), ExpressionSyntax)
+            If node._right IsNot newRight Then anyChanges = True
+
+            If anyChanges Then
+                Return New BinaryExpressionSyntax(node.Kind, node.GetDiagnostics, node.GetAnnotations, newLeft, newOperatorToken, newRight)
+            Else
+                Return node
+            End If
+        End Function
     End Class
 End Namespace

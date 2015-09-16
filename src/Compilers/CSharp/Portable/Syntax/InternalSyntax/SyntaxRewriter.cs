@@ -38,6 +38,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             return token;
         }
 
+        public override CSharpSyntaxNode VisitTrivia(SyntaxTrivia trivia)
+        {
+            return trivia;
+        }
+
         public SyntaxList<TNode> VisitList<TNode>(SyntaxList<TNode> list) where TNode : CSharpSyntaxNode
         {
             SyntaxListBuilder alternate = null;
@@ -76,6 +81,65 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             }
 
             return list;
+        }
+
+        public override CSharpSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
+        {
+            // Do not blow the stack due to a deep recursion on the left. 
+            // This is consistent with Parser.ParseSubExpressionCore implementation.
+
+            var childAsBinary = node.Left as BinaryExpressionSyntax;
+
+            if (childAsBinary == null)
+            {
+                return VisitBinaryExpressionSimple(node);
+            }
+
+            var stack = ArrayBuilder<BinaryExpressionSyntax>.GetInstance();
+            stack.Push(node);
+
+            BinaryExpressionSyntax binary = childAsBinary;
+            ExpressionSyntax child;
+
+            while (true)
+            {
+                stack.Push(binary);
+                child = binary.Left;
+                childAsBinary = child as BinaryExpressionSyntax;
+
+                if (childAsBinary == null)
+                {
+                    break;
+                }
+
+                binary = childAsBinary;
+            }
+
+            var left = (ExpressionSyntax)this.Visit(child);
+
+            do
+            {
+                binary = stack.Pop();
+
+                var operatorToken = (SyntaxToken)this.Visit(binary.OperatorToken);
+                var right = (ExpressionSyntax)this.Visit(binary.Right);
+
+                left = binary.Update(left, operatorToken, right);
+            }
+            while ((object)binary != node);
+
+            Debug.Assert(stack.Count == 0);
+            stack.Free();
+
+            return left;
+        }
+
+        private CSharpSyntaxNode VisitBinaryExpressionSimple(BinaryExpressionSyntax node)
+        {
+            var left = (ExpressionSyntax)this.Visit(node.Left);
+            var operatorToken = (SyntaxToken)this.Visit(node.OperatorToken);
+            var right = (ExpressionSyntax)this.Visit(node.Right);
+            return node.Update(left, operatorToken, right);
         }
     }
 }

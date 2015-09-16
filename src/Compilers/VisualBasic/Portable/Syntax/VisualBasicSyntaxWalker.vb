@@ -1,5 +1,7 @@
 ﻿' Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
+
 Namespace Microsoft.CodeAnalysis.VisualBasic
     ''' <summary>
     ''' Represents a <see cref="VisualBasicSyntaxVisitor"/> that descends an entire <see cref="SyntaxNode"/> tree
@@ -31,6 +33,13 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         End Sub
 
         Public Overrides Sub DefaultVisit(node As SyntaxNode)
+            Dim binary = TryCast(node, BinaryExpressionSyntax)
+
+            If binary IsNot Nothing Then
+                VisitBinaryExpressionInternal(binary)
+                Return
+            End If
+
             Dim list = node.ChildNodesAndTokens()
             Dim childCnt = list.Count
 
@@ -51,6 +60,43 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 End If
             Loop While i < childCnt
 
+        End Sub
+
+        Private Sub VisitBinaryExpressionInternal(node As BinaryExpressionSyntax)
+            ' Do not blow the stack due to a deep recursion on the left. 
+            ' This is consistent with Parser.ParseExpressionCore implementation.
+
+            Dim binary As BinaryExpressionSyntax = node
+            Dim child As ExpressionSyntax
+
+            Do
+                child = binary.Left
+                Dim childAsBinary = TryCast(child, BinaryExpressionSyntax)
+
+                If childAsBinary Is Nothing Then
+                    Exit Do
+                End If
+
+                binary = childAsBinary
+            Loop
+
+            If Depth >= SyntaxWalkerDepth.Node Then
+                Me.Visit(child)
+            End If
+
+            Do
+                binary = DirectCast(child.Parent, BinaryExpressionSyntax)
+
+                If Depth >= SyntaxWalkerDepth.Token Then
+                    Me.VisitToken(binary.OperatorToken)
+                End If
+
+                If Depth >= SyntaxWalkerDepth.Node Then
+                    Me.Visit(binary.Right)
+                End If
+
+                child = binary
+            Loop While child IsNot node
         End Sub
 
         Public Overridable Sub VisitToken(token As SyntaxToken)

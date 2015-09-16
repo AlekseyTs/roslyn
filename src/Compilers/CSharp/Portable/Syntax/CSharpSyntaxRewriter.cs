@@ -317,5 +317,43 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             return this.VisitTrivia(element);
         }
+
+        public override SyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
+        {
+            // Do not blow the stack due to a deep recursion on the left. 
+            // This is consistent with Parser.ParseSubExpressionCore implementation.
+
+            BinaryExpressionSyntax binary = node;
+            ExpressionSyntax child;
+
+            while (true)
+            {
+                child = binary.Left;
+                var childAsBinary = child as BinaryExpressionSyntax;
+
+                if (childAsBinary == null)
+                {
+                    break;
+                }
+
+                binary = childAsBinary;
+            }
+
+            var left = (ExpressionSyntax)this.Visit(child);
+
+            do
+            {
+                binary = (BinaryExpressionSyntax)child.Parent;
+
+                var operatorToken = this.VisitToken(binary.OperatorToken);
+                var right = (ExpressionSyntax)this.Visit(binary.Right);
+                left = binary.Update(left, operatorToken, right);
+
+                child = binary;
+            }
+            while ((object)child != node);
+
+            return left;
+        }
     }
 }

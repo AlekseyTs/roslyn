@@ -2,6 +2,8 @@
 
 Imports System.Text
 Imports Microsoft.CodeAnalysis.Text
+Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
+Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests
     Public Class VisualBasicSyntaxTreeTests
@@ -82,5 +84,99 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests
             Assert.Equal(newTree.FilePath, "new.vb")
             Assert.Equal(oldTree.ToString(), newTree.ToString())
         End Sub
+
+        <Fact, WorkItem(4576, "https://github.com/dotnet/roslyn/issues/4576")>
+        Public Sub VisitLongSequenceOfBinaryExpressions()
+            Dim tree = SyntaxFactory.ParseSyntaxTree(
+$"
+Module Test
+    Sub Main()
+        dim s as string = a0{BuildSequenceOfBinaryExpressions("a")}
+    End Sub
+End Module
+")
+            Assert.True(tree.GetDiagnostics().IsEmpty())
+
+            Dim visitor As New TestWalker()
+            visitor.Visit(tree.GetRoot())
+            Assert.Equal(10001, visitor.AIdentifiers.Count)
+
+            Dim internalrewriter = New TestInternalRewriter()
+            Dim result1 = internalrewriter.Visit(DirectCast(tree.GetRoot().Green, InternalSyntax.VisualBasicSyntaxNode))
+            Assert.Equal(
+$"
+Module Test
+    Sub Main()
+        dim s as string = b0{BuildSequenceOfBinaryExpressions("b")}
+    End Sub
+End Module
+", result1.ToFullString())
+
+            Dim rewriter As New TestRewriter()
+            Dim result2 = rewriter.Visit(tree.GetRoot())
+
+            Assert.Equal(
+$"
+Module Test
+    Sub Main()
+        dim s as string = c0{BuildSequenceOfBinaryExpressions("c")}
+    End Sub
+End Module
+", result2.ToFullString())
+        End Sub
+
+        Private Shared Function BuildSequenceOfBinaryExpressions(identifierPrefix As String) As String
+            Dim builder = New StringBuilder()
+
+            For i As Integer = 1 To 10000
+                builder.Append(" & ")
+                builder.Append(identifierPrefix)
+                builder.Append(i)
+            Next
+
+            Return builder.ToString()
+        End Function
+
+        Class TestWalker
+            Inherits VisualBasicSyntaxWalker
+
+            Public AIdentifiers As New HashSet(Of IdentifierNameSyntax)
+
+            Public Overrides Sub VisitIdentifierName(node As IdentifierNameSyntax)
+                If node.Identifier.ValueText.StartsWith("a", StringComparison.Ordinal) Then
+                    AIdentifiers.Add(node)
+                End If
+
+                MyBase.VisitIdentifierName(node)
+            End Sub
+        End Class
+
+        Class TestRewriter
+            Inherits VisualBasicSyntaxRewriter
+
+            Public Overrides Function VisitIdentifierName(node As IdentifierNameSyntax) As SyntaxNode
+                If node.Identifier.ValueText.StartsWith("a", StringComparison.Ordinal) Then
+                    Return SyntaxFactory.IdentifierName(SyntaxFactory.Identifier("c" + node.Identifier.ValueText.Substring(1)).
+                                                                          WithLeadingTrivia(node.Identifier.LeadingTrivia).
+                                                                          WithTrailingTrivia(node.Identifier.TrailingTrivia))
+                End If
+
+                Return MyBase.VisitIdentifierName(node)
+            End Function
+        End Class
+
+        Private Class TestInternalRewriter
+            Inherits Syntax.InternalSyntax.VisualBasicSyntaxRewriter
+
+            Public Overrides Function VisitIdentifierName(node As InternalSyntax.IdentifierNameSyntax) As InternalSyntax.VisualBasicSyntaxNode
+                If node.Identifier.ValueText.StartsWith("a", StringComparison.Ordinal) Then
+                    Return InternalSyntax.SyntaxFactory.IdentifierName(DirectCast(InternalSyntax.SyntaxFactory.Identifier("b" + node.Identifier.ValueText.Substring(1)).
+                                                                                      WithLeadingTrivia(node.Identifier.GetLeadingTrivia()).
+                                                                                      WithTrailingTrivia(node.Identifier.GetTrailingTrivia()), InternalSyntax.IdentifierTokenSyntax))
+                End If
+
+                Return MyBase.VisitIdentifierName(node)
+            End Function
+        End Class
     End Class
 End Namespace

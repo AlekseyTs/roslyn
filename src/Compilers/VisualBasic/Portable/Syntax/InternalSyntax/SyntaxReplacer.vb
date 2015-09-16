@@ -111,6 +111,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Syntax.InternalSyntax
 
         End Function
 
+        Public Overrides Function VisitBinaryExpression(node As BinaryExpressionSyntax) As VisualBasicSyntaxNode
+            ' We will not blow the stack due to a deep recursion on the left because we won't descent on the left. 
+            Debug.Assert(_skipCnt = 2)
+            Return VisitBinaryExpressionSimple(node)
+        End Function
+
         Public Overrides Function VisitSyntaxToken(token As SyntaxToken) As SyntaxToken
             Return _newItem(token)
         End Function

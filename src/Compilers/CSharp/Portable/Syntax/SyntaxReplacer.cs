@@ -185,13 +185,70 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
                         rewritten = base.Visit(node);
                     }
 
-                    if (_nodeSet.Contains(node) && _computeReplacementNode != null)
+                    if (_computeReplacementNode != null && _nodeSet.Contains(node))
                     {
                         rewritten = _computeReplacementNode((TNode)node, (TNode)rewritten);
                     }
                 }
 
                 return rewritten;
+            }
+
+            public override SyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
+            {
+                // Do not blow the stack due to a deep recursion on the left. 
+                // This is consistent with Parser.ParseSubExpressionCore implementation.
+
+                BinaryExpressionSyntax binary = node;
+                ExpressionSyntax child;
+
+                bool shouldVisitChild = true;
+
+                while (true)
+                {
+                    child = binary.Left;
+
+                    if (!this.ShouldVisit(child.FullSpan))
+                    {
+                        shouldVisitChild = false;
+                        break;
+                    }
+
+                    var childAsBinary = child as BinaryExpressionSyntax;
+
+                    if (childAsBinary == null)
+                    {
+                        break;
+                    }
+
+                    binary = childAsBinary;
+                }
+
+                var left = shouldVisitChild ? (ExpressionSyntax)base.Visit(child) : child;
+
+                if (_computeReplacementNode != null && _nodeSet.Contains(child))
+                {
+                    left = (ExpressionSyntax)_computeReplacementNode((TNode)(SyntaxNode)child, (TNode)(SyntaxNode)left);
+                }
+
+                do
+                {
+                    binary = (BinaryExpressionSyntax)child.Parent;
+
+                    var operatorToken = this.VisitToken(binary.OperatorToken);
+                    var right = (ExpressionSyntax)this.Visit(binary.Right);
+                    left = binary.Update(left, operatorToken, right);
+
+                    if (_computeReplacementNode != null && _nodeSet.Contains(binary))
+                    {
+                        left = (ExpressionSyntax)_computeReplacementNode((TNode)(SyntaxNode)binary, (TNode)(SyntaxNode)left);
+                    }
+
+                    child = binary;
+                }
+                while ((object)child != node);
+
+                return left;
             }
 
             public override SyntaxToken VisitToken(SyntaxToken token)

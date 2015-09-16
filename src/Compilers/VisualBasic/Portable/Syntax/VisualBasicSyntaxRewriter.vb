@@ -48,6 +48,56 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             End If
         End Function
 
+        Public Overrides Function VisitBinaryExpression(ByVal node As BinaryExpressionSyntax) As SyntaxNode
+            ' Do not blow the stack due to a deep recursion on the left. 
+            ' This is consistent with Parser.ParseExpressionCore implementation.
+
+            Dim binary As BinaryExpressionSyntax = node
+            Dim child As ExpressionSyntax
+
+            Do
+                child = binary.Left
+                Dim childAsBinary = TryCast(child, BinaryExpressionSyntax)
+
+                If childAsBinary Is Nothing Then
+                    Exit Do
+                End If
+
+                binary = childAsBinary
+            Loop
+
+            Dim anyChanges As Boolean = False
+
+            Dim newLeft = DirectCast(Visit(child), ExpressionSyntax)
+            If child IsNot newLeft Then
+                anyChanges = True
+            End If
+
+            Do
+                binary = DirectCast(child.Parent, BinaryExpressionSyntax)
+
+                Dim newOperatorToken = DirectCast(VisitToken(binary.OperatorToken).Node, InternalSyntax.SyntaxToken)
+                If binary.OperatorToken.Node IsNot newOperatorToken Then
+                    anyChanges = True
+                End If
+
+                Dim newRight = DirectCast(Visit(binary.Right), ExpressionSyntax)
+                If binary.Right IsNot newRight Then
+                    anyChanges = True
+                End If
+
+                If anyChanges Then
+                    newLeft = New BinaryExpressionSyntax(binary.Kind, binary.Green.GetDiagnostics, binary.Green.GetAnnotations, newLeft, newOperatorToken, newRight)
+                Else
+                    newLeft = binary
+                End If
+
+                child = binary
+            Loop While child IsNot node
+
+            Return newLeft
+        End Function
+
         Public Overridable Function VisitToken(token As SyntaxToken) As SyntaxToken
             Dim leading = Me.VisitList(token.LeadingTrivia)
             Dim trailing = Me.VisitList(token.TrailingTrivia)

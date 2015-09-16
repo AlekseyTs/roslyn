@@ -572,7 +572,9 @@ namespace CSharpSyntaxGenerator
             for (int i = 0, n = nodes.Count; i < n; i++)
             {
                 var node = nodes[i] as Node;
-                if (node != null)
+
+                // Skip method for BinaryExpressionSyntax, we provide manual implementation.
+                if (node != null && !string.Equals(node.Name, "BinaryExpressionSyntax", StringComparison.Ordinal))
                 {
                     var nodeFields = node.Fields.Where(nd => IsNodeOrNodeList(nd.Type)).ToList();
 
@@ -1382,7 +1384,9 @@ namespace CSharpSyntaxGenerator
             for (int i = 0, n = nodes.Count; i < n; i++)
             {
                 var node = nodes[i] as Node;
-                if (node != null)
+
+                // Skip method for BinaryExpressionSyntax, we provide manual implementation.
+                if (node != null && !string.Equals(node.Name, "BinaryExpressionSyntax", StringComparison.Ordinal))
                 {
                     var nodeFields = node.Fields.Where(nd => IsNodeOrNodeList(nd.Type)).ToList();
 
