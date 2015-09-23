@@ -216,19 +216,26 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 _builder.DefineInitialHiddenSequencePoint();
             }
 
-            EmitStatement(_boundBody);
-
-            if (_indirectReturnState == IndirectReturnState.Needed)
+            try
             {
-                // it is unfortunate that return was not handled while we were in scope of the method
-                // it can happen in rare cases involving exception handling (for example all returns were from a try)
-                // in such case we can still handle return here.
-                HandleReturn();
+                EmitStatement(_boundBody);
+
+                if (_indirectReturnState == IndirectReturnState.Needed)
+                {
+                    // it is unfortunate that return was not handled while we were in scope of the method
+                    // it can happen in rare cases involving exception handling (for example all returns were from a try)
+                    // in such case we can still handle return here.
+                    HandleReturn();
+                }
+
+                if (!_diagnostics.HasAnyErrors())
+                {
+                    _builder.Realize();
+                }
             }
-
-            if (!_diagnostics.HasAnyErrors())
+            catch (EmitCancelledException)
             {
-                _builder.Realize();
+                Debug.Assert(_diagnostics.HasAnyErrors());
             }
 
             _synthesizedLocalOrdinals.Free();

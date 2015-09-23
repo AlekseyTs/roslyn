@@ -1085,6 +1085,79 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
         public override BoundNode VisitBinaryOperator(BoundBinaryOperator node)
         {
+            BoundExpression child = node.Left;
+
+            if (child.Kind != BoundKind.BinaryOperator || child.ConstantValue != null)
+            {
+                return VisitBinaryOperatorSimple(node);
+            }
+
+            // Do not blow the stack due to a deep recursion on the left.
+            var stack = ArrayBuilder<BoundBinaryOperator>.GetInstance();
+            stack.Push(node);
+
+            BoundBinaryOperator binary = (BoundBinaryOperator)child;
+
+            while (true)
+            {
+                stack.Push(binary);
+                child = binary.Left;
+
+                if (child.Kind != BoundKind.BinaryOperator || child.ConstantValue != null)
+                {
+                    break;
+                }
+
+                binary = (BoundBinaryOperator)child;
+            }
+
+            var prevContext = _context;
+            int prevStack = StackDepth();
+
+            var left = (BoundExpression)this.Visit(child);
+
+            while (true)
+            {
+                binary = stack.Pop();
+
+                var isLogical = (binary.OperatorKind & BinaryOperatorKind.Logical) != 0;
+
+                object cookie = null;
+                if (isLogical)
+                {
+                    cookie = GetStackStateCookie();     // implicit branch here
+                    SetStackDepth(prevStack);  // right is evaluated with original stack
+                }
+
+                var right = (BoundExpression)this.Visit(binary.Right);
+
+                if (isLogical)
+                {
+                    EnsureStackState(cookie);   // implicit label here
+                }
+
+                var type = this.VisitType(binary.Type);
+                left = binary.Update(binary.OperatorKind, left, right, binary.ConstantValueOpt, binary.MethodOpt, binary.ResultKind, type);
+
+                if (stack.Count == 0)
+                {
+                    break;
+                }
+
+                _context = prevContext;
+                _counter += 1;
+                SetStackDepth(prevStack);
+                PushEvalStack(binary, ExprContext.Value);
+            }
+
+            Debug.Assert((object)binary == node);
+            stack.Free();
+
+            return left;
+        }
+
+        private BoundNode VisitBinaryOperatorSimple(BoundBinaryOperator node)
+        {
             var isLogical = (node.OperatorKind & BinaryOperatorKind.Logical) != 0;
             if (isLogical)
             {

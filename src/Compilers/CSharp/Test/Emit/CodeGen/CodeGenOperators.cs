@@ -4609,7 +4609,114 @@ class test<T> where T : c0
   IL_0004:  ret
 }
 ");
+        }
 
+        [Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")]
+        public void EmitSequenceOfBinaryExpressions_01()
+        {
+            var source =
+@"
+class Test
+{ 
+    static void Main()
+    {
+    }
+
+	public static double Calculate(float[] f)
+    {
+" + $"        return { BuildSequenceOfBinaryExpressions_01() };" + @"
+    }
+}
+";
+
+            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe);
+        }
+
+        private static string BuildSequenceOfBinaryExpressions_01()
+        {
+            var builder = new System.Text.StringBuilder();
+            int i;
+            for (i = 0; i < 4096 ; i++)
+            {
+                builder.Append(i + 1);
+                builder.Append(" * ");
+                builder.Append("f[");
+                builder.Append(i);
+                builder.Append("] + ");
+            }
+
+            builder.Append(i + 1);
+
+            return builder.ToString();
+        }
+
+        [Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")]
+        public void EmitSequenceOfBinaryExpressions_02()
+        {
+            var source =
+@"
+class Test
+{ 
+    static void Main()
+    {
+    }
+
+	public static double Calculate(long[] f)
+    {
+" + $"        return checked({ BuildSequenceOfBinaryExpressions_01() });" + @"
+    }
+}
+";
+
+            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe);
+        }
+        
+        [Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")]
+        public void EmitSequenceOfBinaryExpressions_03()
+        {
+            var source =
+@"
+class Test
+{ 
+    static void Main()
+    {
+    }
+
+	public static bool Calculate(bool[] a, bool[] f)
+    {
+" + $"        return { BuildSequenceOfBinaryExpressions_03() };" + @"
+    }
+}
+";
+
+            var compilation = CreateCompilationWithMscorlib(source, options: TestOptions.ReleaseExe);
+            compilation.VerifyEmitDiagnostics(
+    // (10,16): error CS8078: An expression is too long or complex to compile
+    //         return a[0] && f[0] || a[1] && f[1] || a[2] && f[2] || ...
+    Diagnostic(ErrorCode.ERR_InsufficientStack, "a").WithLocation(10, 16)
+                );
+        }
+
+        private static string BuildSequenceOfBinaryExpressions_03()
+        {
+            var builder = new System.Text.StringBuilder();
+            int i;
+            for (i = 0; i < 4096; i++)
+            {
+                builder.Append("a[");
+                builder.Append(i);
+                builder.Append("]");
+                builder.Append(" && ");
+                builder.Append("f[");
+                builder.Append(i);
+                builder.Append("] || ");
+            }
+
+            builder.Append("a[");
+            builder.Append(i);
+            builder.Append("]");
+
+            return builder.ToString();
         }
     }
 }

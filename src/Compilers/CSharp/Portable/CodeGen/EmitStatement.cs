@@ -328,7 +328,46 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         // generate a jump to dest if (condition == sense) is true
         private void EmitCondBranch(BoundExpression condition, ref object dest, bool sense)
         {
-        oneMoreTime:
+            _recursionDepth++;
+
+            if (_recursionDepth > 1)
+            {
+                if (_recursionDepth > Syntax.InternalSyntax.LanguageParser.MaxUncheckedRecursionDepth)
+                {
+                    PortableShim.RuntimeHelpers.EnsureSufficientExecutionStack();
+                }
+
+                EmitCondBranchCore(condition, ref dest, sense);
+            }
+            else
+            {
+                EmitCondBranchCoreWithStackGuard(condition, ref dest, sense);
+            }
+
+            _recursionDepth--;
+        }
+
+        private void EmitCondBranchCoreWithStackGuard(BoundExpression condition, ref object dest, bool sense)
+        {
+            Debug.Assert(_recursionDepth == 1);
+
+            try
+            {
+                EmitCondBranchCore(condition, ref dest, sense);
+                Debug.Assert(_recursionDepth == 1);
+            }
+            // TODO (DevDiv workitem 966425): Replace exception name test with a type test once the type 
+            // is available in the PCL
+            catch (Exception ex) when (ex.GetType().Name == "InsufficientExecutionStackException")
+            {
+                _diagnostics.Add(ErrorCode.ERR_InsufficientStack, condition.Syntax.GetFirstToken().GetLocation());
+                throw new EmitCancelledException();
+            }
+        }
+
+        private void EmitCondBranchCore(BoundExpression condition, ref object dest, bool sense)
+        {
+            oneMoreTime:
 
             ILOpCode ilcode;
 

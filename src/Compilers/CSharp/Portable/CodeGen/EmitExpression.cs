@@ -12,6 +12,11 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 {
     internal partial class CodeGenerator
     {
+        private int _recursionDepth;
+
+        private class EmitCancelledException : Exception
+        { }
+
         private void EmitExpression(BoundExpression expression, bool used)
         {
             if (expression == null)
@@ -35,6 +40,45 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 }
             }
 
+            _recursionDepth++;
+
+            if (_recursionDepth > 1)
+            {
+                if (_recursionDepth > Syntax.InternalSyntax.LanguageParser.MaxUncheckedRecursionDepth)
+                {
+                    PortableShim.RuntimeHelpers.EnsureSufficientExecutionStack();
+                }
+
+                EmitExpressionCore(expression, used);
+            }
+            else
+            {
+                EmitExpressionCoreWithStackGuard(expression, used);
+            }
+
+            _recursionDepth--;
+        }
+
+        private void EmitExpressionCoreWithStackGuard(BoundExpression expression, bool used)
+        {
+            Debug.Assert(_recursionDepth == 1);
+
+            try
+            {
+                EmitExpressionCore(expression, used);
+                Debug.Assert(_recursionDepth == 1);
+            }
+            // TODO (DevDiv workitem 966425): Replace exception name test with a type test once the type 
+            // is available in the PCL
+            catch (Exception ex) when (ex.GetType().Name == "InsufficientExecutionStackException")
+            {
+                _diagnostics.Add(ErrorCode.ERR_InsufficientStack, expression.Syntax.GetFirstToken().GetLocation());
+                throw new EmitCancelledException();
+            }
+        }
+
+        private void EmitExpressionCore(BoundExpression expression, bool used)
+        {
             switch (expression.Kind)
             {
                 case BoundKind.AssignmentOperator:
