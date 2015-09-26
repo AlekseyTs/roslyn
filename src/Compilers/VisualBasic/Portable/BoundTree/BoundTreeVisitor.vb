@@ -132,5 +132,21 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         Public Overridable Function DefaultVisit(node As BoundNode) As BoundNode
             Return Nothing
         End Function
+
+        Public Class CancelledByStackGuardException
+            Inherits Exception
+
+            Public ReadOnly Node As BoundNode
+
+            Public Sub New(inner As Exception, node As BoundNode)
+                MyBase.New(inner.Message, inner)
+
+                Me.Node = node
+            End Sub
+
+            Public Sub AddAnError(diagnostics As DiagnosticBag)
+                diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression, Node.Syntax.GetFirstToken().GetLocation())
+            End Sub
+        End Class
     End Class
 End Namespace

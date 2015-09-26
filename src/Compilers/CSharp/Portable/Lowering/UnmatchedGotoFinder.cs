@@ -20,15 +20,18 @@ namespace Microsoft.CodeAnalysis.CSharp
         private HashSet<LabelSymbol> _gotos;
         private HashSet<LabelSymbol> _targets;
 
-        private UnmatchedGotoFinder(Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache)
+        private int _recursionDepth;
+
+        private UnmatchedGotoFinder(Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache, int recursionDepth)
         {
             Debug.Assert(unmatchedLabelsCache != null);
             _unmatchedLabelsCache = unmatchedLabelsCache;
+            _recursionDepth = recursionDepth;
         }
 
-        public static HashSet<LabelSymbol> Find(BoundNode node, Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache)
+        public static HashSet<LabelSymbol> Find(BoundNode node, Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache, int recursionDepth)
         {
-            UnmatchedGotoFinder finder = new UnmatchedGotoFinder(unmatchedLabelsCache);
+            UnmatchedGotoFinder finder = new UnmatchedGotoFinder(unmatchedLabelsCache, recursionDepth);
             finder.Visit(node);
             HashSet<LabelSymbol> gotos = finder._gotos;
             HashSet<LabelSymbol> targets = finder._targets;
@@ -55,7 +58,18 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return null; // Don't visit children.
             }
 
+            var expression = node as BoundExpression;
+            if (expression != null)
+            {
+                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+            }
+
             return base.Visit(node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
         }
 
         public override BoundNode VisitGotoStatement(BoundGotoStatement node)

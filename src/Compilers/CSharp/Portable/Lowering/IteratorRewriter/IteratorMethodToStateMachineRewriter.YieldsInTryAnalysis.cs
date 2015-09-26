@@ -11,7 +11,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Analyses method body for yields in try blocks and labels that they contain.
         /// </summary>
-        private class YieldsInTryAnalysis : LabelCollector
+        private sealed class YieldsInTryAnalysis : LabelCollector
         {
             // all try blocks with yields in them and complete set of labels inside those try blocks
             // NOTE: non-yielding try blocks are transparently ignored - i.e. their labels are included
@@ -116,6 +116,23 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         // transient accumulator.
         protected HashSet<LabelSymbol> currentLabels;
+        private int _recursionDepth;
+
+        public sealed override BoundNode Visit(BoundNode node)
+        {
+            var expression = node as BoundExpression;
+            if (expression != null)
+            {
+                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+            }
+
+            return base.Visit(node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
+        }
 
         public override BoundNode VisitLabelStatement(BoundLabelStatement node)
         {

@@ -1475,6 +1475,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 Dim asyncDebugInfo As Cci.AsyncMethodBodyDebugInfo = Nothing
                 Dim codeGen = New CodeGen.CodeGenerator(method, block, builder, moduleBuilder, diagnostics, optimizations, emittingPdb)
 
+                If diagnostics.HasAnyErrors() Then
+                    Return Nothing
+                End If
+
                 ' We need to save additional debugging information for MoveNext of an async state machine.
                 Dim stateMachineMethod = TryCast(method, SynthesizedStateMachineMethod)
 

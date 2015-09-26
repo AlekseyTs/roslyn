@@ -24,6 +24,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         private bool _sawAwaitInExceptionHandler;
         private readonly DiagnosticBag _diagnostics;
 
+        private int _recursionDepth;
+
         private LocalRewriter(
             CSharpCompilation compilation,
             MethodSymbol containingMethod,
@@ -183,6 +185,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
+            return VisitExpressionWithStackGuard(ref _recursionDepth, node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
             var visited = (BoundExpression)base.Visit(node);
 
             // If you *really* need to change the type, consider using an indirect method

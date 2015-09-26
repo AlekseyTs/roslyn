@@ -47,8 +47,11 @@ namespace Microsoft.CodeAnalysis.CSharp
         // Returns deterministically ordered list of variables that ought to be hoisted.
         public static OrderedSet<Symbol> Analyze(CSharpCompilation compilation, MethodSymbol method, BoundNode node, DiagnosticBag diagnostics)
         {
-            var initiallyAssignedVariables = UnassignedVariablesWalker.Analyze(compilation, method, node);
+            var initiallyAssignedVariables = UnassignedVariablesWalker.Analyze(compilation, method, node, convertInsufficientExecutionStackExceptionToCancelledByStackGuardException:true);
             var walker = new IteratorAndAsyncCaptureWalker(compilation, method, node, new NeverEmptyStructTypeCache(), initiallyAssignedVariables);
+
+            walker._convertInsufficientExecutionStackExceptionToCancelledByStackGuardException = true;
+
             bool badRegion = false;
             walker.Analyze(ref badRegion);
             Debug.Assert(!badRegion);
@@ -292,7 +295,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 // Locals cannot be used to communicate between the finally block and the rest of the method.
                 // So we just capture any outside variables that are used inside.
-                new OutsideVariablesUsedInside(this, this.topLevelMethod).Visit(finallyBlock);
+                new OutsideVariablesUsedInside(this, this.topLevelMethod, this).Visit(finallyBlock);
             }
 
             base.VisitFinallyBlock(finallyBlock, ref unsetInFinally);
@@ -303,12 +306,37 @@ namespace Microsoft.CodeAnalysis.CSharp
             private readonly HashSet<Symbol> _localsInScope;
             private readonly IteratorAndAsyncCaptureWalker _analyzer;
             private readonly MethodSymbol _topLevelMethod;
+            private int _recursionDepth;
+            private readonly IteratorAndAsyncCaptureWalker _parent;
 
-            public OutsideVariablesUsedInside(IteratorAndAsyncCaptureWalker analyzer, MethodSymbol topLevelMethod)
+            public OutsideVariablesUsedInside(IteratorAndAsyncCaptureWalker analyzer, MethodSymbol topLevelMethod, IteratorAndAsyncCaptureWalker parent)
             {
                 _analyzer = analyzer;
                 _topLevelMethod = topLevelMethod;
                 _localsInScope = new HashSet<Symbol>();
+                _parent = parent;
+                _recursionDepth = parent._recursionDepth;
+            }
+
+            public override BoundNode Visit(BoundNode node)
+            {
+                var expression = node as BoundExpression;
+                if (expression != null)
+                {
+                    return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+                }
+
+                return base.Visit(node);
+            }
+
+            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+            {
+                return (BoundExpression)base.Visit(node);
+            }
+
+            protected override bool ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()
+            {
+                return _parent.ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException();
             }
 
             public override BoundNode VisitBlock(BoundBlock node)

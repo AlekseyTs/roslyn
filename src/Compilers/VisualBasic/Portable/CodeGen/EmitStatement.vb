@@ -634,6 +634,33 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
         ' it is ok if lazyDest is Nothing
         ' if lazyDest is needed it will be initialized to a new object
         Private Sub EmitCondBranch(condition As BoundExpression, ByRef lazyDest As Object, sense As Boolean)
+            _recursionDepth += 1
+
+            If _recursionDepth > 1 Then
+                StackGuard.EnsureSufficientExecutionStack(_recursionDepth)
+
+                EmitCondBranchCore(condition, lazyDest, sense)
+            Else
+                EmitCondBranchCoreWithStackGuard(condition, lazyDest, sense)
+            End If
+
+            _recursionDepth -= 1
+        End Sub
+
+        Private Sub EmitCondBranchCoreWithStackGuard(condition As BoundExpression, ByRef lazyDest As Object, sense As Boolean)
+            Debug.Assert(_recursionDepth = 1)
+
+            Try
+                EmitCondBranchCore(condition, lazyDest, sense)
+                Debug.Assert(_recursionDepth = 1)
+
+            Catch ex As Exception When StackGuard.IsInsufficientExecutionStackException(ex)
+                _diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression, condition.Syntax.GetFirstToken().GetLocation())
+                Throw New EmitCancelledException()
+            End Try
+        End Sub
+
+        Private Sub EmitCondBranchCore(condition As BoundExpression, ByRef lazyDest As Object, sense As Boolean)
 oneMoreTime:
             Dim ilcode As ILOpCode
             Dim constExprValue = condition.ConstantValueOpt

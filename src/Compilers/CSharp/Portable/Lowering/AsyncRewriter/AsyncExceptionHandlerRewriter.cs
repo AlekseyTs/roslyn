@@ -25,6 +25,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         private AwaitCatchFrame _currentAwaitCatchFrame;
         private AwaitFinallyFrame _currentAwaitFinallyFrame = new AwaitFinallyFrame();
 
+        private int _recursionDepth;
+
         private AsyncExceptionHandlerRewriter(
             MethodSymbol containingMethod,
             NamedTypeSymbol containingType,
@@ -40,6 +42,22 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(factory.CurrentType == (containingType ?? containingMethod.ContainingType));
             _diagnostics = diagnostics;
             _analysis = analysis;
+        }
+
+        public override BoundNode Visit(BoundNode node)
+        {
+            var expression = node as BoundExpression;
+            if (expression != null)
+            {
+                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+            }
+
+            return base.Visit(node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
         }
 
         /// <summary>

@@ -85,6 +85,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             /// </summary>
             public Dictionary<LambdaSymbol, BoundNode> lambdaScopes;
 
+            private int _recursionDepth;
+
             private Analysis(MethodSymbol method)
             {
                 Debug.Assert((object)method != null);
@@ -113,6 +115,22 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 Visit(node);
+            }
+
+            public override BoundNode Visit(BoundNode node)
+            {
+                var expression = node as BoundExpression;
+                if (expression != null)
+                {
+                    return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+                }
+
+                return base.Visit(node);
+            }
+
+            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+            {
+                return (BoundExpression)base.Visit(node);
             }
 
             private static BoundNode FindNodeToAnalyze(BoundNode node)

@@ -20,14 +20,22 @@ namespace Microsoft.CodeAnalysis.CSharp
         private bool _inExpressionLambda;
         private bool _reportedUnsafe;
         private readonly MethodSymbol _containingSymbol;
+        private int _recursionDepth;
 
         public static void IssueDiagnostics(CSharpCompilation compilation, BoundNode node, DiagnosticBag diagnostics, MethodSymbol containingSymbol)
         {
             Debug.Assert(node != null);
             Debug.Assert((object)containingSymbol != null);
 
-            var diagnosticPass = new DiagnosticsPass(compilation, diagnostics, containingSymbol);
-            diagnosticPass.Visit(node);
+            try
+            {
+                var diagnosticPass = new DiagnosticsPass(compilation, diagnostics, containingSymbol);
+                diagnosticPass.Visit(node);
+            }
+            catch (CancelledByStackGuardException ex)
+            {
+                ex.AddAnError(diagnostics);
+            }
         }
 
         private DiagnosticsPass(CSharpCompilation compilation, DiagnosticBag diagnostics, MethodSymbol containingSymbol)
@@ -38,6 +46,22 @@ namespace Microsoft.CodeAnalysis.CSharp
             _compilation = compilation;
             _diagnostics = diagnostics;
             _containingSymbol = containingSymbol;
+        }
+
+        public override BoundNode Visit(BoundNode node)
+        {
+            var expression = node as BoundExpression;
+            if (expression != null)
+            {
+                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+            }
+
+            return base.Visit(node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
         }
 
         private void Error(ErrorCode code, BoundNode node, params object[] args)

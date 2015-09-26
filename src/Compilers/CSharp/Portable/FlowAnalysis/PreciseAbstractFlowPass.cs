@@ -15,6 +15,8 @@ namespace Microsoft.CodeAnalysis.CSharp
     internal abstract partial class PreciseAbstractFlowPass<LocalState> : BoundTreeVisitor
         where LocalState : AbstractFlowPass<LocalState>.AbstractLocalState
     {
+        protected int _recursionDepth;
+
         /// <summary>
         /// The compilation in which the analysis is taking place.  This is needed to determine which
         /// conditional methods will be compiled and which will be omitted.
@@ -271,16 +273,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                 if (_trackRegions)
                 {
                     if (node == this.firstInRegion && this.regionPlace == RegionPlace.Before) EnterRegion();
-                    result = base.Visit(node);
+                    result = VisitWithStackGuard(node);
                     if (node == this.lastInRegion && this.regionPlace == RegionPlace.Inside) LeaveRegion();
                 }
                 else
                 {
-                    result = base.Visit(node);
+                    result = VisitWithStackGuard(node);
                 }
             }
 
             return result;
+        }
+
+        private BoundNode VisitWithStackGuard(BoundNode node)
+        {
+            var expression = node as BoundExpression;
+            if (expression != null)
+            {
+                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+            }
+
+            return base.Visit(node);
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
+        }
+
+        protected override bool ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()
+        {
+            return false; // just let the original exception to bubble up.
         }
 
         /// <summary>
@@ -1889,6 +1912,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     break;
                 }
+
+                Unsplit(); // VisitRvalue does this
             }
 
             Debug.Assert((object)binary == node);

@@ -332,10 +332,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             if (_recursionDepth > 1)
             {
-                if (_recursionDepth > Syntax.InternalSyntax.LanguageParser.MaxUncheckedRecursionDepth)
-                {
-                    PortableShim.RuntimeHelpers.EnsureSufficientExecutionStack();
-                }
+                StackGuard.EnsureSufficientExecutionStack(_recursionDepth);
 
                 EmitCondBranchCore(condition, ref dest, sense);
             }
@@ -356,9 +353,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 EmitCondBranchCore(condition, ref dest, sense);
                 Debug.Assert(_recursionDepth == 1);
             }
-            // TODO (DevDiv workitem 966425): Replace exception name test with a type test once the type 
-            // is available in the PCL
-            catch (Exception ex) when (ex.GetType().Name == "InsufficientExecutionStackException")
+            catch (Exception ex) when (StackGuard.IsInsufficientExecutionStackException(ex))
             {
                 _diagnostics.Add(ErrorCode.ERR_InsufficientStack, condition.Syntax.GetFirstToken().GetLocation());
                 throw new EmitCancelledException();

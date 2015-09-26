@@ -73,7 +73,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
             _emitPdbSequencePoints = emittingPdb AndAlso method.GenerateDebugInfo
 
             If _optimizations = OptimizationLevel.Release Then
-                _block = Optimizer.Optimize(method, boundBody, _stackLocals)
+                Try
+                    _block = Optimizer.Optimize(method, boundBody, _stackLocals)
+                Catch ex As BoundTreeVisitor.CancelledByStackGuardException
+                    ex.AddAnError(diagnostics)
+                    _block = boundBody
+                End Try
             End If
 
             _checkCallsForUnsafeJITOptimization = (_method.ImplementationAttributes And MethodSymbol.DisableJITOptimizationFlags) <> MethodSymbol.DisableJITOptimizationFlags
@@ -141,15 +146,20 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 _builder.DefineInitialHiddenSequencePoint()
             End If
 
-            EmitStatement(_block)
+            Try
+                EmitStatement(_block)
 
-            If _unhandledReturn Then
-                HandleReturn()
-            End If
+                If _unhandledReturn Then
+                    HandleReturn()
+                End If
 
-            If Not _diagnostics.HasAnyErrors Then
-                _builder.Realize()
-            End If
+                If Not _diagnostics.HasAnyErrors Then
+                    _builder.Realize()
+                End If
+
+            Catch e As EmitCancelledException
+                Debug.Assert(_diagnostics.HasAnyErrors())
+            End Try
 
             _synthesizedLocalOrdinals.Free()
         End Sub

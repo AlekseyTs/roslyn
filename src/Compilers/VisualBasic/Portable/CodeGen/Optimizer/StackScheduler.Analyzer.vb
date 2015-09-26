@@ -62,6 +62,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
             ' the dummy and will be rejected.
             Private ReadOnly _dummyVariables As New Dictionary(Of Object, DummyLocal)
 
+            Private _recursionDepth As Integer
+
             Private Sub New(container As Symbol)
                 Me._container = container
                 Me._empty = New DummyLocal(container)
@@ -183,7 +185,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 Return node
             End Function
 
-            Private Function VisitExpression(node As BoundExpression, context As ExprContext) As BoundExpression
+            Private Function VisitExpressionCore(node As BoundExpression, context As ExprContext) As BoundExpression
                 If node Is Nothing Then
                     Me._counter += 1
                     Return node
@@ -218,6 +220,38 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
 
                 Me._context = prevContext
                 Return result
+            End Function
+
+            Private Function VisitExpression(node As BoundExpression, context As ExprContext) As BoundExpression
+                Dim result As BoundExpression
+
+                _recursionDepth += 1
+
+                If _recursionDepth > 1 Then
+                    StackGuard.EnsureSufficientExecutionStack(_recursionDepth)
+
+                    result = VisitExpressionCore(node, context)
+                Else
+                    result = VisitExpressionCoreWithStackGuard(node, context)
+                End If
+
+                _recursionDepth -= 1
+
+                Return result
+            End Function
+
+            Private Function VisitExpressionCoreWithStackGuard(node As BoundExpression, context As ExprContext) As BoundExpression
+                Debug.Assert(_recursionDepth = 1)
+
+                Try
+                    Dim result = VisitExpressionCore(node, context)
+                    Debug.Assert(_recursionDepth = 1)
+
+                    Return result
+
+                Catch ex As Exception When StackGuard.IsInsufficientExecutionStackException(ex)
+                    Throw New CancelledByStackGuardException(ex, node)
+                End Try
             End Function
 
             Public Overrides Function VisitSpillSequence(node As BoundSpillSequence) As BoundNode
@@ -905,6 +939,83 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
             End Function
 
             Public Overrides Function VisitBinaryOperator(node As BoundBinaryOperator) As BoundNode
+                ' Do not blow the stack due to a deep recursion on the left. 
+
+                Dim child As BoundExpression = node.Left
+
+                If child.Kind <> BoundKind.BinaryOperator OrElse child.ConstantValueOpt IsNot Nothing Then
+                    Return VisitBinaryOperatorSimple(node)
+                End If
+
+                Dim stack = ArrayBuilder(Of BoundBinaryOperator).GetInstance()
+                stack.Push(node)
+
+                Dim binary As BoundBinaryOperator = DirectCast(child, BoundBinaryOperator)
+
+                Do
+                    stack.Push(binary)
+                    child = binary.Left
+
+                    If child.Kind <> BoundKind.BinaryOperator OrElse child.ConstantValueOpt IsNot Nothing Then
+                        Exit Do
+                    End If
+
+                    binary = DirectCast(child, BoundBinaryOperator)
+                Loop
+
+
+                Dim prevStack As Integer = Me._evalStack
+
+                Dim left = DirectCast(Me.Visit(child), BoundExpression)
+
+                Do
+                    binary = stack.Pop()
+
+                    ' Short-circuit operators need to emulate implicit branch/label
+                    Dim isLogical As Boolean
+                    Dim cookie As Object = Nothing
+
+                    Select Case (binary.OperatorKind And BinaryOperatorKind.OpMask)
+                        Case BinaryOperatorKind.AndAlso, BinaryOperatorKind.OrElse
+                            isLogical = True
+                            ' implicit branch here
+                            cookie = GetStackStateCookie()
+
+                            Me._evalStack = prevStack  ' right is evaluated with original stack
+
+                        Case Else
+                            isLogical = False
+                    End Select
+
+                    Dim right = DirectCast(Me.Visit(binary.Right), BoundExpression)
+
+                    If isLogical Then
+                        ' implicit label here
+                        EnsureStackState(cookie)
+                    End If
+
+                    Dim type As TypeSymbol = Me.VisitType(binary.Type)
+                    left = binary.Update(binary.OperatorKind, left, right, binary.Checked, binary.ConstantValueOpt, type)
+
+                    If stack.Count = 0 Then
+                        Exit Do
+                    End If
+
+                    Me._lastExpressionCnt = Me._counter
+                    Me._lastExprContext = ExprContext.Value
+                    Me._lastExpression = left
+
+                    Me._counter += 1
+                    Me._evalStack = prevStack + 1
+                Loop
+
+                Debug.Assert(binary Is node)
+                stack.Free()
+
+                Return left
+            End Function
+
+            Private Function VisitBinaryOperatorSimple(node As BoundBinaryOperator) As BoundNode
                 Select Case (node.OperatorKind And BinaryOperatorKind.OpMask)
                     Case BinaryOperatorKind.AndAlso, BinaryOperatorKind.OrElse
                         ' Short-circuit operators need to emulate implicit branch/label

@@ -25,6 +25,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             var locals = PooledDictionary<LocalSymbol, LocalDefUseInfo>.GetInstance();
             var evalStack = ArrayBuilder<ValueTuple<BoundExpression, ExprContext>>.GetInstance();
+
             src = (BoundStatement)StackOptimizerPass1.Analyze(src, locals, evalStack, debugFriendly);
             evalStack.Free();
 
@@ -294,7 +295,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
     // NOTE: It is always safe to mark a local as not eligible as a stack local
     //       so when situation gets complicated we just refuse to schedule and move on.
     //
-    internal class StackOptimizerPass1 : BoundTreeRewriter
+    internal sealed class StackOptimizerPass1 : BoundTreeRewriter
     {
         private readonly bool _debugFriendly;
         private readonly ArrayBuilder<ValueTuple<BoundExpression, ExprContext>> _evalStack;
@@ -316,6 +317,8 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         // fake local that represents the eval stack.
         // when we need to ensure that eval stack is not blocked by stack Locals, we record an access to empty.
         public static readonly DummyLocal empty = new DummyLocal();
+
+        private int _recursionDepth;
 
         private StackOptimizerPass1(Dictionary<LocalSymbol, LocalDefUseInfo> locals,
             ArrayBuilder<ValueTuple<BoundExpression, ExprContext>> evalStack,
@@ -360,7 +363,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             return result;
         }
 
-        public BoundExpression VisitExpression(BoundExpression node, ExprContext context)
+        private BoundExpression VisitExpressionCore(BoundExpression node, ExprContext context)
         {
             var prevContext = _context;
             int prevStack = StackDepth();
@@ -395,6 +398,42 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
 
             return result;
+        }
+
+        private BoundExpression VisitExpression(BoundExpression node, ExprContext context)
+        {
+            BoundExpression result;
+            _recursionDepth++;
+
+            if (_recursionDepth > 1)
+            {
+                StackGuard.EnsureSufficientExecutionStack(_recursionDepth);
+
+                result = VisitExpressionCore(node, context);
+            }
+            else
+            {
+                result = VisitExpressionCoreWithStackGuard(node, context);
+            }
+
+            _recursionDepth--;
+            return result;
+        }
+
+        private BoundExpression VisitExpressionCoreWithStackGuard(BoundExpression node, ExprContext context)
+        {
+            Debug.Assert(_recursionDepth == 1);
+
+            try
+            {
+                var result = VisitExpressionCore(node, context);
+                Debug.Assert(_recursionDepth == 1);
+                return result;
+            }
+            catch (Exception ex) when (StackGuard.IsInsufficientExecutionStackException(ex))
+            {
+                throw new CancelledByStackGuardException(ex, node);
+            }
         }
 
         private void PushEvalStack(BoundExpression result, ExprContext context)
@@ -588,7 +627,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         // only because it must be returned, otherwise all uses are 
         // confined to the nested sequence that is assigned indirectly of to an instance field (and therefore has +1 stack)
         // in such case the desired stack for this local is +1
-        private static bool IsNestedLocalOfCompoundOperator(LocalSymbol local, BoundSequence node)
+        private bool IsNestedLocalOfCompoundOperator(LocalSymbol local, BoundSequence node)
         {
             var value = node.Value;
 
@@ -608,7 +647,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                             assignment.Right.Kind == BoundKind.Sequence)
                         {
                             // and no other side-effects should use the variable
-                            var localUsedWalker = new LocalUsedWalker(local);
+                            var localUsedWalker = new LocalUsedWalker(local, _recursionDepth);
                             for (int i = 0; i < sideeffects.Length - 1; i++)
                             {
                                 if (localUsedWalker.IsLocalUsedIn(sideeffects[i]))
@@ -636,14 +675,16 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             return false;
         }
 
-        private class LocalUsedWalker : BoundTreeWalker
+        private sealed class LocalUsedWalker : BoundTreeWalker
         {
             private readonly LocalSymbol _local;
             private bool _found;
+            private int _recursionDepth;
 
-            internal LocalUsedWalker(LocalSymbol local)
+            internal LocalUsedWalker(LocalSymbol local, int recursionDepth)
             {
                 _local = local;
+                _recursionDepth = recursionDepth;
             }
 
             public bool IsLocalUsedIn(BoundExpression node)
@@ -658,10 +699,21 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             {
                 if (!_found)
                 {
+                    var expression = node as BoundExpression;
+                    if (expression != null)
+                    {
+                        return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+                    }
+
                     return base.Visit(node);
                 }
 
                 return null;
+            }
+
+            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+            {
+                return (BoundExpression)base.Visit(node);
             }
 
             public override BoundNode VisitLocal(BoundLocal node)
@@ -1666,10 +1718,11 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
     //              NotLastUse(X_stackLocal) ===> NotLastUse(Dup)
     //              LastUse(X_stackLocal) ===> LastUse(X_stackLocal)
     //
-    internal class StackOptimizerPass2 : BoundTreeRewriter
+    internal sealed class StackOptimizerPass2 : BoundTreeRewriter
     {
         private int _nodeCounter;
         private readonly Dictionary<LocalSymbol, LocalDefUseInfo> _info;
+        private int _recursionDepth;
 
         private StackOptimizerPass2(Dictionary<LocalSymbol, LocalDefUseInfo> info)
         {
@@ -1696,12 +1749,25 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
             else
             {
-                result = base.Visit(node);
+                var expression = node as BoundExpression;
+                if (expression != null)
+                {
+                    result = VisitExpressionWithStackGuard(ref _recursionDepth, expression);
+                }
+                else
+                {
+                    result = base.Visit(node);
+                }
             }
 
             _nodeCounter += 1;
 
             return result;
+        }
+
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            return (BoundExpression)base.Visit(node);
         }
 
         private static bool IsLastAccess(LocalDefUseInfo locInfo, int counter)

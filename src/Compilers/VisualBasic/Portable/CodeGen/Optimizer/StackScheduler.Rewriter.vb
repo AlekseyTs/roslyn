@@ -53,6 +53,58 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 Return result
             End Function
 
+            Public Overrides Function VisitBinaryOperator(node As BoundBinaryOperator) As BoundNode
+                ' Do not blow the stack due to a deep recursion on the left. 
+
+                Dim child As BoundExpression = node.Left
+
+                If child.Kind <> BoundKind.BinaryOperator OrElse child.ConstantValueOpt IsNot Nothing Then
+                    Return VisitBinaryOperatorSimple(node)
+                End If
+
+                Dim stack = ArrayBuilder(Of BoundBinaryOperator).GetInstance()
+                stack.Push(node)
+
+                Dim binary As BoundBinaryOperator = DirectCast(child, BoundBinaryOperator)
+
+                Do
+                    stack.Push(binary)
+                    child = binary.Left
+
+                    If child.Kind <> BoundKind.BinaryOperator OrElse child.ConstantValueOpt IsNot Nothing Then
+                        Exit Do
+                    End If
+
+                    binary = DirectCast(child, BoundBinaryOperator)
+                Loop
+
+
+                Dim left = DirectCast(Me.Visit(child), BoundExpression)
+
+                Do
+                    binary = stack.Pop()
+
+                    Dim right = DirectCast(Me.Visit(binary.Right), BoundExpression)
+                    Dim type As TypeSymbol = Me.VisitType(binary.Type)
+                    left = binary.Update(binary.OperatorKind, left, right, binary.Checked, binary.ConstantValueOpt, type)
+
+                    If stack.Count = 0 Then
+                        Exit Do
+                    End If
+
+                    Me._nodeCounter += 1
+                Loop
+
+                Debug.Assert(binary Is node)
+                stack.Free()
+
+                Return left
+            End Function
+
+            Private Function VisitBinaryOperatorSimple(node As BoundBinaryOperator) As BoundNode
+                Return MyBase.VisitBinaryOperator(node)
+            End Function
+
             Private Shared Function IsLastAccess(locInfo As LocalDefUseInfo, counter As Integer) As Boolean
                 Return locInfo.localDefs.Any(Function(d) counter = d.Start AndAlso counter = d.End)
             End Function
