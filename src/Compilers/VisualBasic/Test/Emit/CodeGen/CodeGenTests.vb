@@ -13178,22 +13178,32 @@ End Module
 $"
 Class Test
     Shared Sub Main()
-        Dim f = new Single(4096) {{}}
+        Dim f = new Single(4096-1) {{}}
         for i As Integer = 0 To 4095
             f(i) = 4096 - i
         Next
 
-        System.Console.WriteLine(Calculate(f))
+        System.Console.WriteLine(If(Calculate1(f) = Calculate2(f), ""True"", ""False""))
     End Sub
 
-    Shared Function Calculate(f As Single()) As Double
+    Shared Function Calculate1(f As Single()) As Double
         Return {BuildSequenceOfBinaryExpressions_01()}
+    End Function
+
+    Shared Function Calculate2(f As Single()) As Double
+        Dim result as Double = 0
+        Dim i as Integer
+        For i = 0 To f.Length - 1
+            result+=(i + 1)*f(i)
+        Next
+
+        return result + (i + 1)
     End Function
 End Class
 "
             Dim compilation = CreateCompilationWithMscorlib({source}, options:=TestOptions.ReleaseExe)
 
-            CompileAndVerify(compilation, expectedOutput:="11461640193")
+            CompileAndVerify(compilation, expectedOutput:="True")
         End Sub
 
         Private Shared Function BuildSequenceOfBinaryExpressions_01(Optional count As Integer = 4096) As String
@@ -13219,7 +13229,7 @@ End Class
 $"
 Class Test
     Shared Sub Main()
-        Dim f = new Long(4096) {{}}
+        Dim f = new Long(4096-1) {{}}
         for i As Integer = 0 To 4095
             f(i) = 4096 - i
         Next
@@ -13284,7 +13294,7 @@ End Class
 $"
 Class Test
     Shared Sub Main()
-        Dim f = new Single?(4096) {{}}
+        Dim f = new Single?(4096-1) {{}}
         for i As Integer = 0 To 4095
             f(i) = 4096 - i
         Next
@@ -13306,7 +13316,7 @@ End Class
 
         <Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")>
         Public Sub EmitSequenceOfBinaryExpressions_05()
-            Dim count As Integer = 512
+            Dim count As Integer = 256
             Dim source =
 $"
 Class Test
@@ -13345,8 +13355,8 @@ End Class
 "
             Dim compilation = CreateCompilationWithMscorlib({source}, options:=TestOptions.ReleaseExe)
 
-            CompileAndVerify(compilation, expectedOutput:="493180929
-493180929")
+            CompileAndVerify(compilation, expectedOutput:="129149953
+129149953")
         End Sub
 
         <Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")>

@@ -4626,17 +4626,30 @@ class Test
             f[i] = 4096 - i;
         }
 
-        System.Console.WriteLine(Calculate(f));
+        System.Console.WriteLine((Calculate1(f) == Calculate2(f)) ? ""True"" : ""False"");
     }
 
-	public static double Calculate(float[] f)
+	public static double Calculate1(float[] f)
     {
 " + $"        return { BuildSequenceOfBinaryExpressions_01() };" + @"
+    }
+
+	public static double Calculate2(float[] f)
+    {
+        double result = 0;
+        int i;
+
+        for (i = 0; i < f.Length; i++)
+        {
+            result+=(i + 1)*f[i];
+        }
+
+        return result + (i + 1);
     }
 }
 ";
 
-            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe, expectedOutput: "11461640193");
+            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe, expectedOutput: "True");
         }
 
         private static string BuildSequenceOfBinaryExpressions_01(int count = 4096)
@@ -4769,7 +4782,7 @@ class Test
         [Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")]
         public void EmitSequenceOfBinaryExpressions_05()
         {
-            int count = 512;
+            int count = 256;
             var source =
 @"
 class Test
@@ -4814,8 +4827,8 @@ class Test
 }
 ";
 
-            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe, expectedOutput: @"493180929
-493180929");
+            var result = CompileAndVerify(source, options: TestOptions.ReleaseExe, expectedOutput: @"129149953
+129149953");
         }
 
         [Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")]
