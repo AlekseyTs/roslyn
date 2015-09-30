@@ -16,6 +16,39 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 {
     internal class Optimizer
     {
+        /// <summary>
+        /// Perform IL specific optiomizations (mostly reduction of local slots)
+        /// </summary>
+        /// <param name="src">Method body to optimize</param>
+        /// <param name="debugFriendly">
+        /// When set, do not perform aggressive optimizations that degrade debugging experience.
+        /// In particular we do not do the following:
+        /// 
+        /// 1) Do not elide any user defined locals, even if never read from. 
+        ///    Example:
+        ///      {
+        ///        var dummy = Foo();    // should not become just "Foo"
+        ///      }
+        ///        
+        ///    User might want to examine dummy in the debugger.
+        /// 
+        /// 2) Do not carry values on the stack between statements
+        ///    Example:
+        ///      {
+        ///        var temp = Foo();
+        ///        temp.ToString();       // should not become   Foo().ToString();
+        ///      }
+        ///       
+        ///    User might want to examine temp in the debugger.
+        ///        
+        /// </param>
+        /// <param name="stackLocals">
+        /// Produced list of "ephemeral" locals.
+        /// Essentially, these locals do not need to leave the evaluation stack.
+        /// As such they do not require an allocation of a local slot and 
+        /// their load/store operations are implemented trivially.
+        /// </param>
+        /// <returns></returns>
         public static BoundStatement Optimize(
             BoundStatement src, bool debugFriendly,
             out HashSet<LocalSymbol> stackLocals)
@@ -24,10 +57,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             //      stack scheduler must be the last one.
 
             var locals = PooledDictionary<LocalSymbol, LocalDefUseInfo>.GetInstance();
-            var evalStack = ArrayBuilder<ValueTuple<BoundExpression, ExprContext>>.GetInstance();
-
-            src = (BoundStatement)StackOptimizerPass1.Analyze(src, locals, evalStack, debugFriendly);
-            evalStack.Free();
+            src = (BoundStatement)StackOptimizerPass1.Analyze(src, locals, debugFriendly);
 
             FilterValidStackLocals(locals);
 
@@ -336,11 +366,12 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         public static BoundNode Analyze(
             BoundNode node, 
             Dictionary<LocalSymbol, LocalDefUseInfo> locals,
-            ArrayBuilder<ValueTuple<BoundExpression, ExprContext>> evalStack,
             bool debugFriendly)
         {
+            var evalStack = ArrayBuilder<ValueTuple<BoundExpression, ExprContext>>.GetInstance();
             var analyzer = new StackOptimizerPass1(locals, evalStack, debugFriendly);
             var rewritten = analyzer.Visit(node);
+            evalStack.Free();
 
             return rewritten;
         }

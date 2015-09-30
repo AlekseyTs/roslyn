@@ -34,14 +34,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|ARM' ">
     <PlatformTarget>ARM</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DogfoodDebug|AnyCPU'">
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DogfoodDebug|ARM'">
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DogfoodRelease|AnyCPU'">
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DogfoodRelease|ARM'">
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DefineConstants>$(DefineConstants);SCRIPTING</DefineConstants>
   </PropertyGroup>
@@ -70,6 +62,11 @@
     <Compile Include="AssemblyLoader\ShadowCopy.cs" />
     <Compile Include="Resolvers\NuGetPackageResolver.cs" />
     <Compile Include="ScriptCompiler.cs" />
+    <Compile Include="ScriptingResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ScriptingResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="ScriptRunner.cs" />
     <Compile Include="ObjectFormatter.cs" />
     <Compile Include="ObjectFormatter.Formatter.cs" />
@@ -80,12 +77,6 @@
     <Compile Include="MemberDisplayFormat.cs" />
     <Compile Include="ObjectFormattingOptions.cs" />
     <Compile Include="ScriptExecutionState.cs" />
-    <Compile Include="ScriptingResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ScriptingResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ScriptVariables.cs" />
     <Compile Include="ScriptOptions.cs" />
     <Compile Include="ScriptState.cs" />
     <Compile Include="ScriptVariable.cs" />
@@ -108,8 +99,8 @@
   <ItemGroup>
     <EmbeddedResource Include="ScriptingResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ScriptingResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>ScriptingResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
