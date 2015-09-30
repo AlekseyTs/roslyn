@@ -12961,7 +12961,7 @@ End Class
             Dim compilation = CreateCompilationWithMscorlib({source}, options:=TestOptions.ReleaseExe.WithOverflowChecks(True))
 
             compilation.VerifyEmitDiagnostics(
-    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "Return").WithLocation(7, 9)
+    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "a").WithLocation(7, 16)
                 )
         End Sub
 
@@ -13008,7 +13008,7 @@ End Class
             Dim compilation = CreateCompilationWithMscorlib({source}, options:=TestOptions.ReleaseExe)
 
             compilation.VerifyEmitDiagnostics(
-    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "Return").WithLocation(13, 9)
+    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "1").WithLocation(13, 16)
                 )
         End Sub
 
@@ -13056,5 +13056,50 @@ End Class
             CompileAndVerify(compilation, expectedOutput:="493180929
 493180929")
         End Sub
+
+        <Fact, WorkItem(5395, "https://github.com/dotnet/roslyn/issues/5395")>
+        Public Sub EmitSequenceOfBinaryExpressions_06()
+            Dim source =
+$"
+Class Test
+    Shared Sub Main()
+    End Sub
+
+    Shared Function Calculate(a As S1(), f As S1()) As Boolean
+        Return {BuildSequenceOfBinaryExpressions_03()}
+    End Function
+End Class
+
+Structure S1
+    Public Shared Operator And(x As S1, y As S1) As S1
+        Return New S1()
+    End Operator
+
+    Public Shared Operator Or(x As S1, y As S1) As S1
+        Return New S1()
+    End Operator
+
+    Public Shared Operator IsTrue(x As S1) As Boolean
+        Return True
+    End Operator
+
+    Public Shared Operator IsFalse(x As S1) As Boolean
+        Return True
+    End Operator
+
+    Public Shared Widening Operator CType(x As S1) As Boolean
+        Return True
+    End Operator
+End Structure
+"
+            Dim compilation = CreateCompilationWithMscorlib({source}, options:=TestOptions.ReleaseExe.WithOverflowChecks(True))
+
+            compilation.VerifyEmitDiagnostics(
+    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "a").WithLocation(7, 16),
+    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "a").WithLocation(7, 16),
+    Diagnostic(ERRID.ERR_TooLongOrComplexExpression, "a").WithLocation(7, 16)
+                )
+        End Sub
+
     End Class
 End Namespace

@@ -112,27 +112,10 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// <summary>
     /// Analyses method body for labels.
     /// </summary>
-    internal abstract class LabelCollector : BoundTreeWalker
+    internal abstract class LabelCollector : BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator 
     {
         // transient accumulator.
         protected HashSet<LabelSymbol> currentLabels;
-        private int _recursionDepth;
-
-        public sealed override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
-        }
 
         public override BoundNode VisitLabelStatement(BoundLabelStatement node)
         {

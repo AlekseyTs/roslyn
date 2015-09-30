@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
 {
-    internal sealed class PlaceholderLocalRewriter : BoundTreeRewriter
+    internal sealed class PlaceholderLocalRewriter : BoundTreeRewriterWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
     {
         internal static BoundNode Rewrite(CSharpCompilation compilation, EENamedTypeSymbol container, HashSet<LocalSymbol> declaredLocals, BoundNode node, DiagnosticBag diagnostics)
         {
@@ -18,7 +18,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         private readonly EENamedTypeSymbol _container;
         private readonly HashSet<LocalSymbol> _declaredLocals;
         private readonly DiagnosticBag _diagnostics;
-        private int _recursionDepth;
 
         private PlaceholderLocalRewriter(CSharpCompilation compilation, EENamedTypeSymbol container, HashSet<LocalSymbol> declaredLocals, DiagnosticBag diagnostics)
         {
@@ -26,22 +25,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             _container = container;
             _declaredLocals = declaredLocals;
             _diagnostics = diagnostics;
-        }
-
-        public override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         public override BoundNode VisitLocal(BoundLocal node)

@@ -301,37 +301,20 @@ namespace Microsoft.CodeAnalysis.CSharp
             base.VisitFinallyBlock(finallyBlock, ref unsetInFinally);
         }
 
-        private sealed class OutsideVariablesUsedInside : BoundTreeWalker
+        private sealed class OutsideVariablesUsedInside : BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
         {
             private readonly HashSet<Symbol> _localsInScope;
             private readonly IteratorAndAsyncCaptureWalker _analyzer;
             private readonly MethodSymbol _topLevelMethod;
-            private int _recursionDepth;
             private readonly IteratorAndAsyncCaptureWalker _parent;
 
             public OutsideVariablesUsedInside(IteratorAndAsyncCaptureWalker analyzer, MethodSymbol topLevelMethod, IteratorAndAsyncCaptureWalker parent)
+                : base(parent._recursionDepth)
             {
                 _analyzer = analyzer;
                 _topLevelMethod = topLevelMethod;
                 _localsInScope = new HashSet<Symbol>();
                 _parent = parent;
-                _recursionDepth = parent._recursionDepth;
-            }
-
-            public override BoundNode Visit(BoundNode node)
-            {
-                var expression = node as BoundExpression;
-                if (expression != null)
-                {
-                    return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-                }
-
-                return base.Visit(node);
-            }
-
-            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-            {
-                return (BoundExpression)base.Visit(node);
             }
 
             protected override bool ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()

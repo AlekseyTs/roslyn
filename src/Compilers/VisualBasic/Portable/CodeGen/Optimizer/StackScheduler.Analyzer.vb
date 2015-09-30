@@ -254,6 +254,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 End Try
             End Function
 
+            Protected Overrides Function VisitExpressionWithoutStackGuard(node As BoundExpression) As BoundExpression
+                Throw ExceptionUtilities.Unreachable
+            End Function
+
             Public Overrides Function VisitSpillSequence(node As BoundSpillSequence) As BoundNode
                 Throw ExceptionUtilities.Unreachable
             End Function

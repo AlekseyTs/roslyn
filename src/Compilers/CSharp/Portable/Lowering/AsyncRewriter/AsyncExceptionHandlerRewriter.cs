@@ -14,7 +14,7 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// with surrogate replacements that keep actual handler code in regular code blocks.
     /// That allows these constructs to be further lowered at the async lowering pass.
     /// </summary>
-    internal sealed class AsyncExceptionHandlerRewriter : BoundTreeRewriter
+    internal sealed class AsyncExceptionHandlerRewriter : BoundTreeRewriterWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator 
     {
         private readonly bool _generateDebugInfo;
         private readonly CSharpCompilation _compilation;
@@ -24,8 +24,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private AwaitCatchFrame _currentAwaitCatchFrame;
         private AwaitFinallyFrame _currentAwaitFinallyFrame = new AwaitFinallyFrame();
-
-        private int _recursionDepth;
 
         private AsyncExceptionHandlerRewriter(
             MethodSymbol containingMethod,
@@ -42,22 +40,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(factory.CurrentType == (containingType ?? containingMethod.ContainingType));
             _diagnostics = diagnostics;
             _analysis = analysis;
-        }
-
-        public override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         /// <summary>

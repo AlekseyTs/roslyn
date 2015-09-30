@@ -436,6 +436,11 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
         }
 
+        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        {
+            throw ExceptionUtilities.Unreachable; 
+        }
+
         private void PushEvalStack(BoundExpression result, ExprContext context)
         {
             _evalStack.Add(ValueTuple.Create(result, context));
@@ -675,16 +680,15 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             return false;
         }
 
-        private sealed class LocalUsedWalker : BoundTreeWalker
+        private sealed class LocalUsedWalker : BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
         {
             private readonly LocalSymbol _local;
             private bool _found;
-            private int _recursionDepth;
 
             internal LocalUsedWalker(LocalSymbol local, int recursionDepth)
+                : base(recursionDepth)
             {
                 _local = local;
-                _recursionDepth = recursionDepth;
             }
 
             public bool IsLocalUsedIn(BoundExpression node)
@@ -699,21 +703,10 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             {
                 if (!_found)
                 {
-                    var expression = node as BoundExpression;
-                    if (expression != null)
-                    {
-                        return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-                    }
-
                     return base.Visit(node);
                 }
 
                 return null;
-            }
-
-            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-            {
-                return (BoundExpression)base.Visit(node);
             }
 
             public override BoundNode VisitLocal(BoundLocal node)
@@ -1718,11 +1711,10 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
     //              NotLastUse(X_stackLocal) ===> NotLastUse(Dup)
     //              LastUse(X_stackLocal) ===> LastUse(X_stackLocal)
     //
-    internal sealed class StackOptimizerPass2 : BoundTreeRewriter
+    internal sealed class StackOptimizerPass2 : BoundTreeRewriterWithStackGuard
     {
         private int _nodeCounter;
         private readonly Dictionary<LocalSymbol, LocalDefUseInfo> _info;
-        private int _recursionDepth;
 
         private StackOptimizerPass2(Dictionary<LocalSymbol, LocalDefUseInfo> info)
         {
@@ -1749,15 +1741,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
             else
             {
-                var expression = node as BoundExpression;
-                if (expression != null)
-                {
-                    result = VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-                }
-                else
-                {
-                    result = base.Visit(node);
-                }
+                result = base.Visit(node);
             }
 
             _nodeCounter += 1;
@@ -1765,9 +1749,55 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             return result;
         }
 
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
+        public override BoundNode VisitBinaryOperator(BoundBinaryOperator node)
         {
-            return (BoundExpression)base.Visit(node);
+            BoundExpression child = node.Left;
+
+            if (child.Kind != BoundKind.BinaryOperator || child.ConstantValue != null)
+            {
+                return base.VisitBinaryOperator(node);
+            }
+
+            // Do not blow the stack due to a deep recursion on the left.
+            var stack = ArrayBuilder<BoundBinaryOperator>.GetInstance();
+            stack.Push(node);
+
+            BoundBinaryOperator binary = (BoundBinaryOperator)child;
+
+            while (true)
+            {
+                stack.Push(binary);
+                child = binary.Left;
+
+                if (child.Kind != BoundKind.BinaryOperator || child.ConstantValue != null)
+                {
+                    break;
+                }
+
+                binary = (BoundBinaryOperator)child;
+            }
+
+            var left = (BoundExpression)this.Visit(child);
+
+            while (true)
+            {
+                binary = stack.Pop();
+                var right = (BoundExpression)this.Visit(binary.Right);
+                var type = this.VisitType(binary.Type);
+                left = binary.Update(binary.OperatorKind, left, right, binary.ConstantValueOpt, binary.MethodOpt, binary.ResultKind, type);
+
+                if (stack.Count == 0)
+                {
+                    break;
+                }
+
+                _nodeCounter += 1;
+            }
+
+            Debug.Assert((object)binary == node);
+            stack.Free();
+
+            return left;
         }
 
         private static bool IsLastAccess(LocalDefUseInfo locInfo, int counter)

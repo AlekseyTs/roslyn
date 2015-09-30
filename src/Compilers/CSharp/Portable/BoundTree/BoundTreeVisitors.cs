@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using Roslyn.Utilities;
+using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -167,7 +168,19 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             public void AddAnError(DiagnosticBag diagnostics)
             {
-                diagnostics.Add(ErrorCode.ERR_InsufficientStack, Node.Syntax.GetFirstToken().GetLocation());
+                diagnostics.Add(ErrorCode.ERR_InsufficientStack, GetTooLongOrComplexExpressionErrorLocation(Node));
+            }
+
+            public static Location GetTooLongOrComplexExpressionErrorLocation(BoundNode node)
+            {
+                SyntaxNode syntax = node.Syntax;
+
+                if (!(syntax is ExpressionSyntax))
+                {
+                    syntax = syntax.DescendantNodes(n => !(n is ExpressionSyntax)).OfType<ExpressionSyntax>().FirstOrDefault() ?? syntax;
+                }
+
+                return syntax.GetFirstToken().GetLocation();
             }
         }
 
@@ -217,60 +230,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        protected virtual BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            throw ExceptionUtilities.Unreachable;
-        }
-
         /// <summary>
-        /// Consumers must provide implementation for <see cref="VisitWithoutStackGuard"/>.
+        /// We should be intentional about behavior of derived classes regarding guarding against stack overflow.
         /// </summary>
-        protected BoundNode VisitWithStackGuard(ref int recursionDepth, BoundNode node)
-        {
-            if (node == null)
-            {
-                return null;
-            }
-
-            BoundNode result;
-            recursionDepth++;
-#if DEBUG
-            int saveRecursionDepth = recursionDepth;
-#endif
-
-            if (recursionDepth > 1 || !ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException())
-            {
-                StackGuard.EnsureSufficientExecutionStack(recursionDepth);
-
-                result = VisitWithoutStackGuard(node);
-            }
-            else
-            {
-                result = VisitWithStackGuard(node);
-            }
-
-#if DEBUG
-            Debug.Assert(saveRecursionDepth == recursionDepth);
-#endif
-            recursionDepth--;
-            return result;
-        }
-
-        private BoundNode VisitWithStackGuard(BoundNode node)
-        {
-            try
-            {
-                return VisitWithoutStackGuard(node);
-            }
-            catch (Exception ex) when (StackGuard.IsInsufficientExecutionStackException(ex))
-            {
-                throw new CancelledByStackGuardException(ex, node);
-            }
-        }
-
-        protected virtual BoundNode VisitWithoutStackGuard(BoundNode node)
-        {
-            throw ExceptionUtilities.Unreachable;
-        }
+        protected abstract BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node);
     }
 }

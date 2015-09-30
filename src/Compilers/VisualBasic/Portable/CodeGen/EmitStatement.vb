@@ -655,7 +655,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 Debug.Assert(_recursionDepth = 1)
 
             Catch ex As Exception When StackGuard.IsInsufficientExecutionStackException(ex)
-                _diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression, condition.Syntax.GetFirstToken().GetLocation())
+                _diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression,
+                                 BoundTreeVisitor.CancelledByStackGuardException.GetTooLongOrComplexExpressionErrorLocation(condition))
                 Throw New EmitCancelledException()
             End Try
         End Sub
@@ -859,7 +860,9 @@ OtherExpressions:
         ''' <summary>
         ''' tells if given node contains a label statement that defines given label symbol
         ''' </summary>
-        Private Class LabelFinder : Inherits BoundTreeWalker
+        Private Class LabelFinder
+            Inherits StatementWalker
+
             Private ReadOnly _label As LabelSymbol
             Private _found As Boolean = False
 
@@ -868,7 +871,7 @@ OtherExpressions:
             End Sub
 
             Public Overrides Function Visit(node As BoundNode) As BoundNode
-                If Not _found Then
+                If Not _found AndAlso TypeOf node IsNot BoundExpression Then
                     Return MyBase.Visit(node)
                 End If
 

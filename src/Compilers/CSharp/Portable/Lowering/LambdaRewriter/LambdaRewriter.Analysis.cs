@@ -16,7 +16,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// Perform a first analysis pass in preparation for removing all lambdas from a method body.  The entry point is Analyze.
         /// The results of analysis are placed in the fields seenLambda, blockParent, variableBlock, captured, and captures.
         /// </summary>
-        internal sealed class Analysis : BoundTreeWalker
+        internal sealed class Analysis : BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator 
         {
             private readonly MethodSymbol _topLevelMethod;
 
@@ -85,8 +85,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             /// </summary>
             public Dictionary<LambdaSymbol, BoundNode> lambdaScopes;
 
-            private int _recursionDepth;
-
             private Analysis(MethodSymbol method)
             {
                 Debug.Assert((object)method != null);
@@ -115,22 +113,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 Visit(node);
-            }
-
-            public override BoundNode Visit(BoundNode node)
-            {
-                var expression = node as BoundExpression;
-                if (expression != null)
-                {
-                    return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-                }
-
-                return base.Visit(node);
-            }
-
-            protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-            {
-                return (BoundExpression)base.Visit(node);
             }
 
             private static BoundNode FindNodeToAnalyze(BoundNode node)

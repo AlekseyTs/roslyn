@@ -59,7 +59,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 Debug.Assert(_recursionDepth = 1)
 
             Catch ex As Exception When StackGuard.IsInsufficientExecutionStackException(ex)
-                _diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression, expression.Syntax.GetFirstToken().GetLocation())
+                _diagnostics.Add(ERRID.ERR_TooLongOrComplexExpression,
+                                 BoundTreeVisitor.CancelledByStackGuardException.GetTooLongOrComplexExpressionErrorLocation(expression))
                 Throw New EmitCancelledException()
             End Try
         End Sub

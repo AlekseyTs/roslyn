@@ -98,6 +98,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         ''' exposed to public API consumer and disabled when used from command-line compiler. </summary>
         Private ReadOnly _suppressConstantExpressions As Boolean
 
+        Protected _recursionDepth As Integer
+
         ''' <summary>
         ''' Construct an object for outside-region analysis
         ''' </summary>
@@ -655,10 +657,15 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
 
 #Region "Visitors"
 
+        Public NotOverridable Overrides Function Visit(node As BoundNode) As BoundNode
+            Visit(node, dontLeaveRegion:=False)
+            Return Nothing
+        End Function
+
         ''' <summary>
         ''' Visit a node.
         ''' </summary>
-        Protected Overridable Shadows Sub Visit(node As BoundNode, Optional dontLeaveRegion As Boolean = False)
+        Protected Overridable Overloads Sub Visit(node As BoundNode, dontLeaveRegion As Boolean)
             VisitAlways(node, dontLeaveRegion:=dontLeaveRegion)
         End Sub
 
@@ -667,14 +674,14 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         ''' </summary>
         Protected Sub VisitAlways(node As BoundNode, Optional dontLeaveRegion As Boolean = False)
             If Me._firstInRegion Is Nothing Then
-                MyBase.Visit(node)
+                VisitWithStackGuard(node)
             Else
 
                 If node Is Me._firstInRegion AndAlso Me._regionPlace = RegionPlace.Before Then
                     Me.EnterRegion()
                 End If
 
-                MyBase.Visit(node)
+                VisitWithStackGuard(node)
 
                 If Not dontLeaveRegion AndAlso node Is Me._lastInRegion AndAlso IsInside Then
                     Me.LeaveRegion()
@@ -682,6 +689,24 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
 
             End If
         End Sub
+
+        Private Shadows Function VisitWithStackGuard(node As BoundNode) As BoundNode
+            Dim expression = TryCast(node, BoundExpression)
+
+            If expression IsNot Nothing Then
+                Return VisitExpressionWithStackGuard(_recursionDepth, expression)
+            End If
+
+            Return MyBase.Visit(node)
+        End Function
+
+        Protected Overrides Function VisitExpressionWithoutStackGuard(node As BoundExpression) As BoundExpression
+            Return DirectCast(MyBase.Visit(node), BoundExpression)
+        End Function
+
+        Protected Overrides Function ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException() As Boolean
+            Return False ' just let the original exception to bubble up.
+        End Function
 
         Protected Overridable Sub VisitLvalue(node As BoundExpression, Optional dontLeaveRegion As Boolean = False)
             ' NOTE: we can skip checking if Me._firstInRegion is nothing because 'node' is not nothing
@@ -856,8 +881,8 @@ lUnsplitAndFinish:
                 Debug.Assert(Me._lastInRegion IsNot Nothing)
 
                 ' Check if the region defining node is somewhere inside OriginalExpression
-                If BoundNodeFinder.ContainsNode(node.OriginalExpression, Me._firstInRegion) Then
-                    Debug.Assert(BoundNodeFinder.ContainsNode(node.OriginalExpression, Me._lastInRegion))
+                If BoundNodeFinder.ContainsNode(node.OriginalExpression, Me._firstInRegion, _recursionDepth, ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()) Then
+                    Debug.Assert(BoundNodeFinder.ContainsNode(node.OriginalExpression, Me._lastInRegion, _recursionDepth, ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()))
 
                     origExpressionContainsRegion = True
 
@@ -871,7 +896,7 @@ lUnsplitAndFinish:
                         End If
 
                         regionEnclosesInitializers = True
-                        If Me._firstInRegion Is initializerExpr OrElse Not BoundNodeFinder.ContainsNode(Me._firstInRegion, initializerExpr) Then
+                        If Me._firstInRegion Is initializerExpr OrElse Not BoundNodeFinder.ContainsNode(Me._firstInRegion, initializerExpr, _recursionDepth, ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()) Then
                             regionEnclosesInitializers = False
                             Exit For
                         End If
@@ -898,7 +923,7 @@ lUnsplitAndFinish:
 
                     containedByInitializer = False
                     Debug.Assert(initializerExpr IsNot Nothing)
-                    If BoundNodeFinder.ContainsNode(initializerExpr, Me._firstInRegion) Then
+                    If BoundNodeFinder.ContainsNode(initializerExpr, Me._firstInRegion, _recursionDepth, ConvertInsufficientExecutionStackExceptionToCancelledByStackGuardException()) Then
                         Debug.Assert(Not containedByInitializer)
                         containedByInitializer = True
                         Exit For

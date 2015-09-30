@@ -13,20 +13,18 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// Compiles a list of all labels that are targeted by gotos within a
     /// node, but are not declared within the node.
     /// </summary>
-    internal sealed class UnmatchedGotoFinder : BoundTreeWalker
+    internal sealed class UnmatchedGotoFinder : BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
     {
         private readonly Dictionary<BoundNode, HashSet<LabelSymbol>> _unmatchedLabelsCache; // NB: never modified.
 
         private HashSet<LabelSymbol> _gotos;
         private HashSet<LabelSymbol> _targets;
 
-        private int _recursionDepth;
-
         private UnmatchedGotoFinder(Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache, int recursionDepth)
+            : base(recursionDepth)
         {
             Debug.Assert(unmatchedLabelsCache != null);
             _unmatchedLabelsCache = unmatchedLabelsCache;
-            _recursionDepth = recursionDepth;
         }
 
         public static HashSet<LabelSymbol> Find(BoundNode node, Dictionary<BoundNode, HashSet<LabelSymbol>> unmatchedLabelsCache, int recursionDepth)
@@ -58,18 +56,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return null; // Don't visit children.
             }
 
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
             return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         public override BoundNode VisitGotoStatement(BoundGotoStatement node)

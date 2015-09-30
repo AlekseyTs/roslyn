@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
 {
-    internal sealed class CapturedVariableRewriter : BoundTreeRewriter
+    internal sealed class CapturedVariableRewriter : BoundTreeRewriterWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
     {
         internal static BoundNode Rewrite(
             ParameterSymbol targetMethodThisParameter,
@@ -26,7 +26,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         private readonly Conversions _conversions;
         private readonly ImmutableDictionary<string, DisplayClassVariable> _displayClassVariables;
         private readonly DiagnosticBag _diagnostics;
-        private int _recursionDepth;
 
         private CapturedVariableRewriter(
             ParameterSymbol targetMethodThisParameter,
@@ -38,22 +37,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             _conversions = conversions;
             _displayClassVariables = displayClassVariables;
             _diagnostics = diagnostics;
-        }
-
-        public override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         public override BoundNode VisitBlock(BoundBlock node)

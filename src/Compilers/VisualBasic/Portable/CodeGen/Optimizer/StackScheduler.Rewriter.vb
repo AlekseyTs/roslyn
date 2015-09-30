@@ -21,7 +21,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
         ''' 
         ''' </summary>
         Private NotInheritable Class Rewriter
-            Inherits BoundTreeRewriter
+            Inherits BoundTreeRewriterWithStackGuard
 
             Private _nodeCounter As Integer = 0
             Private ReadOnly _info As Dictionary(Of LocalSymbol, LocalDefUseInfo) = Nothing

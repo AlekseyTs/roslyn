@@ -1631,7 +1631,11 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Debug.Assert(method.IsFromCompilation(compilationState.Compilation))
             If Not method.IsShared AndAlso compilationState.InitializeComponentOpt IsNot Nothing AndAlso
                Not method.IsImplicitlyDeclared Then
-                InitializeComponentCallTreeBuilder.CollectCallees(compilationState, method, body)
+                Try
+                    InitializeComponentCallTreeBuilder.CollectCallees(compilationState, method, body)
+                Catch ex As BoundTreeVisitor.CancelledByStackGuardException
+                    ex.AddAnError(diagnostics)
+                End Try
             End If
 
             '  Instance constructor should return the referenced constructor in 'referencedConstructor'
@@ -1673,8 +1677,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Return body
         End Function
 
-        Private Class InitializeComponentCallTreeBuilder
-            Inherits BoundTreeWalker
+        Private NotInheritable Class InitializeComponentCallTreeBuilder
+            Inherits BoundTreeWalkerWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
 
             Private _calledMethods As HashSet(Of MethodSymbol)
             Private ReadOnly _containingType As NamedTypeSymbol

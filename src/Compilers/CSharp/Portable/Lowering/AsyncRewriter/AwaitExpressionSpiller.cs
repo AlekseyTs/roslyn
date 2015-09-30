@@ -12,34 +12,17 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    internal sealed class AwaitExpressionSpiller : BoundTreeRewriter
+    internal sealed class AwaitExpressionSpiller : BoundTreeRewriterWithStackGuard
     {
         private const BoundKind SpillSequenceBuilder = BoundKind.SequencePoint; // NOTE: this bound kind is hijacked during this phase to represent BoundSpillSequenceBuilder
 
         private readonly SyntheticBoundNodeFactory _F;
         private readonly PooledDictionary<LocalSymbol, LocalSymbol> _tempSubstitution;
-        private int _recursionDepth;
 
         private AwaitExpressionSpiller(MethodSymbol method, CSharpSyntaxNode syntaxNode, TypeCompilationState compilationState, PooledDictionary<LocalSymbol, LocalSymbol> tempSubstitution, DiagnosticBag diagnostics)
         {
             _F = new SyntheticBoundNodeFactory(method, syntaxNode, compilationState, diagnostics);
             _tempSubstitution = tempSubstitution;
-        }
-
-        public override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         private sealed class BoundSpillSequenceBuilder : BoundExpression
@@ -201,25 +184,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 #endif
         }
 
-        private sealed class LocalSubstituter : BoundTreeRewriter
+        private sealed class LocalSubstituter : BoundTreeRewriterWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
         {
             private readonly PooledDictionary<LocalSymbol, LocalSymbol> _tempSubstitution;
-            private int _recursionDepth;
 
             public LocalSubstituter(PooledDictionary<LocalSymbol, LocalSymbol> tempSubstitution, int recursionDepth)
+                : base(recursionDepth)
             {
                 _tempSubstitution = tempSubstitution;
-                _recursionDepth = recursionDepth;
-            }
-
-            public override BoundNode Visit(BoundNode node)
-            {
-                return VisitWithStackGuard(ref _recursionDepth, node);
-            }
-
-            protected override BoundNode VisitWithoutStackGuard(BoundNode node)
-            {
-                return base.Visit(node);
             }
 
             public override BoundNode VisitLocal(BoundLocal node)
@@ -330,7 +302,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 builder.AddStatement(statement);
             }
 
-            var substituterOpt = (substituteTemps && _tempSubstitution.Count > 0) ? new LocalSubstituter(_tempSubstitution, _recursionDepth) : null;
+            var substituterOpt = (substituteTemps && _tempSubstitution.Count > 0) ? new LocalSubstituter(_tempSubstitution, RecursionDepth) : null;
             var result = _F.Block(builder.GetLocals(), builder.GetStatements(substituterOpt));
 
             builder.Free();
@@ -991,7 +963,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (node.Type.SpecialType == SpecialType.System_Void)
             {
                 var whenNotNullStatement = UpdateStatement(whenNotNullBuilder, _F.ExpressionStatement(whenNotNull), substituteTemps: false);
-                whenNotNullStatement = ConditionalReceiverReplacer.Replace(whenNotNullStatement, receiver, node.Id, _recursionDepth);
+                whenNotNullStatement = ConditionalReceiverReplacer.Replace(whenNotNullStatement, receiver, node.Id, RecursionDepth);
 
                 Debug.Assert(whenNullOpt == null || !LocalRewriter.ReadIsSideeffecting(whenNullOpt));
 
@@ -1004,7 +976,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Debug.Assert(_F.Syntax.IsKind(SyntaxKind.AwaitExpression));
                 var tmp = _F.SynthesizedLocal(node.Type, kind: SynthesizedLocalKind.AwaitSpill, syntax: _F.Syntax);
                 var whenNotNullStatement = UpdateStatement(whenNotNullBuilder, _F.Assignment(_F.Local(tmp), whenNotNull), substituteTemps: false);
-                whenNotNullStatement = ConditionalReceiverReplacer.Replace(whenNotNullStatement, receiver, node.Id, _recursionDepth);
+                whenNotNullStatement = ConditionalReceiverReplacer.Replace(whenNotNullStatement, receiver, node.Id, RecursionDepth);
 
                 whenNullOpt = whenNullOpt ?? _F.Default(node.Type);
 
@@ -1018,11 +990,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private sealed class ConditionalReceiverReplacer : BoundTreeRewriter
+        private sealed class ConditionalReceiverReplacer : BoundTreeRewriterWithStackGuardWithoutRecursionOnTheLeftOfBinaryOperator
         {
             private readonly BoundExpression _receiver;
             private readonly int _receiverId;
-            private int _recursionDepth;
 
 #if DEBUG
             // we must replace exactly one node
@@ -1030,20 +1001,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 #endif
 
             private ConditionalReceiverReplacer(BoundExpression receiver, int receiverId, int recursionDepth)
+                : base(recursionDepth)
             {
                 _receiver = receiver;
                 _receiverId = receiverId;
-                _recursionDepth = recursionDepth;
-            }
-
-            public override BoundNode Visit(BoundNode node)
-            {
-                 return VisitWithStackGuard(ref _recursionDepth, node);
-            }
-
-            protected override BoundNode VisitWithoutStackGuard(BoundNode node)
-            {
-                return base.Visit(node);
             }
 
             public static BoundStatement Replace(BoundNode node, BoundExpression receiver, int receiverID, int recursionDepth)

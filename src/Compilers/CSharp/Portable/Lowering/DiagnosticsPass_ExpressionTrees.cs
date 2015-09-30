@@ -13,14 +13,13 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// This part of the partial class focuses on features that cannot be used in expression trees.
     /// CAVEAT: Errors may be produced for ObsoleteAttribute, but such errors don't affect lambda convertibility.
     /// </summary>
-    internal sealed partial class DiagnosticsPass : BoundTreeWalker
+    internal sealed partial class DiagnosticsPass
     {
         private readonly DiagnosticBag _diagnostics;
         private readonly CSharpCompilation _compilation;
         private bool _inExpressionLambda;
         private bool _reportedUnsafe;
         private readonly MethodSymbol _containingSymbol;
-        private int _recursionDepth;
 
         public static void IssueDiagnostics(CSharpCompilation compilation, BoundNode node, DiagnosticBag diagnostics, MethodSymbol containingSymbol)
         {
@@ -46,22 +45,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             _compilation = compilation;
             _diagnostics = diagnostics;
             _containingSymbol = containingSymbol;
-        }
-
-        public override BoundNode Visit(BoundNode node)
-        {
-            var expression = node as BoundExpression;
-            if (expression != null)
-            {
-                return VisitExpressionWithStackGuard(ref _recursionDepth, expression);
-            }
-
-            return base.Visit(node);
-        }
-
-        protected override BoundExpression VisitExpressionWithoutStackGuard(BoundExpression node)
-        {
-            return (BoundExpression)base.Visit(node);
         }
 
         private void Error(ErrorCode code, BoundNode node, params object[] args)
