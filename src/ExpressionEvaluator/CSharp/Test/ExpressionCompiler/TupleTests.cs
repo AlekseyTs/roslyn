@@ -29,8 +29,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.UnitTests
         (int, int) o;
     }
 }";
-            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef }, options: TestOptions.DebugDll);
-            WithRuntimeInstance(comp, runtime =>
+            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef, SystemRuntimeFacadeRef }, options: TestOptions.DebugDll);
+            WithRuntimeInstance(comp, new[] { ValueTupleRef, SystemRuntimeFacadeRef, MscorlibRef }, runtime =>
             {
                 var context = CreateMethodContext(runtime, "C.M");
                 var testData = new CompilationTestData();
@@ -123,8 +123,8 @@ class C
         (int A\u1234, int \u1234B) o = (1, 2);
     }
 }";
-            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef }, options: TestOptions.DebugDll);
-            WithRuntimeInstance(comp, runtime =>
+            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef, SystemRuntimeFacadeRef }, options: TestOptions.DebugDll);
+            WithRuntimeInstance(comp, new[] { ValueTupleRef, SystemRuntimeFacadeRef, MscorlibRef }, runtime =>
             {
                 var context = CreateMethodContext(runtime, "C.M");
                 var testData = new CompilationTestData();
@@ -171,8 +171,8 @@ class C
         const A<(int, int A)>.B<(object B, object)>[] c = null;
     }
 }";
-            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef }, options: TestOptions.DebugDll);
-            WithRuntimeInstance(comp, runtime =>
+            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef, SystemRuntimeFacadeRef }, options: TestOptions.DebugDll);
+            WithRuntimeInstance(comp, new[] { ValueTupleRef, SystemRuntimeFacadeRef, MscorlibRef }, runtime =>
             {
                 var context = CreateMethodContext(runtime, "C.M");
                 var testData = new CompilationTestData();
@@ -213,8 +213,8 @@ class C
         var x = (1, 2);
     }
 }";
-            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef }, options: TestOptions.DebugDll);
-            WithRuntimeInstance(comp, runtime =>
+            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef, SystemRuntimeFacadeRef }, options: TestOptions.DebugDll);
+            WithRuntimeInstance(comp, new[] { ValueTupleRef, SystemRuntimeFacadeRef, MscorlibRef }, runtime =>
             {
                 var context = CreateMethodContext(runtime, "C.M");
                 var testData = new CompilationTestData();
@@ -279,8 +279,8 @@ class C
     {
     }
 }";
-            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef }, options: TestOptions.DebugDll);
-            WithRuntimeInstance(comp, runtime =>
+            var comp = CreateCompilationWithMscorlib(source, new[] { ValueTupleRef, SystemRuntimeFacadeRef }, options: TestOptions.DebugDll);
+            WithRuntimeInstance(comp, new[] { ValueTupleRef, SystemRuntimeFacadeRef, MscorlibRef }, runtime =>
             {
                 var context = CreateMethodContext(
                     runtime,
