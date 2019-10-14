@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.Metadata.Tools;
 using Roslyn.Utilities;
 using Cci = Microsoft.Cci;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Roslyn.Test.Utilities
 {
@@ -59,7 +60,7 @@ namespace Roslyn.Test.Utilities
             }
 
             Cci.IReference reference = _tokenDeferral.GetReferenceFromToken(token);
-            ISymbol symbol = reference as ISymbol;
+            ISymbol symbol = (reference as ISymbolInternal)?.GetISymbol();
             return string.Format("\"{0}\"", symbol == null ? (object)reference : symbol.ToDisplayString(SymbolDisplayFormat.ILVisualizationFormat));
         }
 

@@ -151,7 +151,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             var model = compilation.GetSemanticModel(tree);
             IdentifierNameSyntax syntaxToBind = GetSyntaxNodeOfTypeForBinding<IdentifierNameSyntax>(GetSyntaxNodeList(tree));
 
-            return (AliasSymbol)model.GetAliasInfo(syntaxToBind);
+            return model.GetAliasInfo(syntaxToBind).GetSymbol<AliasSymbol>();
         }
 
         protected CompilationUtils.SemanticInfoSummary GetSemanticInfoForTest(string testSrc)

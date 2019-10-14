@@ -12,7 +12,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// <summary>
     /// Represents a field in a class, struct or enum
     /// </summary>
-    internal abstract partial class FieldSymbol : Symbol, IFieldSymbol
+    internal abstract partial class FieldSymbol : Symbol
     {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Changes to the public interface of this class should remain synchronized with the VB version.
@@ -436,6 +436,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+
+        /// <summary>
+        /// Returns true if a given field is a tuple element
+        /// </summary>
+        internal bool IsTupleElement()
+        {
+            return this.CorrespondingTupleField is object;
+        }
+
+
         /// <summary>
         /// If this is a field representing a tuple element,
         /// returns the index of the element (zero-based).
@@ -449,55 +459,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        #region IFieldSymbol Members
-
-        ISymbol IFieldSymbol.AssociatedSymbol
+        protected override ISymbol CreateISymbol()
         {
-            get
-            {
-                return this.AssociatedSymbol;
-            }
+            return new PublicModel.FieldSymbol(this);
         }
-
-        ITypeSymbol IFieldSymbol.Type
-        {
-            get
-            {
-                return this.Type;
-            }
-        }
-
-        CodeAnalysis.NullableAnnotation IFieldSymbol.NullableAnnotation => TypeWithAnnotations.ToPublicAnnotation();
-
-        ImmutableArray<CustomModifier> IFieldSymbol.CustomModifiers
-        {
-            get { return this.TypeWithAnnotations.CustomModifiers; }
-        }
-
-        IFieldSymbol IFieldSymbol.OriginalDefinition
-        {
-            get { return this.OriginalDefinition; }
-        }
-
-        IFieldSymbol IFieldSymbol.CorrespondingTupleField
-        {
-            get { return this.CorrespondingTupleField; }
-        }
-
-        #endregion
-
-        #region ISymbol Members
-
-        public override void Accept(SymbolVisitor visitor)
-        {
-            visitor.VisitField(this);
-        }
-
-        public override TResult Accept<TResult>(SymbolVisitor<TResult> visitor)
-        {
-            return visitor.VisitField(this);
-        }
-
-        #endregion
     }
 }

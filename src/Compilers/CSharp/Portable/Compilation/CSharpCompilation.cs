@@ -240,15 +240,15 @@ namespace Microsoft.CodeAnalysis.CSharp
         protected override INamedTypeSymbol CommonCreateErrorTypeSymbol(INamespaceOrTypeSymbol container, string name, int arity)
         {
             return new ExtendedErrorTypeSymbol(
-                       container.EnsureCSharpSymbolOrNull<INamespaceOrTypeSymbol, NamespaceOrTypeSymbol>(nameof(container)),
-                       name, arity, errorInfo: null);
+                       container.EnsureCSharpSymbolOrNull<INamespaceOrTypeSymbol, Symbols.PublicModel.NamespaceOrTypeSymbol>(nameof(container))?.UnderlyingNamespaceOrTypeSymbol,
+                       name, arity, errorInfo: null).GetPublicSymbol<INamedTypeSymbol>();
         }
 
         protected override INamespaceSymbol CommonCreateErrorNamespaceSymbol(INamespaceSymbol container, string name)
         {
             return new MissingNamespaceSymbol(
-                       container.EnsureCSharpSymbolOrNull<INamespaceSymbol, NamespaceSymbol>(nameof(container)),
-                       name);
+                       container.EnsureCSharpSymbolOrNull<INamespaceSymbol, Symbols.PublicModel.NamespaceSymbol>(nameof(container))?.UnderlyingNamespaceSymbol,
+                       name).GetPublicSymbol<INamespaceSymbol>();
         }
 
         #region Constructors and Factories
@@ -429,7 +429,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (EventQueue != null) EventQueue.TryEnqueue(new CompilationStartedEvent(this));
         }
 
-        internal override void ValidateDebugEntryPoint(IMethodSymbol debugEntryPoint, DiagnosticBag diagnostics)
+        internal override void ValidateDebugEntryPoint(IMethodSymbolInternal debugEntryPoint, DiagnosticBag diagnostics)
         {
             Debug.Assert(debugEntryPoint != null);
 
@@ -1116,6 +1116,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.GetMetadataReference(assemblySymbol);
         }
 
+        private protected override MetadataReference CommonGetMetadataReference(IAssemblySymbol assemblySymbol)
+        {
+            return GetMetadataReference(assemblySymbol.EnsureCSharpSymbolOrNull<IAssemblySymbol, Symbols.PublicModel.AssemblySymbol>(nameof(assemblySymbol))?.UnderlyingAssemblySymbol);
+        }
+
+        internal MetadataReference GetMetadataReference(AssemblySymbol assemblySymbol)
+        {
+            return GetBoundReferenceManager().GetMetadataReference(assemblySymbol);
+        }
+
         #endregion
 
         #region Symbols
@@ -1195,11 +1205,11 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal new NamespaceSymbol GetCompilationNamespace(INamespaceSymbol namespaceSymbol)
         {
-            if (namespaceSymbol is NamespaceSymbol &&
+            if (namespaceSymbol is Symbols.PublicModel.NamespaceSymbol n &&
                 namespaceSymbol.NamespaceKind == NamespaceKind.Compilation &&
                 namespaceSymbol.ContainingCompilation == this)
             {
-                return (NamespaceSymbol)namespaceSymbol;
+                return n.UnderlyingNamespaceSymbol;
             }
 
             var containingNamespace = namespaceSymbol.ContainingNamespace;
@@ -1273,7 +1283,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <returns>The Script class symbol or null if it is not defined.</returns>
         private ImplicitNamedTypeSymbol BindScriptClass()
         {
-            return (ImplicitNamedTypeSymbol)CommonBindScriptClass();
+            return (ImplicitNamedTypeSymbol)((Symbols.PublicModel.NamedTypeSymbol)CommonBindScriptClass())?.UnderlyingNamedTypeSymbol;
         }
 
         internal bool IsSubmissionSyntaxTree(SyntaxTree tree)
@@ -1369,7 +1379,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return Assembly.GetSpecialTypeMember(specialMember);
         }
 
-        internal override ISymbol CommonGetSpecialTypeMember(SpecialMember specialMember)
+        internal override ISymbolInternal CommonGetSpecialTypeMember(SpecialMember specialMember)
         {
             return GetSpecialTypeMember(specialMember);
         }
@@ -1547,7 +1557,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     AddEntryPointCandidates(
                         entryPointCandidates,
-                        this.GetSymbolsWithName(WellKnownMemberNames.EntryPointMethodName, SymbolFilter.Member, cancellationToken));
+                        this.GetSymbolsWithName(WellKnownMemberNames.EntryPointMethodName, SymbolFilter.Member, cancellationToken).Select(s => ((Symbols.PublicModel.Symbol)s).UnderlyingSymbol));
 
                     // Global code is the entry point, ignore all other Mains.
                     var scriptClass = this.ScriptClass;
@@ -1697,7 +1707,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private static void AddEntryPointCandidates(
-            ArrayBuilder<MethodSymbol> entryPointCandidates, IEnumerable<ISymbol> members)
+            ArrayBuilder<MethodSymbol> entryPointCandidates, IEnumerable<Symbol> members)
         {
             foreach (var member in members)
             {
@@ -1837,8 +1847,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 throw new ArgumentNullException(nameof(destination));
             }
 
-            var cssource = source.EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>(nameof(source));
-            var csdest = destination.EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>(nameof(destination));
+            var cssource = source.EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>(nameof(source))?.UnderlyingTypeSymbol;
+            var csdest = destination.EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>(nameof(destination))?.UnderlyingTypeSymbol;
 
             HashSet<DiagnosticInfo> useSiteDiagnostics = null;
             return Conversions.ClassifyConversionFromType(cssource, csdest, ref useSiteDiagnostics);
@@ -1911,14 +1921,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Returns a new PointerTypeSymbol representing a pointer type tied to a type in this Compilation.
         /// </summary>
-        internal PointerTypeSymbol CreatePointerTypeSymbol(TypeSymbol elementType)
+        internal PointerTypeSymbol CreatePointerTypeSymbol(TypeSymbol elementType, NullableAnnotation elementNullableAnnotation = NullableAnnotation.Oblivious)
         {
             if ((object)elementType == null)
             {
                 throw new ArgumentNullException(nameof(elementType));
             }
 
-            return new PointerTypeSymbol(TypeWithAnnotations.Create(elementType));
+            return new PointerTypeSymbol(TypeWithAnnotations.Create(elementType, elementNullableAnnotation));
         }
 
         private protected override bool IsSymbolAccessibleWithinCore(
@@ -1926,9 +1936,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             ISymbol within,
             ITypeSymbol throughType)
         {
-            var symbol0 = symbol.EnsureCSharpSymbolOrNull<ISymbol, Symbol>(nameof(symbol));
-            var within0 = within.EnsureCSharpSymbolOrNull<ISymbol, Symbol>(nameof(within));
-            var throughType0 = throughType.EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>(nameof(throughType));
+            var symbol0 = symbol.EnsureCSharpSymbolOrNull<ISymbol, Symbols.PublicModel.Symbol>(nameof(symbol))?.UnderlyingSymbol;
+            var within0 = within.EnsureCSharpSymbolOrNull<ISymbol, Symbols.PublicModel.Symbol>(nameof(within))?.UnderlyingSymbol;
+            var throughType0 = throughType.EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>(nameof(throughType))?.UnderlyingTypeSymbol;
             HashSet<DiagnosticInfo> useSiteDiagnostics = null;
             return
                 within0.Kind == SymbolKind.Assembly ?
@@ -2591,7 +2601,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal override CommonPEModuleBuilder CreateModuleBuilder(
             EmitOptions emitOptions,
-            IMethodSymbol debugEntryPoint,
+            IMethodSymbolInternal debugEntryPoint,
             Stream sourceLinkStream,
             IEnumerable<EmbeddedText> embeddedTexts,
             IEnumerable<ResourceDescription> manifestResources,
@@ -2636,7 +2646,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (debugEntryPoint != null)
             {
-                moduleBeingBuilt.SetDebugEntryPoint((MethodSymbol)debugEntryPoint, diagnostics);
+                moduleBeingBuilt.SetDebugEntryPoint(debugEntryPoint, diagnostics);
             }
 
             moduleBeingBuilt.SourceLinkStreamOpt = sourceLinkStream;
@@ -2662,7 +2672,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool emitMetadataOnly,
             bool emitTestCoverageData,
             DiagnosticBag diagnostics,
-            Predicate<ISymbol> filterOpt,
+            Predicate<ISymbolInternal> filterOpt,
             CancellationToken cancellationToken)
         {
             // The diagnostics should include syntax and declaration errors. We insert these before calling Emitter.Emit, so that the emitter
@@ -2976,12 +2986,12 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override IAssemblySymbol CommonAssembly
         {
-            get { return this.Assembly; }
+            get { return this.Assembly.GetPublicSymbol<IAssemblySymbol>(); }
         }
 
         protected override INamespaceSymbol CommonGlobalNamespace
         {
-            get { return this.GlobalNamespace; }
+            get { return this.GlobalNamespace.GetPublicSymbol<INamespaceSymbol>(); }
         }
 
         protected override CompilationOptions CommonOptions
@@ -3039,7 +3049,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override ISymbol CommonGetAssemblyOrModuleSymbol(MetadataReference reference)
         {
-            return this.GetAssemblyOrModuleSymbol(reference);
+            return this.GetAssemblyOrModuleSymbol(reference).GetPublicSymbol<ISymbol>();
         }
 
         protected override Compilation CommonClone()
@@ -3049,37 +3059,37 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override IModuleSymbol CommonSourceModule
         {
-            get { return this.SourceModule; }
+            get { return this.SourceModule.GetPublicSymbol<IModuleSymbol>(); }
         }
 
-        protected override INamedTypeSymbol CommonGetSpecialType(SpecialType specialType)
+        private protected override INamedTypeSymbolInternal CommonGetSpecialType(SpecialType specialType)
         {
             return this.GetSpecialType(specialType);
         }
 
         protected override INamespaceSymbol CommonGetCompilationNamespace(INamespaceSymbol namespaceSymbol)
         {
-            return this.GetCompilationNamespace(namespaceSymbol);
+            return this.GetCompilationNamespace(namespaceSymbol).GetPublicSymbol<INamespaceSymbol>();
         }
 
         protected override INamedTypeSymbol CommonGetTypeByMetadataName(string metadataName)
         {
-            return this.GetTypeByMetadataName(metadataName);
+            return this.GetTypeByMetadataName(metadataName).GetPublicSymbol<INamedTypeSymbol>();
         }
 
         protected override INamedTypeSymbol CommonScriptClass
         {
-            get { return this.ScriptClass; }
+            get { return this.ScriptClass.GetPublicSymbol<INamedTypeSymbol>(); }
         }
 
         protected override IArrayTypeSymbol CommonCreateArrayTypeSymbol(ITypeSymbol elementType, int rank, CodeAnalysis.NullableAnnotation elementNullableAnnotation)
         {
-            return CreateArrayTypeSymbol(elementType.EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>(nameof(elementType)), rank, elementNullableAnnotation.ToInternalAnnotation());
+            return CreateArrayTypeSymbol(elementType.EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>(nameof(elementType))?.UnderlyingTypeSymbol, rank, elementNullableAnnotation.ToInternalAnnotation()).GetPublicSymbol<IArrayTypeSymbol>();
         }
 
         protected override IPointerTypeSymbol CommonCreatePointerTypeSymbol(ITypeSymbol elementType)
         {
-            return CreatePointerTypeSymbol(elementType.EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>(nameof(elementType)));
+            return CreatePointerTypeSymbol(elementType.EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>(nameof(elementType))?.UnderlyingTypeSymbol, elementType.NullableAnnotation.ToInternalAnnotation()).GetPublicSymbol<IPointerTypeSymbol>();
         }
 
         protected override INamedTypeSymbol CommonCreateTupleTypeSymbol(
@@ -3091,7 +3101,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             var typesBuilder = ArrayBuilder<TypeWithAnnotations>.GetInstance(elementTypes.Length);
             for (int i = 0; i < elementTypes.Length; i++)
             {
-                var elementType = elementTypes[i].EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>($"{nameof(elementTypes)}[{i}]");
+                var elementType = elementTypes[i].EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>($"{nameof(elementTypes)}[{i}]")?.UnderlyingTypeSymbol;
                 var annotation = elementNullableAnnotations.IsDefault ? NullableAnnotation.Oblivious : elementNullableAnnotations[i].ToInternalAnnotation();
                 typesBuilder.Add(TypeWithAnnotations.Create(elementType, annotation));
             }
@@ -3104,7 +3114,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 compilation: this,
                 shouldCheckConstraints: false,
                 includeNullability: false,
-                errorPositions: default(ImmutableArray<bool>));
+                errorPositions: default(ImmutableArray<bool>)).GetPublicSymbol<INamedTypeSymbol>();
         }
 
         protected override INamedTypeSymbol CommonCreateTupleTypeSymbol(
@@ -3113,7 +3123,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<Location> elementLocations,
             ImmutableArray<CodeAnalysis.NullableAnnotation> elementNullableAnnotations)
         {
-            var csharpUnderlyingTuple = underlyingType.EnsureCSharpSymbolOrNull<INamedTypeSymbol, NamedTypeSymbol>(nameof(underlyingType));
+            var csharpUnderlyingTuple = underlyingType.EnsureCSharpSymbolOrNull<INamedTypeSymbol, Symbols.PublicModel.NamedTypeSymbol>(nameof(underlyingType))?.UnderlyingNamedTypeSymbol;
 
             int cardinality;
             if (!csharpUnderlyingTuple.IsTupleCompatible(out cardinality))
@@ -3134,7 +3144,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         elementNullableAnnotations,
                         (t, a) => TypeWithAnnotations.Create(t.Type, a.ToInternalAnnotation())));
             }
-            return tupleType;
+            return tupleType.GetPublicSymbol<INamedTypeSymbol>();
         }
 
         protected override INamedTypeSymbol CommonCreateAnonymousTypeSymbol(
@@ -3146,7 +3156,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             for (int i = 0, n = memberTypes.Length; i < n; i++)
             {
-                memberTypes[i].EnsureCSharpSymbolOrNull<ITypeSymbol, TypeSymbol>($"{nameof(memberTypes)}[{i}]");
+                memberTypes[i].EnsureCSharpSymbolOrNull<ITypeSymbol, Symbols.PublicModel.TypeSymbol>($"{nameof(memberTypes)}[{i}]");
             }
 
             if (!memberIsReadOnly.IsDefault && memberIsReadOnly.Any(v => !v))
@@ -3158,31 +3168,31 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             for (int i = 0, n = memberTypes.Length; i < n; i++)
             {
-                var type = memberTypes[i];
+                var type = memberTypes[i].GetSymbol<TypeSymbol>();
                 var name = memberNames[i];
                 var location = memberLocations.IsDefault ? Location.None : memberLocations[i];
                 var nullableAnnotation = memberNullableAnnotations.IsDefault ? NullableAnnotation.Oblivious : memberNullableAnnotations[i].ToInternalAnnotation();
-                fields.Add(new AnonymousTypeField(name, location, TypeWithAnnotations.Create((TypeSymbol)type, nullableAnnotation)));
+                fields.Add(new AnonymousTypeField(name, location, TypeWithAnnotations.Create(type, nullableAnnotation)));
             }
 
             var descriptor = new AnonymousTypeDescriptor(fields.ToImmutableAndFree(), Location.None);
 
-            return this.AnonymousTypeManager.ConstructAnonymousTypeSymbol(descriptor);
+            return this.AnonymousTypeManager.ConstructAnonymousTypeSymbol(descriptor).GetPublicSymbol<INamedTypeSymbol>();
         }
 
         protected override ITypeSymbol CommonDynamicType
         {
-            get { return DynamicType; }
+            get { return DynamicType.GetPublicSymbol<ITypeSymbol>(); }
         }
 
         protected override INamedTypeSymbol CommonObjectType
         {
-            get { return this.ObjectType; }
+            get { return this.ObjectType.GetPublicSymbol<INamedTypeSymbol>(); }
         }
 
         protected override IMethodSymbol CommonGetEntryPoint(CancellationToken cancellationToken)
         {
-            return this.GetEntryPoint(cancellationToken);
+            return this.GetEntryPoint(cancellationToken).GetPublicSymbol<IMethodSymbol>();
         }
 
         internal override int CompareSourceLocations(Location loc1, Location loc2)
@@ -3386,7 +3396,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal void SymbolDeclaredEvent(Symbol symbol)
         {
-            EventQueue?.TryEnqueue(new SymbolDeclaredCompilationEvent(this, symbol));
+            EventQueue?.TryEnqueue(new SymbolDeclaredCompilationEvent(this, symbol.GetPublicSymbol<ISymbol>()));
         }
 
         /// <summary>
@@ -3457,7 +3467,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         var symbol = GetSymbol(container, current);
                         if (symbol != null)
                         {
-                            set.Add(symbol);
+                            set.Add(symbol.GetPublicSymbol<ISymbol>());
                         }
                     }
                 }
@@ -3469,7 +3479,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         var symbol = GetSymbol(container, current);
                         if (symbol != null)
                         {
-                            set.Add(symbol);
+                            set.Add(symbol.GetPublicSymbol<ISymbol>());
                         }
                     }
 
@@ -3515,7 +3525,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             (member.CanBeReferencedByName || member.IsExplicitInterfaceImplementation() || member.IsIndexer()) &&
                             Matches(member.Name))
                         {
-                            set.Add(member);
+                            set.Add(member.GetPublicSymbol<ISymbol>());
                         }
                     }
                 }

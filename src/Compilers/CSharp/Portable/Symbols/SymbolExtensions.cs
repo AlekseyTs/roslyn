@@ -335,7 +335,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal static TDestination EnsureCSharpSymbolOrNull<TSource, TDestination>(this TSource symbol, string paramName)
             where TSource : ISymbol
-            where TDestination : Symbol, TSource
+            where TDestination : Symbols.PublicModel.Symbol, TSource
         {
             var csSymbol = symbol as TDestination;
 
@@ -422,6 +422,32 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 SymbolKind.Event => ((EventSymbol)symbol).RequiresInstanceReceiver,
                 _ => throw new ArgumentException("only methods, properties, fields and events can take a receiver", nameof(symbol)),
             };
+        }
+
+        internal static ImmutableArray<TISymbol> GetPublicSymbols<TSymbol, TISymbol>(this ImmutableArray<TSymbol> symbols) where TISymbol : ISymbol where TSymbol : Symbol
+        {
+            return symbols.SelectAsArray(s => s.GetPublicSymbol<TISymbol>());
+        }
+
+
+        internal static TISymbol GetPublicSymbol<TISymbol>(this Symbol symbolOpt) where TISymbol : ISymbol
+        {
+            return (TISymbol)symbolOpt?.ISymbol;
+        }
+
+        internal static ISymbol GetPublicSymbol(this Symbol symbolOpt)
+        {
+            return symbolOpt.GetPublicSymbol<ISymbol>();
+        }
+
+        internal static TSymbol GetSymbol<TSymbol>(this ISymbol symbolOpt) where TSymbol : Symbol
+        {
+            return (TSymbol)((PublicModel.Symbol)symbolOpt)?.UnderlyingSymbol;
+        }
+
+        internal static Symbol GetSymbol(this ISymbol symbolOpt)
+        {
+            return symbolOpt.GetSymbol<Symbol>();
         }
     }
 }
