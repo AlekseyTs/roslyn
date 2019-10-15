@@ -738,8 +738,10 @@ namespace Microsoft.CodeAnalysis
         /// <param name="assemblySymbol">The target symbol.</param>
         public MetadataReference GetMetadataReference(IAssemblySymbol assemblySymbol)
         {
-            return GetBoundReferenceManager().GetMetadataReference(assemblySymbol);
+            return CommonGetMetadataReference(assemblySymbol);
         }
+
+        private protected abstract MetadataReference CommonGetMetadataReference(IAssemblySymbol assemblySymbol);
 
         /// <summary>
         /// Assembly identities of all assemblies directly referenced by this compilation.
@@ -803,30 +805,30 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public INamedTypeSymbol GetSpecialType(SpecialType specialType)
         {
-            return CommonGetSpecialType(specialType);
+            return (INamedTypeSymbol)CommonGetSpecialType(specialType)?.GetITypeSymbol();
         }
 
         /// <summary>
         /// Get the symbol for the predefined type member from the COR Library referenced by this compilation.
         /// </summary>
-        internal abstract ISymbol CommonGetSpecialTypeMember(SpecialMember specialMember);
+        internal abstract ISymbolInternal CommonGetSpecialTypeMember(SpecialMember specialMember);
 
         /// <summary>
         /// Returns true if the type is System.Type.
         /// </summary>
-        internal abstract bool IsSystemTypeReference(ITypeSymbol type);
+        internal abstract bool IsSystemTypeReference(ITypeSymbolInternal type);
 
-        protected abstract INamedTypeSymbol CommonGetSpecialType(SpecialType specialType);
+        private protected abstract INamedTypeSymbolInternal CommonGetSpecialType(SpecialType specialType);
 
         /// <summary>
         /// Lookup member declaration in well known type used by this Compilation.
         /// </summary>
-        internal abstract ISymbol CommonGetWellKnownTypeMember(WellKnownMember member);
+        internal abstract ISymbolInternal CommonGetWellKnownTypeMember(WellKnownMember member);
 
         /// <summary>
         /// Lookup well-known type used by this Compilation.
         /// </summary>
-        internal abstract ITypeSymbol CommonGetWellKnownType(WellKnownType wellknownType);
+        internal abstract ITypeSymbolInternal CommonGetWellKnownType(WellKnownType wellknownType);
 
         /// <summary>
         /// Returns true if the specified type is equal to or derives from System.Attribute well-known type.
@@ -2025,7 +2027,7 @@ namespace Microsoft.CodeAnalysis
 
         internal abstract CommonPEModuleBuilder CreateModuleBuilder(
             EmitOptions emitOptions,
-            IMethodSymbol debugEntryPoint,
+            IMethodSymbolInternal debugEntryPoint,
             Stream sourceLinkStream,
             IEnumerable<EmbeddedText> embeddedTexts,
             IEnumerable<ResourceDescription> manifestResources,
@@ -2043,7 +2045,7 @@ namespace Microsoft.CodeAnalysis
             bool emitMetadataOnly,
             bool emitTestCoverageData,
             DiagnosticBag diagnostics,
-            Predicate<ISymbol> filterOpt,
+            Predicate<ISymbolInternal> filterOpt,
             CancellationToken cancellationToken);
 
         internal bool CreateDebugDocuments(DebugDocumentsBuilder documentsBuilder, IEnumerable<EmbeddedText> embeddedTexts, DiagnosticBag diagnostics)
@@ -2160,7 +2162,7 @@ namespace Microsoft.CodeAnalysis
             CommonPEModuleBuilder moduleBuilder,
             bool emittingPdb,
             DiagnosticBag diagnostics,
-            Predicate<ISymbol> filterOpt,
+            Predicate<ISymbolInternal> filterOpt,
             CancellationToken cancellationToken)
         {
             try
@@ -2435,7 +2437,7 @@ namespace Microsoft.CodeAnalysis
                 win32Resources,
                 manifestResources,
                 options,
-                debugEntryPoint,
+                (IMethodSymbolInternal)((ISymbolInternalSource)debugEntryPoint)?.GetISymbolInternal(),
                 sourceLinkStream,
                 embeddedTexts,
                 testData: null,
@@ -2454,7 +2456,7 @@ namespace Microsoft.CodeAnalysis
             Stream win32Resources,
             IEnumerable<ResourceDescription> manifestResources,
             EmitOptions options,
-            IMethodSymbol debugEntryPoint,
+            IMethodSymbolInternal debugEntryPoint,
             Stream sourceLinkStream,
             IEnumerable<EmbeddedText> embeddedTexts,
             CompilationTestData testData,
@@ -2641,7 +2643,7 @@ namespace Microsoft.CodeAnalysis
             DiagnosticBag diagnostics,
             IEnumerable<ResourceDescription> manifestResources,
             EmitOptions options,
-            IMethodSymbol debugEntryPoint,
+            IMethodSymbolInternal debugEntryPoint,
             Stream sourceLinkStream,
             IEnumerable<EmbeddedText> embeddedTexts,
             CompilationTestData testData,
@@ -2691,7 +2693,7 @@ namespace Microsoft.CodeAnalysis
                 cancellationToken);
         }
 
-        internal abstract void ValidateDebugEntryPoint(IMethodSymbol debugEntryPoint, DiagnosticBag diagnostics);
+        internal abstract void ValidateDebugEntryPoint(IMethodSymbolInternal debugEntryPoint, DiagnosticBag diagnostics);
 
         internal bool IsEmitDeterministic => this.Options.Deterministic;
 

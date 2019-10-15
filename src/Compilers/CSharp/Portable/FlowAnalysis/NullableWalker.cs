@@ -468,7 +468,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             out SnapshotManager snapshotManager)
         {
             var analyzedNullabilities = ImmutableDictionary.CreateBuilder<BoundExpression, (NullabilityInfo, TypeSymbol)>(EqualityComparer<BoundExpression>.Default, NullabilityInfoTypeComparer.Instance);
-            var updatedSymbols = ImmutableDictionary.CreateBuilder<(BoundNode, Symbol), Symbol>(ExpressionAndSymbolEqualityComparer.Instance, SymbolEqualityComparer.ConsiderEverything);
+            var updatedSymbols = ImmutableDictionary.CreateBuilder<(BoundNode, Symbol), Symbol>(ExpressionAndSymbolEqualityComparer.Instance, Symbols.SymbolEqualityComparer.ConsiderEverything);
             var methodSymbol = symbol as MethodSymbol;
             // Attributes don't have a symbol, which is what SnapshotBuilder uses as an index for maintaining global state.
             // Until we have a workaround for this, disable snapshots for null symbols.
@@ -512,7 +512,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             out SnapshotManager newSnapshots)
         {
             var analyzedNullabilities = ImmutableDictionary.CreateBuilder<BoundExpression, (NullabilityInfo, TypeSymbol)>(EqualityComparer<BoundExpression>.Default, NullabilityInfoTypeComparer.Instance);
-            var updatedSymbols = ImmutableDictionary.CreateBuilder<(BoundNode, Symbol), Symbol>(ExpressionAndSymbolEqualityComparer.Instance, SymbolEqualityComparer.ConsiderEverything);
+            var updatedSymbols = ImmutableDictionary.CreateBuilder<(BoundNode, Symbol), Symbol>(ExpressionAndSymbolEqualityComparer.Instance, Symbols.SymbolEqualityComparer.ConsiderEverything);
             var newSnapshotBuilder = takeNewSnapshots ? new SnapshotManager.Builder() : null;
             var (walker, initialState, symbol) = originalSnapshots.RestoreWalkerToAnalyzeNewNode(position, node, binder, analyzedNullabilities, updatedSymbols, newSnapshotBuilder);
             try
@@ -7844,7 +7844,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             public bool Equals((NullabilityInfo info, TypeSymbol type) x, (NullabilityInfo info, TypeSymbol type) y)
             {
                 return x.info.Equals(y.info) &&
-                       SymbolEqualityComparer.ConsiderEverything.Equals(x.type, y.type);
+                       Symbols.SymbolEqualityComparer.ConsiderEverything.Equals(x.type, y.type);
             }
 
             public int GetHashCode((NullabilityInfo info, TypeSymbol type) obj)

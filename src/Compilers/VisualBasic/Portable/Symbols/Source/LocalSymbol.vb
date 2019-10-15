@@ -13,7 +13,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Symbols
     ''' </summary>
     Friend MustInherit Class LocalSymbol
         Inherits Symbol
-        Implements ILocalSymbolInternal
+        Implements ILocalSymbol, ILocalSymbolInternal
 
         Friend Shared ReadOnly UseBeforeDeclarationResultType As ErrorTypeSymbol = New ErrorTypeSymbol()
 

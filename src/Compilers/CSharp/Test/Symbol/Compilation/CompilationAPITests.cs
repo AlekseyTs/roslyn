@@ -2394,7 +2394,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_IncorrectLengths_IsReadOnly()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             Assert.Throws<ArgumentException>(() =>
                 compilation.CreateAnonymousTypeSymbol(
                     ImmutableArray.Create((ITypeSymbol)compilation.GetSpecialType(SpecialType.System_Int32),
@@ -2406,7 +2406,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_IncorrectLengths_Locations()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             Assert.Throws<ArgumentException>(() =>
                 compilation.CreateAnonymousTypeSymbol(
                     ImmutableArray.Create((ITypeSymbol)compilation.GetSpecialType(SpecialType.System_Int32),
@@ -2418,7 +2418,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_WritableProperty()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             Assert.Throws<ArgumentException>(() =>
                 compilation.CreateAnonymousTypeSymbol(
                     ImmutableArray.Create((ITypeSymbol)compilation.GetSpecialType(SpecialType.System_Int32),
@@ -2430,7 +2430,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_NullLocations()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             Assert.Throws<ArgumentNullException>(() =>
                 compilation.CreateAnonymousTypeSymbol(
                     ImmutableArray.Create((ITypeSymbol)compilation.GetSpecialType(SpecialType.System_Int32),
@@ -2472,7 +2472,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_NullArgument4()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             Assert.Throws<ArgumentNullException>(() =>
                 compilation.CreateAnonymousTypeSymbol(
                         ImmutableArray.Create((ITypeSymbol)compilation.GetSpecialType(SpecialType.System_Int32)),
@@ -2482,7 +2482,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType1()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             var type = compilation.CreateAnonymousTypeSymbol(
                         ImmutableArray.Create<ITypeSymbol>(compilation.GetSpecialType(SpecialType.System_Int32)),
                         ImmutableArray.Create("m1"));
@@ -2497,7 +2497,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType_Locations()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             var tree = CSharpSyntaxTree.ParseText("class C { }");
             var loc1 = Location.Create(tree, new TextSpan(0, 1));
             var loc2 = Location.Create(tree, new TextSpan(1, 1));
@@ -2518,7 +2518,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         [Fact]
         public void CreateAnonymousType2()
         {
-            var compilation = CSharpCompilation.Create("HelloWorld");
+            var compilation = (Compilation)CSharpCompilation.Create("HelloWorld");
             var type = compilation.CreateAnonymousTypeSymbol(
                         ImmutableArray.Create<ITypeSymbol>(compilation.GetSpecialType(SpecialType.System_Int32), compilation.GetSpecialType(SpecialType.System_Boolean)),
                         ImmutableArray.Create("m1", "m2"));
@@ -2585,7 +2585,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
             Assert.Throws<ArgumentException>(() => comp.CreateAnonymousTypeSymbol(memberTypes, memberNames, memberNullableAnnotations: ImmutableArray.Create(CodeAnalysis.NullableAnnotation.NotAnnotated)));
 
             type = comp.CreateAnonymousTypeSymbol(memberTypes, memberNames, memberNullableAnnotations: ImmutableArray.Create(CodeAnalysis.NullableAnnotation.NotAnnotated, CodeAnalysis.NullableAnnotation.Annotated));
-            Assert.Equal("<anonymous type: System.Object P, System.String Q>", type.ToTestDisplayString(includeNonNullable: true));
+            Assert.Equal("<anonymous type: System.Object! P, System.String? Q>", type.ToTestDisplayString(includeNonNullable: true));
             AssertEx.Equal(new[] { CodeAnalysis.NullableAnnotation.NotAnnotated, CodeAnalysis.NullableAnnotation.Annotated }, GetAnonymousTypeNullableAnnotations(type));
         }
 

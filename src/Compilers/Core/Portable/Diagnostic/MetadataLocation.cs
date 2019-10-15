@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Microsoft.CodeAnalysis
 {
@@ -10,9 +11,9 @@ namespace Microsoft.CodeAnalysis
     /// </summary>
     internal sealed class MetadataLocation : Location, IEquatable<MetadataLocation>
     {
-        private readonly IModuleSymbol _module;
+        private readonly IModuleSymbolInternal _module;
 
-        internal MetadataLocation(IModuleSymbol module)
+        internal MetadataLocation(IModuleSymbolInternal module)
         {
             Debug.Assert(module != null);
             _module = module;
@@ -25,7 +26,7 @@ namespace Microsoft.CodeAnalysis
 
         public override IModuleSymbol MetadataModule
         {
-            get { return _module; }
+            get { return (IModuleSymbol)_module.GetISymbol(); }
         }
 
         public override int GetHashCode()

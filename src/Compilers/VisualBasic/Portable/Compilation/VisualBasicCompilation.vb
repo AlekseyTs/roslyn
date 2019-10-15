@@ -459,7 +459,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             End If
         End Sub
 
-        Friend Overrides Sub ValidateDebugEntryPoint(debugEntryPoint As IMethodSymbol, diagnostics As DiagnosticBag)
+        Friend Overrides Sub ValidateDebugEntryPoint(debugEntryPoint As IMethodSymbolInternal, diagnostics As DiagnosticBag)
             Debug.Assert(debugEntryPoint IsNot Nothing)
 
             ' Debug entry point has to be a method definition from this compilation.
@@ -1231,6 +1231,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Return Me.GetBoundReferenceManager().GetMetadataReference(assemblySymbol)
         End Function
 
+        Private Protected Overrides Function CommonGetMetadataReference(assemblySymbol As IAssemblySymbol) As MetadataReference
+            Return GetMetadataReference(assemblySymbol.EnsureVbSymbolOrNothing(Of AssemblySymbol)(NameOf(assemblySymbol)))
+        End Function
+
         Public Overrides ReadOnly Property ReferencedAssemblyNames As IEnumerable(Of AssemblyIdentity)
             Get
                 Return [Assembly].Modules.SelectMany(Function(m) m.GetReferencedAssemblies())
@@ -1823,7 +1827,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Return Assembly.GetSpecialTypeMember(memberId)
         End Function
 
-        Friend Overrides Function CommonGetSpecialTypeMember(specialMember As SpecialMember) As ISymbol
+        Friend Overrides Function CommonGetSpecialTypeMember(specialMember As SpecialMember) As ISymbolInternal
             Return GetSpecialTypeMember(specialMember)
         End Function
 
@@ -2193,7 +2197,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
 
         Friend Overrides Function CreateModuleBuilder(
             emitOptions As EmitOptions,
-            debugEntryPoint As IMethodSymbol,
+            debugEntryPoint As IMethodSymbolInternal,
             sourceLinkStream As Stream,
             embeddedTexts As IEnumerable(Of EmbeddedText),
             manifestResources As IEnumerable(Of ResourceDescription),
@@ -2215,7 +2219,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
 
         Friend Overloads Function CreateModuleBuilder(
             emitOptions As EmitOptions,
-            debugEntryPoint As IMethodSymbol,
+            debugEntryPoint As IMethodSymbolInternal,
             sourceLinkStream As Stream,
             embeddedTexts As IEnumerable(Of EmbeddedText),
             manifestResources As IEnumerable(Of ResourceDescription),
@@ -2279,7 +2283,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             emitMetadataOnly As Boolean,
             emitTestCoverageData As Boolean,
             diagnostics As DiagnosticBag,
-            filterOpt As Predicate(Of ISymbol),
+            filterOpt As Predicate(Of ISymbolInternal),
             cancellationToken As CancellationToken) As Boolean
 
             ' The diagnostics should include syntax and declaration errors. We insert these before calling Emitter.Emit, so that we don't emit
@@ -2624,7 +2628,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             End Get
         End Property
 
-        Protected Overrides Function CommonGetSpecialType(specialType As SpecialType) As INamedTypeSymbol
+        Private Protected Overrides Function CommonGetSpecialType(specialType As SpecialType) As INamedTypeSymbolInternal
             Return Me.GetSpecialType(specialType)
         End Function
 
