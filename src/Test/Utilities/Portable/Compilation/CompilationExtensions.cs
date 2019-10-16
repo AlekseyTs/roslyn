@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.FlowAnalysis;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Symbols;
 using Microsoft.CodeAnalysis.Test.Extensions;
 using Roslyn.Test.Utilities;
 using Roslyn.Utilities;
@@ -33,7 +34,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             CompilationTestData testData = null,
             DiagnosticDescription[] expectedWarnings = null,
             Stream pdbStream = null,
-            IMethodSymbol debugEntryPoint = null,
+            IMethodSymbolInternal debugEntryPoint = null,
             Stream sourceLinkStream = null,
             IEnumerable<EmbeddedText> embeddedTexts = null,
             IEnumerable<ResourceDescription> manifestResources = null,

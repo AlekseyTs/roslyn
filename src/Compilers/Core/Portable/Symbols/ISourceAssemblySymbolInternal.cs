@@ -2,10 +2,11 @@
 
 using System;
 using System.Reflection;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Microsoft.CodeAnalysis
 {
-    internal interface ISourceAssemblySymbolInternal : ISourceAssemblySymbol
+    internal interface ISourceAssemblySymbolInternal : IAssemblySymbolInternal
     {
         AssemblyFlags AssemblyFlags { get; }
 
@@ -15,8 +16,6 @@ namespace Microsoft.CodeAnalysis
         string SignatureKey { get; }
 
         AssemblyHashAlgorithm HashAlgorithm { get; }
-
-        Version AssemblyVersionPattern { get; }
 
         bool InternalsAreVisible { get; }
     }

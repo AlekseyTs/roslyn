@@ -26,7 +26,7 @@ namespace Microsoft.CodeAnalysis
 
         internal TypeCompareKind CompareKind { get; }
 
-        private SymbolEqualityComparer(TypeCompareKind compareKind)
+        internal SymbolEqualityComparer(TypeCompareKind compareKind)
         {
             CompareKind = compareKind;
         }
@@ -43,18 +43,8 @@ namespace Microsoft.CodeAnalysis
             {
                 return y is null;
             }
-            else if (ReferenceEquals(x, y))
-            {
-                return true;
-            }
-            else if (x is ISymbolInternal sx)
-            {
-                return sx.Equals(y, CompareKind);
-            }
-            else
-            {
-                return x.Equals((object)y);
-            }
+
+            return x.Equals(y, this);
         }
 
         public int GetHashCode(ISymbol obj)

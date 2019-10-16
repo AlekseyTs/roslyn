@@ -48,7 +48,7 @@ namespace Microsoft.CodeAnalysis.Shared.Extensions
                 explicitInterfaceImplementations: default,
                 name: EqualsName,
                 typeParameters: default,
-                parameters: ImmutableArray.Create(CodeGenerationSymbolFactory.CreateParameterSymbol(compilation.GetSpecialType(SpecialType.System_Object).WithNullability(NullableAnnotation.Annotated), ObjName)),
+                parameters: ImmutableArray.Create(CodeGenerationSymbolFactory.CreateParameterSymbol(compilation.GetSpecialType(SpecialType.System_Object).WithNullableAnnotation(NullableAnnotation.Annotated), ObjName)),
                 statements: statements);
         }
 

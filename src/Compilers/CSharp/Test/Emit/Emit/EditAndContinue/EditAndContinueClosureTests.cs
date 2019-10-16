@@ -228,10 +228,10 @@ class C
             var testData0 = new CompilationTestData();
             var bytes0 = compilation0.EmitToArray(testData: testData0);
             var localFunction0 = testData0.GetMethodData("C.<F>g__x|0_0").Method;
-            Assert.True(localFunction0.IsStatic);
+            Assert.True(((Symbol)localFunction0).IsStatic);
 
             var localFunction1 = diff1.TestData.GetMethodData("C.<F>g__x|0_0").Method;
-            Assert.True(localFunction1.IsStatic);
+            Assert.True(((Symbol)localFunction1).IsStatic);
         }
 
         [Fact]

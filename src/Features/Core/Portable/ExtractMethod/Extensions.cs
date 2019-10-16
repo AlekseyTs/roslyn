@@ -93,7 +93,7 @@ namespace Microsoft.CodeAnalysis.ExtractMethod
         {
             // Can be cleaned up when https://github.com/dotnet/roslyn/issues/38061 is resolved
             var typeSymbol = (T)symbol.GetSymbolKey().Resolve(semanticModel.Compilation).GetAnySymbol();
-            return typeSymbol.WithNullability(symbol.GetNullability());
+            return typeSymbol.WithNullableAnnotation(symbol.GetNullability());
         }
 
         /// <summary>

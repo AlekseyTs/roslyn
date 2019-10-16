@@ -42,11 +42,11 @@ namespace Microsoft.CodeAnalysis
             switch (flowState)
             {
                 case NullableFlowState.None:
-                    return typeSymbol.WithNullability(NullableAnnotation.None);
+                    return typeSymbol.WithNullableAnnotation(NullableAnnotation.None);
                 case NullableFlowState.NotNull:
-                    return typeSymbol.WithNullability(NullableAnnotation.NotAnnotated);
+                    return typeSymbol.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
                 case NullableFlowState.MaybeNull:
-                    return typeSymbol.WithNullability(NullableAnnotation.Annotated);
+                    return typeSymbol.WithNullableAnnotation(NullableAnnotation.Annotated);
                 default:
                     throw ExceptionUtilities.UnexpectedValue(typeSymbol);
             }
@@ -82,34 +82,34 @@ namespace Microsoft.CodeAnalysis
             => typeInfo.ConvertedType?.WithNullability(typeInfo.Nullability.FlowState);
 
         public static ITypeSymbol GetConvertedTypeWithAnnotatedNullability(this TypeInfo typeInfo)
-            => typeInfo.ConvertedType?.WithNullability(typeInfo.Nullability.Annotation);
+            => typeInfo.ConvertedType?.WithNullableAnnotation(typeInfo.Nullability.Annotation);
 
         public static ITypeSymbol GetTypeWithFlowNullability(this TypeInfo typeInfo)
             => typeInfo.Type?.WithNullability(typeInfo.Nullability.FlowState);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this TypeInfo typeInfo)
-            => typeInfo.Type?.WithNullability(typeInfo.Nullability.Annotation);
+            => typeInfo.Type?.WithNullableAnnotation(typeInfo.Nullability.Annotation);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this IFieldSymbol fieldSymbol)
-            => fieldSymbol.Type.WithNullability(fieldSymbol.NullableAnnotation);
+            => fieldSymbol.Type.WithNullableAnnotation(fieldSymbol.NullableAnnotation);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this IParameterSymbol parameterSymbol)
-            => parameterSymbol.Type.WithNullability(parameterSymbol.NullableAnnotation);
+            => parameterSymbol.Type.WithNullableAnnotation(parameterSymbol.NullableAnnotation);
 
         public static ITypeSymbol GetElementTypeWithAnnotatedNullability(this IArrayTypeSymbol arrayTypeSymbol)
-            => arrayTypeSymbol.ElementType.WithNullability(arrayTypeSymbol.ElementNullableAnnotation);
+            => arrayTypeSymbol.ElementType.WithNullableAnnotation(arrayTypeSymbol.ElementNullableAnnotation);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this IPropertySymbol propertySymbol)
-            => propertySymbol.Type.WithNullability(propertySymbol.NullableAnnotation);
+            => propertySymbol.Type.WithNullableAnnotation(propertySymbol.NullableAnnotation);
 
         public static ITypeSymbol GetReturnTypeWithAnnotatedNullability(this IMethodSymbol methodSymbol)
-            => methodSymbol.ReturnType.WithNullability(methodSymbol.ReturnNullableAnnotation);
+            => methodSymbol.ReturnType.WithNullableAnnotation(methodSymbol.ReturnNullableAnnotation);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this IEventSymbol eventSymbol)
-            => eventSymbol.Type.WithNullability(eventSymbol.NullableAnnotation);
+            => eventSymbol.Type.WithNullableAnnotation(eventSymbol.NullableAnnotation);
 
         public static ITypeSymbol GetTypeWithAnnotatedNullability(this ILocalSymbol localSymbol)
-            => localSymbol.Type.WithNullability(localSymbol.NullableAnnotation);
+            => localSymbol.Type.WithNullableAnnotation(localSymbol.NullableAnnotation);
 
         public static INamedTypeSymbol ConstructWithNullability(this INamedTypeSymbol typeSymbol, params ITypeSymbol[] typeArguments)
         {

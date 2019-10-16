@@ -696,7 +696,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExtractMethod
                 }
 
                 // Return type can be updated to not be null
-                var newType = methodSymbolResult.Data.ReturnType.WithNullability(NullableAnnotation.NotAnnotated);
+                var newType = methodSymbolResult.Data.ReturnType.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
 
                 var oldRoot = await originalDocument.Document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
                 var newRoot = oldRoot.ReplaceNode(methodDeclaration.ReturnType, newType.GenerateTypeSyntax());

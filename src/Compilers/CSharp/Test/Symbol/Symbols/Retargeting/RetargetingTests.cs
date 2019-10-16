@@ -149,7 +149,7 @@ class C
             RetargetingSymbolChecker.CheckSymbols(sourceNamespace.GetMember<NamedTypeSymbol>("C"), retargetingNamespace.GetMember<NamedTypeSymbol>("C"));
 
             Assert.IsType<RetargetingNamedTypeSymbol>(
-                retargetingNamespace.GetMember<NamedTypeSymbol>("C").GetMember<RetargetingFieldSymbol>("F2").MarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype());
+                retargetingNamespace.GetMember<NamedTypeSymbol>("C").GetMember<RetargetingFieldSymbol>("F2").MarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype().GetSymbol());
         }
 
         [Fact]
@@ -183,11 +183,11 @@ class C
             RetargetingSymbolChecker.CheckSymbols(sourceNamespace.GetMember<NamedTypeSymbol>("C"), retargetingNamespace.GetMember<NamedTypeSymbol>("C"));
 
             Assert.IsType<RetargetingNamedTypeSymbol>(
-                retargetingNamespace.GetMember<NamedTypeSymbol>("C").GetMember<RetargetingMethodSymbol>("M").ReturnValueMarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype());
+                retargetingNamespace.GetMember<NamedTypeSymbol>("C").GetMember<RetargetingMethodSymbol>("M").ReturnValueMarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype().GetSymbol());
 
             Assert.IsType<RetargetingNamedTypeSymbol>(
                 ((RetargetingParameterSymbol)retargetingNamespace.GetMember<NamedTypeSymbol>("C").GetMember<RetargetingMethodSymbol>("M").Parameters[0]).
-                MarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype());
+                MarshallingInformation.TryGetSafeArrayElementUserDefinedSubtype().GetSymbol());
         }
 
         [Fact]
@@ -462,11 +462,11 @@ public class TestS { }
             var retargetingAssembly = new RetargetingAssemblySymbol((SourceAssemblySymbol)comp.Assembly, isLinked: false);
             var retargetingType = retargetingAssembly.GlobalNamespace.GetMember<NamedTypeSymbol>("Test");
             Assert.IsType<RetargetingNamedTypeSymbol>(retargetingType);
-            Assert.False(((INamedTypeSymbol)retargetingType).IsSerializable);
+            Assert.False(retargetingType.IsSerializable);
 
             var retargetingTypeS = retargetingAssembly.GlobalNamespace.GetMember<NamedTypeSymbol>("TestS");
             Assert.IsType<RetargetingNamedTypeSymbol>(retargetingTypeS);
-            Assert.True(((INamedTypeSymbol)retargetingTypeS).IsSerializable);
+            Assert.True(retargetingTypeS.IsSerializable);
         }
 
         [Fact]
@@ -814,8 +814,8 @@ class C1<T>
             Assert.Equal(a == null, b == null);
             if (a != null)
             {
-                CheckSymbols((TypeSymbol)a.TryGetSafeArrayElementUserDefinedSubtype(),
-                             (TypeSymbol)b.TryGetSafeArrayElementUserDefinedSubtype(),
+                CheckSymbols(a.TryGetSafeArrayElementUserDefinedSubtype().GetSymbol<TypeSymbol>(),
+                             b.TryGetSafeArrayElementUserDefinedSubtype().GetSymbol<TypeSymbol>(),
                              recurse: false);
             }
         }

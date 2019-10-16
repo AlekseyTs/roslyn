@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Symbols;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
@@ -118,8 +119,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal override IEnumerable<FieldSymbol> GetFieldsToEmit()
             => (object)SingletonCache != null
-            ? SpecializedCollections.SingletonEnumerable(SingletonCache)
-            : SpecializedCollections.EmptyEnumerable<FieldSymbol>();
+            ? Roslyn.Utilities.SpecializedCollections.SingletonEnumerable(SingletonCache)
+            : Roslyn.Utilities.SpecializedCollections.EmptyEnumerable<FieldSymbol>();
 
         // display classes for static lambdas do not have any data and can be serialized.
         public override bool IsSerializable => (object)SingletonCache != null;
@@ -129,6 +130,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         // The lambda method contains user code from the lambda
         bool ISynthesizedMethodBodyImplementationSymbol.HasMethodBodyDependency => true;
 
-        IMethodSymbol ISynthesizedMethodBodyImplementationSymbol.Method => _topLevelMethod;
+        IMethodSymbolInternal ISynthesizedMethodBodyImplementationSymbol.Method => _topLevelMethod;
     }
 }

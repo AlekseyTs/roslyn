@@ -474,8 +474,8 @@ namespace Microsoft.CodeAnalysis.Shared.Extensions
         {
             switch (symbol)
             {
-                case IMethodSymbol m: return m.TypeArguments.ZipAsArray(m.TypeArgumentNullableAnnotations, (t, n) => t.WithNullability(n));
-                case INamedTypeSymbol nt: return nt.TypeArguments.ZipAsArray(nt.TypeArgumentNullableAnnotations, (t, n) => t.WithNullability(n));
+                case IMethodSymbol m: return m.TypeArguments.ZipAsArray(m.TypeArgumentNullableAnnotations, (t, n) => t.WithNullableAnnotation(n));
+                case INamedTypeSymbol nt: return nt.TypeArguments.ZipAsArray(nt.TypeArgumentNullableAnnotations, (t, n) => t.WithNullableAnnotation(n));
                 default: return ImmutableArray.Create<ITypeSymbol>();
             }
         }
@@ -536,12 +536,12 @@ namespace Microsoft.CodeAnalysis.Shared.Extensions
                 {
                     var types = method.Parameters
                         .Skip(skip)
-                        .Select(p => (p.Type ?? compilation.GetSpecialType(SpecialType.System_Object)).WithNullability(p.NullableAnnotation));
+                        .Select(p => (p.Type ?? compilation.GetSpecialType(SpecialType.System_Object)).WithNullableAnnotation(p.NullableAnnotation));
 
                     if (!method.ReturnsVoid)
                     {
                         // +1 for the return type.
-                        types = types.Concat((method.ReturnType ?? compilation.GetSpecialType(SpecialType.System_Object)).WithNullability(method.ReturnNullableAnnotation));
+                        types = types.Concat((method.ReturnType ?? compilation.GetSpecialType(SpecialType.System_Object)).WithNullableAnnotation(method.ReturnNullableAnnotation));
                     }
 
                     return delegateType.TryConstruct(types.ToArray());

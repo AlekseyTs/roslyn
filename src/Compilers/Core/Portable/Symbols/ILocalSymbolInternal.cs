@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.CodeAnalysis.Symbols;
+
 namespace Microsoft.CodeAnalysis
 {
-    internal interface ILocalSymbolInternal : ILocalSymbol
+    internal interface ILocalSymbolInternal : ISymbolInternal
     {
         bool IsImportedFromMetadata { get; }
 

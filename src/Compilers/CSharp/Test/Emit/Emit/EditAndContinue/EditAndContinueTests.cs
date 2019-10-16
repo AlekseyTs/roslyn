@@ -7629,7 +7629,7 @@ public class Y : X { }
             var mA1 = compilationA1.GetMember<MethodSymbol>("A.M");
             var mX1 = compilationA1.GetMember<TypeSymbol>("X");
 
-            var allAddedSymbols = new ISymbol[] { mA1, mX1 };
+            var allAddedSymbols = new ISymbol[] { mA1.GetPublicSymbol(), mX1.GetPublicSymbol() };
 
             var diffA1 = compilationA1.EmitDifference(
                 generationA0,
