@@ -492,7 +492,7 @@ public class C
   </files>
   <entryPoint declaringType=""C"" methodName=""F"" />
   <methods/>
-</symbols>", debugEntryPoint: f, options: PdbValidationOptions.ExcludeScopes | PdbValidationOptions.ExcludeSequencePoints | PdbValidationOptions.ExcludeCustomDebugInformation);
+</symbols>", debugEntryPoint: f.GetPublicSymbol<IMethodSymbol>(), options: PdbValidationOptions.ExcludeScopes | PdbValidationOptions.ExcludeSequencePoints | PdbValidationOptions.ExcludeCustomDebugInformation);
 
             var peReader = new PEReader(c.EmitToArray(debugEntryPoint: f));
             int peEntryPointToken = peReader.PEHeaders.CorHeader.EntryPointTokenOrRelativeVirtualAddress;
@@ -515,7 +515,7 @@ public class C
   </files>
   <entryPoint declaringType=""C"" methodName=""F"" />
   <methods/>
-</symbols>", debugEntryPoint: f, options: PdbValidationOptions.ExcludeScopes | PdbValidationOptions.ExcludeSequencePoints | PdbValidationOptions.ExcludeCustomDebugInformation);
+</symbols>", debugEntryPoint: f.GetPublicSymbol<IMethodSymbol>(), options: PdbValidationOptions.ExcludeScopes | PdbValidationOptions.ExcludeSequencePoints | PdbValidationOptions.ExcludeCustomDebugInformation);
 
             var peReader = new PEReader(c.EmitToArray(debugEntryPoint: f));
             int peEntryPointToken = peReader.PEHeaders.CorHeader.EntryPointTokenOrRelativeVirtualAddress;
@@ -549,22 +549,22 @@ public class C
             var d_int_g = d_int.GetMember<MethodSymbol>("G");
             var d_int_g_int = d_int_g.Construct(stInt);
 
-            var result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: f2);
+            var result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: f2.GetPublicSymbol<IMethodSymbol>());
             result.Diagnostics.Verify(
                 // error CS8096: Debug entry point must be a definition of a source method in the current compilation.
                 Diagnostic(ErrorCode.ERR_DebugEntryPointNotSourceMethodDefinition));
 
-            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_t_g_int);
+            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_t_g_int.GetPublicSymbol<IMethodSymbol>());
             result.Diagnostics.Verify(
                 // error CS8096: Debug entry point must be a definition of a source method in the current compilation.
                 Diagnostic(ErrorCode.ERR_DebugEntryPointNotSourceMethodDefinition));
 
-            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_int_g);
+            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_int_g.GetPublicSymbol<IMethodSymbol>());
             result.Diagnostics.Verify(
                 // error CS8096: Debug entry point must be a definition of a source method in the current compilation.
                 Diagnostic(ErrorCode.ERR_DebugEntryPointNotSourceMethodDefinition));
 
-            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_int_g_int);
+            result = c1.Emit(new MemoryStream(), new MemoryStream(), debugEntryPoint: d_int_g_int.GetPublicSymbol<IMethodSymbol>());
             result.Diagnostics.Verify(
                 // error CS8096: Debug entry point must be a definition of a source method in the current compilation.
                 Diagnostic(ErrorCode.ERR_DebugEntryPointNotSourceMethodDefinition));

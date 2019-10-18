@@ -29,6 +29,7 @@ using Roslyn.Test.Utilities;
 using Xunit;
 using PDB::Roslyn.Test.Utilities;
 using PDB::Roslyn.Test.PdbUtilities;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Microsoft.CodeAnalysis.ExpressionEvaluator.UnitTests
 {
@@ -530,7 +531,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.UnitTests
             bool expectedGeneric,
             string expectedValueSourcePath,
             int expectedValueSourceLine)
-            where TMethodSymbol : IMethodSymbol
+            where TMethodSymbol : IMethodSymbolInternal
         {
             Assert.Equal(expectedLocalName, localAndMethod.LocalName);
             Assert.Equal(expectedLocalDisplayName, localAndMethod.LocalDisplayName);

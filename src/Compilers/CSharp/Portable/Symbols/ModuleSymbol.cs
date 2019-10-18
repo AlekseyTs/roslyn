@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
+using Microsoft.CodeAnalysis.Symbols;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -13,7 +14,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// <summary>
     /// Represents a module within an assembly. Every assembly contains one or more modules.
     /// </summary>
-    internal abstract class ModuleSymbol : Symbol, IModuleSymbol
+    internal abstract class ModuleSymbol : Symbol, IModuleSymbolInternal
     {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Changes to the public interface of this class should remain synchronized with the VB version.
@@ -46,6 +47,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return null;
             }
         }
+
+        IModuleSymbolInternal ISymbolInternal.ContainingModule => this.ContainingModule;
 
         /// <summary>
         /// Returns value 'NetModule' of the <see cref="SymbolKind"/>
@@ -362,40 +365,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        #region IModuleSymbol Members
-
-        INamespaceSymbol IModuleSymbol.GlobalNamespace
-        {
-            get { return this.GlobalNamespace; }
-        }
-
-        INamespaceSymbol IModuleSymbol.GetModuleNamespace(INamespaceSymbol namespaceSymbol)
-        {
-            return this.GetModuleNamespace(namespaceSymbol);
-        }
-
-        ImmutableArray<IAssemblySymbol> IModuleSymbol.ReferencedAssemblySymbols
-        {
-            get
-            {
-                return ImmutableArray<IAssemblySymbol>.CastUp(ReferencedAssemblySymbols);
-            }
-        }
-
-        #endregion
-
-        #region ISymbol Members
-
-        public override void Accept(SymbolVisitor visitor)
-        {
-            visitor.VisitModule(this);
-        }
-
-        public override TResult Accept<TResult>(SymbolVisitor<TResult> visitor)
-        {
-            return visitor.VisitModule(this);
-        }
-
         /// <summary>
         /// If this symbol represents a metadata module returns the underlying <see cref="ModuleMetadata"/>.
         /// 
@@ -403,6 +372,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         public abstract ModuleMetadata GetMetadata();
 
-        #endregion
+        protected override ISymbol CreateISymbol()
+        {
+            return new PublicModel.ModuleSymbol(this);
+        }
     }
 }

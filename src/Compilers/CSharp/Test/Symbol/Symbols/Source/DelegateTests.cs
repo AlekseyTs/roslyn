@@ -770,14 +770,14 @@ class C
             var model = compilation.GetSemanticModel(tree);
 
             ExpressionSyntax lambdaSyntax = tree.GetCompilationUnitRoot().DescendantNodes().OfType<ParenthesizedLambdaExpressionSyntax>().Single();
-            var lambda = (LambdaSymbol)model.GetSymbolInfo(lambdaSyntax).Symbol;
+            var lambda = (IMethodSymbol)model.GetSymbolInfo(lambdaSyntax).Symbol;
 
             Assert.False(lambda.ReturnsByRef);
             Assert.True(lambda.ReturnsByRefReadonly);
             Assert.Equal(lambda.Parameters[0].RefKind, RefKind.In);
 
             lambdaSyntax = tree.GetCompilationUnitRoot().DescendantNodes().OfType<AnonymousMethodExpressionSyntax>().Single();
-            lambda = (LambdaSymbol)model.GetSymbolInfo(lambdaSyntax).Symbol;
+            lambda = (IMethodSymbol)model.GetSymbolInfo(lambdaSyntax).Symbol;
 
             Assert.False(lambda.ReturnsByRef);
             Assert.True(lambda.ReturnsByRefReadonly);

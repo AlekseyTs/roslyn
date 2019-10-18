@@ -43,6 +43,18 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
                     throw new InvalidOperationException("Stack too deep.");
                 }
 #endif
+                if (x is ITypeSymbol xType && y is ITypeSymbol yType && xType.IsDefinition != yType.IsDefinition)
+                {
+                    if (x.IsDefinition)
+                    {
+                        y = yType.WithNullableAnnotation(xType.NullableAnnotation);
+                    }
+                    else
+                    {
+                        x = xType.WithNullableAnnotation(yType.NullableAnnotation);
+                    }
+                }
+
                 if (ReferenceEquals(x, y))
                 {
                     return true;
