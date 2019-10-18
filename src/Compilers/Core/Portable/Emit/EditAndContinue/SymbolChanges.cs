@@ -5,6 +5,7 @@ using Roslyn.Utilities;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Microsoft.CodeAnalysis.Emit
 {
@@ -59,7 +60,7 @@ namespace Microsoft.CodeAnalysis.Emit
                 Debug.Assert(synthesizedDef.Method != null);
 
                 var generator = synthesizedDef.Method;
-                var synthesizedSymbol = (ISymbol)synthesizedDef;
+                ISymbolInternal synthesizedSymbol = synthesizedDef;
 
                 var change = GetChange((IDefinition)generator);
                 switch (change)
@@ -137,9 +138,9 @@ namespace Microsoft.CodeAnalysis.Emit
                 }
             }
 
-            if (def is ISymbol symbol)
+            if (def is ISymbolInternal symbol)
             {
-                return GetChange(symbol);
+                return GetChange(symbol.GetISymbol());
             }
 
             // If the def existed in the previous generation, the def is unchanged
@@ -179,13 +180,15 @@ namespace Microsoft.CodeAnalysis.Emit
 
                 case SymbolChange.Updated:
                 case SymbolChange.ContainsChanges:
-                    if (symbol is IDefinition definition)
+                    ISymbolInternal symbolInternal = (symbol as ISymbolInternalSource)?.GetISymbolInternal();
+
+                    if (symbolInternal is IDefinition definition)
                     {
                         // If the definition did not exist in the previous generation, it was added.
                         return _definitionMap.DefinitionExists(definition) ? SymbolChange.None : SymbolChange.Added;
                     }
 
-                    if (symbol is INamespace @namespace)
+                    if (symbolInternal is INamespace @namespace)
                     {
                         // If the namespace did not exist in the previous generation, it was added.
                         // Otherwise the namespace may contain changes.
@@ -203,7 +206,7 @@ namespace Microsoft.CodeAnalysis.Emit
         {
             foreach (var symbol in _changes.Keys)
             {
-                var namespaceTypeDef = (symbol as ITypeDefinition)?.AsNamespaceTypeDefinition(context);
+                var namespaceTypeDef = ((symbol as ISymbolInternalSource)?.GetISymbolInternal() as ITypeDefinition)?.AsNamespaceTypeDefinition(context);
                 if (namespaceTypeDef != null)
                 {
                     yield return namespaceTypeDef;

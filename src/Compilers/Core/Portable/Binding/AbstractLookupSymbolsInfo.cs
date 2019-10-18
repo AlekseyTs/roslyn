@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.CodeAnalysis.Symbols;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
     internal abstract class AbstractLookupSymbolsInfo<TSymbol>
-        where TSymbol : class, ISymbol
+        where TSymbol : class, ISymbolInternal
     {
         public struct ArityEnumerator : IEnumerator<int>
         {

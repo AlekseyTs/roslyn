@@ -440,7 +440,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 if (_lazyAvailableReusableHoistedFields == null)
                 {
-                    _lazyAvailableReusableHoistedFields = new Dictionary<TypeSymbol, ArrayBuilder<StateMachineFieldSymbol>>(TypeSymbol.EqualsIgnoringDynamicTupleNamesAndNullabilityComparer);
+                    _lazyAvailableReusableHoistedFields = new Dictionary<TypeSymbol, ArrayBuilder<StateMachineFieldSymbol>>(Symbols.SymbolEqualityComparer.IgnoringDynamicTupleNamesAndNullability);
                 }
 
                 _lazyAvailableReusableHoistedFields.Add(field.Type, fields = new ArrayBuilder<StateMachineFieldSymbol>());

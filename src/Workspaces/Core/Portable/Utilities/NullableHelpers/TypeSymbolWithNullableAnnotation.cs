@@ -203,6 +203,13 @@ namespace Microsoft.CodeAnalysis
             }
 
             #endregion
+
+            NullableAnnotation ITypeSymbol.NullableAnnotation => throw new System.NotImplementedException();
+
+            ITypeSymbol ITypeSymbol.WithNullableAnnotation(NullableAnnotation nullableAnnotation)
+            {
+                throw new System.NotImplementedException();
+            }
         }
     }
 }

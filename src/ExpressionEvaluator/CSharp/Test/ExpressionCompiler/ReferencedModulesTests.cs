@@ -648,8 +648,8 @@ class B : A
                     typeToken,
                     MakeAssemblyReferencesKind.AllAssemblies);
 
-                Assert.Equal(identityAS2, context.Compilation.GlobalNamespace.GetMembers("A").OfType<INamedTypeSymbol>().Single().ContainingAssembly.Identity);
-                Assert.Equal(identityBS2, context.Compilation.GlobalNamespace.GetMembers("B").OfType<INamedTypeSymbol>().Single().ContainingAssembly.Identity);
+                Assert.Equal(identityAS2, context.Compilation.GlobalNamespace.GetMembers("A").OfType<NamedTypeSymbol>().Single().ContainingAssembly.Identity);
+                Assert.Equal(identityBS2, context.Compilation.GlobalNamespace.GetMembers("B").OfType<NamedTypeSymbol>().Single().ContainingAssembly.Identity);
 
                 string error;
                 // A could be ambiguous, but the ambiguity is resolved in favor of the newer assembly.
@@ -688,7 +688,7 @@ class B : A
 IL_0000:  newobj     ""B..ctor()""
 IL_0005:  ret
 }");
-                Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityBS2.GetDisplayName());
+                Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityBS2.GetDisplayName());
                 // B.F should result in missing assembly AS2 since there were no direct references to AS2.
                 ResultProperties resultProperties;
                 ImmutableArray<AssemblyIdentity> missingAssemblyIdentities;
@@ -755,7 +755,7 @@ IL_0005:  ret
 IL_0000:  newobj     ""B..ctor()""
 IL_0005:  ret
 }");
-                Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityBS2.GetDisplayName());
+                Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityBS2.GetDisplayName());
                 // B.F should result in missing assembly AS2 since there were no direct references to AS2.
                 testData = new CompilationTestData();
                 context.CompileExpression(
@@ -929,7 +929,7 @@ public class B
 IL_0000:  newobj     ""N.C1..ctor()""
 IL_0005:  ret
 }");
-            Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
+            Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
 
             GetContextState(runtime, "A.M", out blocks, out moduleVersionId, out symReader, out methodToken, out localSignatureToken);
             contextFactory = CreateMethodContextFactory(moduleVersionId, symReader, methodToken, localSignatureToken);
@@ -947,7 +947,7 @@ IL_0005:  ret
 IL_0000:  newobj     ""C2..ctor()""
 IL_0005:  ret
 }");
-            Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
+            Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
 
             // Duplicate extension method, at method scope.
             ExpressionCompilerTestHelpers.CompileExpressionWithRetry(blocks, "x.F()", ImmutableArray<Alias>.Empty, contextFactory, getMetaDataBytesPtr: null, errorMessage: out errorMessage, testData: out testData);
@@ -963,7 +963,7 @@ IL_0000:  ldloc.0
 IL_0001:  call       ""A N.E.F(A)""
 IL_0006:  ret
 }");
-            Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
+            Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityA.GetDisplayName());
         }
 
         /// <summary>
@@ -1143,7 +1143,7 @@ IL_0005:  ret
   IL_0000:  ldnull
   IL_0001:  ret
 }");
-                Assert.Equal(methodData.Method.ReturnType.ContainingAssembly.ToDisplayString(), identityObjectModel.GetDisplayName());
+                Assert.Equal(((MethodSymbol)methodData.Method).ReturnType.ContainingAssembly.ToDisplayString(), identityObjectModel.GetDisplayName());
             });
         }
 

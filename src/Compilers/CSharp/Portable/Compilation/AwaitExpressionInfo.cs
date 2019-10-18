@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
@@ -13,11 +14,11 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         private readonly AwaitableInfo _awaitableInfo;
 
-        public IMethodSymbol GetAwaiterMethod => _awaitableInfo?.GetAwaiter;
+        public IMethodSymbol GetAwaiterMethod => _awaitableInfo?.GetAwaiter.GetPublicSymbol<IMethodSymbol>();
 
-        public IPropertySymbol IsCompletedProperty => _awaitableInfo?.IsCompleted;
+        public IPropertySymbol IsCompletedProperty => _awaitableInfo?.IsCompleted.GetPublicSymbol<IPropertySymbol>();
 
-        public IMethodSymbol GetResultMethod => _awaitableInfo?.GetResult;
+        public IMethodSymbol GetResultMethod => _awaitableInfo?.GetResult.GetPublicSymbol<IMethodSymbol>();
 
         public bool IsDynamic => _awaitableInfo?.IsDynamic == true;
 
