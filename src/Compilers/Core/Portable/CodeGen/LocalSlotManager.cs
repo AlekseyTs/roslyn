@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis.Collections;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Symbols;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeGen
@@ -63,7 +64,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         }
 
         // maps local identities to locals.
-        private Dictionary<ILocalSymbol, LocalDefinition> _localMap;
+        private Dictionary<ILocalSymbolInternal, LocalDefinition> _localMap;
 
         // pool of free slots partitioned by their signature.
         private KeyedStack<LocalSignature, LocalDefinition> _freeSlots;
@@ -88,14 +89,14 @@ namespace Microsoft.CodeAnalysis.CodeGen
             }
         }
 
-        private Dictionary<ILocalSymbol, LocalDefinition> LocalMap
+        private Dictionary<ILocalSymbolInternal, LocalDefinition> LocalMap
         {
             get
             {
                 var map = _localMap;
                 if (map == null)
                 {
-                    map = new Dictionary<ILocalSymbol, LocalDefinition>(ReferenceEqualityComparer.Instance);
+                    map = new Dictionary<ILocalSymbolInternal, LocalDefinition>(ReferenceEqualityComparer.Instance);
                     _localMap = map;
                 }
 
@@ -144,7 +145,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         /// <summary>
         /// Retrieve a local slot by its symbol.
         /// </summary>
-        internal LocalDefinition GetLocal(ILocalSymbol symbol)
+        internal LocalDefinition GetLocal(ILocalSymbolInternal symbol)
         {
             return LocalMap[symbol];
         }
@@ -153,7 +154,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         /// Release a local slot by its symbol.
         /// Slot is not associated with symbol after this.
         /// </summary>
-        internal void FreeLocal(ILocalSymbol symbol)
+        internal void FreeLocal(ILocalSymbolInternal symbol)
         {
             var slot = GetLocal(symbol);
             LocalMap.Remove(symbol);
