@@ -1429,6 +1429,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return membersAndInitializers!;
         }
 
+        [Conditional("DEBUG")]
+        internal void AssertMemberExposure(Symbol member)
+        {
+            if (member is SynthesizedRecordConstructor)
+            {
+                return;
+            }
+
+            var declared = _lazyDeclaredMembersAndInitializers;
+            Debug.Assert(declared != DeclaredMembersAndInitializers.UninitializedSentinel);
+
+            if (declared is object && declared.NonTypeNonIndexerMembers.Contains(m => m == (object)member))
+            {
+                return;
+            }
+
+            Debug.Assert(_lazyMembersDictionary is Dictionary<string, ImmutableArray<Symbol>> members && members.Values.Contains(a => a.Contains(m => m == (object)member)));
+        }
+
         protected Dictionary<string, ImmutableArray<Symbol>> GetMembersByName()
         {
             if (this.state.HasComplete(CompletionPart.Members))
