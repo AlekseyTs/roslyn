@@ -1211,8 +1211,8 @@ namespace Microsoft.CodeAnalysis.Operations
             IOperation target = Create(boundCompoundAssignmentOperator.Left);
             IOperation value = Create(boundCompoundAssignmentOperator.Right);
             BinaryOperatorKind operatorKind = Helper.DeriveBinaryOperatorKind(boundCompoundAssignmentOperator.Operator.Kind);
-            Conversion inConversion = boundCompoundAssignmentOperator.LeftConversion;
-            Conversion outConversion = boundCompoundAssignmentOperator.FinalConversion;
+            Conversion inConversion = boundCompoundAssignmentOperator.LeftConversion?.Conversion ?? Conversion.Identity;
+            Conversion outConversion = boundCompoundAssignmentOperator.FinalConversion?.Conversion ?? Conversion.Identity;
             bool isLifted = boundCompoundAssignmentOperator.Operator.Kind.IsLifted();
             bool isChecked = boundCompoundAssignmentOperator.Operator.Kind.IsChecked();
             IMethodSymbol operatorMethod = boundCompoundAssignmentOperator.Operator.Method.GetPublicSymbol();
