@@ -2168,7 +2168,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             CheckNativeIntegerFeatureAvailability(signature.Kind, node, diagnostics);
             CheckConstraintLanguageVersionAndRuntimeSupportForOperator(node, signature.Method, signature.ConstrainedToTypeOpt, diagnostics);
 
-            var resultPlaceholder = new BoundValuePlaceholder(operand.Syntax, signature.ReturnType);
+            var resultPlaceholder = new BoundValuePlaceholder(node, signature.ReturnType);
 
             BoundExpression resultConversion = GenerateConversionForAssignment(operandType, resultPlaceholder, diagnostics, isRefAssignment: false);
 
@@ -2193,7 +2193,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (!best.Conversion.IsIdentity)
             {
                 operandPlaceholder = new BoundValuePlaceholder(operand.Syntax, operand.Type).MakeCompilerGenerated();
-                operandConversion = (BoundConversion)CreateConversion(operand.Syntax, operandPlaceholder, best.Conversion, isCast: false, conversionGroupOpt: null, best.Signature.OperandType, diagnostics);
+                operandConversion = (BoundConversion)CreateConversion(node, operandPlaceholder, best.Conversion, isCast: false, conversionGroupOpt: null, best.Signature.OperandType, diagnostics);
             }
 
             return new BoundIncrementOperator(
