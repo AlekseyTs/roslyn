@@ -376,6 +376,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             throw ExceptionUtilities.Unreachable;
         }
 
+        public override BoundNode VisitValuePlaceholder(BoundValuePlaceholder node)
+        {
+            return PlaceholderReplacement(node);
+        }
+
         public override BoundNode VisitDeconstructValuePlaceholder(BoundDeconstructValuePlaceholder node)
         {
             return PlaceholderReplacement(node);

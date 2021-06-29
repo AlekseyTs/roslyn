@@ -578,14 +578,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Generate the conversion back to the type of the original expression.
 
             // (X)(short)((int)(short)x + 1)
-            if (!node.ResultConversion.IsIdentity)
+            if (node.ResultConversion is not null)
             {
-                result = MakeConversionNode(
-                    syntax: node.Syntax,
-                    rewrittenOperand: result,
-                    conversion: node.ResultConversion,
-                    rewrittenType: node.Type,
-                    @checked: node.OperatorKind.IsChecked());
+                Debug.Assert(node.ResultPlaceholder is not null);
+
+                AddPlaceholderReplacement(node.ResultPlaceholder, result);
+                result = VisitExpression(node.ResultConversion);
+                RemovePlaceholderReplacement(node.ResultPlaceholder);
             }
 
             return result;
@@ -609,14 +608,13 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Debug.Assert(TypeSymbol.Equals(node.MethodOpt.GetParameterType(0), node.MethodOpt.ReturnType, TypeCompareKind.ConsiderEverything2));
             }
 
-            if (!node.OperandConversion.IsIdentity)
+            if (node.OperandConversion is not null)
             {
-                rewrittenArgument = MakeConversionNode(
-                    syntax: syntax,
-                    rewrittenOperand: rewrittenValueToIncrement,
-                    conversion: node.OperandConversion,
-                    rewrittenType: type,
-                    @checked: @checked);
+                Debug.Assert(node.OperandPlaceholder is not null);
+
+                AddPlaceholderReplacement(node.OperandPlaceholder, rewrittenValueToIncrement);
+                rewrittenArgument = VisitExpression(node.OperandConversion);
+                RemovePlaceholderReplacement(node.OperandPlaceholder);
             }
 
             if (!isLifted)
@@ -726,15 +724,13 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // If we need to make a conversion from the original operand type to the operand type of the
             // underlying increment operation, do it now.
-            if (!node.OperandConversion.IsIdentity)
+            if (node.OperandConversion is not null)
             {
-                // (short)x
-                binaryOperand = MakeConversionNode(
-                    syntax: node.Syntax,
-                    rewrittenOperand: binaryOperand,
-                    conversion: node.OperandConversion,
-                    rewrittenType: unaryOperandType,
-                    @checked: @checked);
+                Debug.Assert(node.OperandPlaceholder is not null);
+
+                AddPlaceholderReplacement(node.OperandPlaceholder, binaryOperand);
+                binaryOperand = VisitExpression(node.OperandConversion);
+                RemovePlaceholderReplacement(node.OperandPlaceholder);
             }
 
             // Early-out for pointer increment - we don't need to convert the operands to a common type.
