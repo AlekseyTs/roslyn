@@ -2170,7 +2170,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var resultPlaceholder = new BoundValuePlaceholder(node, signature.ReturnType);
 
-            BoundExpression resultConversion = GenerateConversionForAssignment(operandType, resultPlaceholder, diagnostics, isRefAssignment: false);
+            BoundExpression resultConversion = GenerateConversionForAssignment(operandType, resultPlaceholder, diagnostics, ConversionForAssignmentFlags.IncrementAssignment);
 
             bool hasErrors = resultConversion.HasErrors;
 
