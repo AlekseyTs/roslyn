@@ -578,7 +578,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Generate the conversion back to the type of the original expression.
 
             // (X)(short)((int)(short)x + 1)
-            if (node.ResultConversion is not null)
+            if (node.ResultConversion is BoundConversion { Conversion: { IsIdentity: false } })
             {
                 Debug.Assert(node.ResultPlaceholder is not null);
 
@@ -608,7 +608,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Debug.Assert(TypeSymbol.Equals(node.MethodOpt.GetParameterType(0), node.MethodOpt.ReturnType, TypeCompareKind.ConsiderEverything2));
             }
 
-            if (node.OperandConversion is not null)
+            if (node.OperandConversion is BoundConversion { Conversion: { IsIdentity: false } })
             {
                 Debug.Assert(node.OperandPlaceholder is not null);
 
@@ -724,7 +724,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // If we need to make a conversion from the original operand type to the operand type of the
             // underlying increment operation, do it now.
-            if (node.OperandConversion is not null)
+            if (node.OperandConversion is BoundConversion { Conversion: { IsIdentity: false } })
             {
                 Debug.Assert(node.OperandPlaceholder is not null);
 
