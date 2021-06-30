@@ -218,8 +218,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (visited != null &&
                 visited != node &&
-                node.Kind != BoundKind.ImplicitReceiver &&
-                node.Kind != BoundKind.ObjectOrCollectionValuePlaceholder)
+                node.Kind is not (BoundKind.ImplicitReceiver or BoundKind.ObjectOrCollectionValuePlaceholder or BoundKind.ValuePlaceholder))
             {
                 if (!CanBePassedByReference(node) && CanBePassedByReference(visited))
                 {

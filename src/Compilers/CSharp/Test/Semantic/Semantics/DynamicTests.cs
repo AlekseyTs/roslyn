@@ -2392,60 +2392,90 @@ class C
                   //-fieldAccess: bool
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: bool
                   //-compoundAssignmentOperator: bool
 
         a |= d;   //-thisReference: C
                   //-fieldAccess: bool
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: bool
                   //-compoundAssignmentOperator: bool
        
         a ^= d;   //-thisReference: C
                   //-fieldAccess: bool
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: bool
                   //-compoundAssignmentOperator: bool
         
         i += d;   //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i -= d;   //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i *= d;   //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i /= d;   //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i %= d;   //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i <<= d;  //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
 
         i >>= d;  //-thisReference: C
                   //-fieldAccess: int
                   //-thisReference: C
                   //-fieldAccess: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-valuePlaceholder: dynamic
+                  //-conversion: int
                   //-compoundAssignmentOperator: int
     }
 }

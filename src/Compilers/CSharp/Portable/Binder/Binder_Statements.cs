@@ -1807,9 +1807,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
             else if (!conversion.IsValid ||
-                (flags & ConversionForAssignmentFlags.CompoundAssignment) == 0 ?
+                ((flags & ConversionForAssignmentFlags.CompoundAssignment) == 0 ?
                     !conversion.IsImplicit :
-                    (conversion.IsExplicit && (flags & ConversionForAssignmentFlags.PredefinedOperator) == 0))
+                    (conversion.IsExplicit && (flags & ConversionForAssignmentFlags.PredefinedOperator) == 0)))
             {
                 // We suppress conversion errors on default parameters; eg,
                 // if someone says "void M(string s = 123) {}". We will report

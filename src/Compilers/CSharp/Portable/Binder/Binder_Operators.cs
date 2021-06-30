@@ -59,11 +59,13 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     left = BindToNaturalType(left, diagnostics);
                     right = BindToNaturalType(right, diagnostics);
-                    var finalDynamicConversion = this.Compilation.Conversions.ClassifyConversionFromExpression(right, left.Type, ref useSiteInfo);
+                    var placeholder = new BoundValuePlaceholder(right.Syntax, left.HasDynamicType() ? left.Type : right.Type).MakeCompilerGenerated();
+                    var finalDynamicConversion = this.Compilation.Conversions.ClassifyConversionFromExpression(placeholder, left.Type, ref useSiteInfo);
                     diagnostics.Add(node, useSiteInfo);
-
-                    var placeholder = new BoundValuePlaceholder(right.Syntax, right.Type).MakeCompilerGenerated();
                     var conversion = (BoundConversion)CreateConversion(node, placeholder, finalDynamicConversion, isCast: true, conversionGroupOpt: null, left.Type, diagnostics);
+
+                    conversion = conversion.Update(conversion.Operand, conversion.Conversion, conversion.IsBaseConversion, conversion.Checked,
+                                                   explicitCastInCode: true, conversion.ConstantValueOpt, conversion.ConversionGroupOpt, conversion.Type);
 
                     return new BoundCompoundAssignmentOperator(
                         node,
