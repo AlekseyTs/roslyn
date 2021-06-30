@@ -2191,8 +2191,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (resultConversion is not BoundConversion)
             {
                 Debug.Assert(hasErrors || (object)resultConversion == resultPlaceholder);
-                resultPlaceholder = null;
-                resultConversion = null;
+                if ((object)resultConversion != resultPlaceholder)
+                {
+                    resultPlaceholder = null;
+                    resultConversion = null;
+                }
             }
 
             if (!hasErrors && operandType.IsVoidPointer())
@@ -2201,14 +2204,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 hasErrors = true;
             }
 
-            BoundValuePlaceholder operandPlaceholder = null;
-            BoundConversion operandConversion = null;
-
-            if (!best.Conversion.IsIdentity)
-            {
-                operandPlaceholder = new BoundValuePlaceholder(operand.Syntax, operand.Type).MakeCompilerGenerated();
-                operandConversion = (BoundConversion)CreateConversion(node, operandPlaceholder, best.Conversion, isCast: false, conversionGroupOpt: null, best.Signature.OperandType, diagnostics);
-            }
+            var operandPlaceholder = new BoundValuePlaceholder(operand.Syntax, operand.Type).MakeCompilerGenerated();
+            var operandConversion = CreateConversion(node, operandPlaceholder, best.Conversion, isCast: false, conversionGroupOpt: null, best.Signature.OperandType, diagnostics);
 
             return new BoundIncrementOperator(
                 node,
@@ -2219,7 +2216,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 operandPlaceholder,
                 operandConversion,
                 resultPlaceholder,
-                (BoundConversion)resultConversion,
+                resultConversion,
                 resultKind,
                 originalUserDefinedOperators,
                 operandType,

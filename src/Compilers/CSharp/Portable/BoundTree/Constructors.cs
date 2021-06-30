@@ -711,9 +711,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             MethodSymbol? methodOpt,
             TypeSymbol? constrainedToTypeOpt,
             BoundValuePlaceholder? operandPlaceholder,
-            BoundConversion? operandConversion,
+            BoundExpression? operandConversion,
             BoundValuePlaceholder? resultPlaceholder,
-            BoundConversion? resultConversion,
+            BoundExpression? resultConversion,
             LookupResultKind resultKind,
             TypeSymbol type,
             bool hasErrors = false) :
@@ -721,7 +721,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
         }
 
-        public BoundIncrementOperator Update(UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundConversion? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundConversion? resultConversion, LookupResultKind resultKind, TypeSymbol type)
+        public BoundIncrementOperator Update(UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundExpression? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundExpression? resultConversion, LookupResultKind resultKind, TypeSymbol type)
         {
             return Update(operatorKind, operand, methodOpt, constrainedToTypeOpt, operandPlaceholder, operandConversion, resultPlaceholder, resultConversion, resultKind, this.OriginalUserDefinedOperatorsOpt, type);
         }
