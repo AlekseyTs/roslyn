@@ -79,7 +79,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 RoslynDebug.Assert(source != null);
                 RoslynDebug.Assert((object)destination != null);
-                RoslynDebug.Assert(!isCast || conversionGroupOpt != null);
+                RoslynDebug.Assert(!isCast || conversionGroupOpt != null || wasCompilerGenerated);
 
                 if (conversion.IsIdentity)
                 {
