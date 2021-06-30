@@ -273,10 +273,10 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundExpression left = node.Left;
 
-            if (!node.Operator.Kind.IsDynamic() && node.LeftConversion is not null && node.LeftConversion.Conversion.Exists)
+            if (!node.Operator.Kind.IsDynamic() && node.LeftConversion is BoundConversion { Conversion: { IsIdentity: false, Exists: true } conversion })
             {
                 // Need to represent the implicit conversion as a node in order to be able to produce correct diagnostics.
-                left = new BoundConversion(left.Syntax, left, node.LeftConversion.Conversion, node.Operator.Kind.IsChecked(),
+                left = new BoundConversion(left.Syntax, left, conversion, node.Operator.Kind.IsChecked(),
                                            explicitCastInCode: false, conversionGroupOpt: null, constantValueOpt: null, type: node.Operator.LeftType);
             }
 

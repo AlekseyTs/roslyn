@@ -206,8 +206,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (finalConversion is not BoundConversion final)
             {
                 Debug.Assert(finalConversion.HasErrors || (object)finalConversion == finalPlaceholder);
-                finalPlaceholder = null;
-                finalConversion = null;
+                if ((object)finalConversion != finalPlaceholder)
+                {
+                    finalPlaceholder = null;
+                    finalConversion = null;
+                }
             }
             else if (final.Conversion.IsExplicit &&
                 isPredefinedOperator &&
@@ -233,17 +236,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             // code path for the diagnostics.  Make sure we don't report success.
             Debug.Assert(left.Kind != BoundKind.EventAccess || hasError);
 
-            BoundValuePlaceholder leftPlaceholder = null;
-            BoundConversion leftConversion = null;
-
-            if (!best.LeftConversion.IsIdentity)
-            {
-                leftPlaceholder = new BoundValuePlaceholder(left.Syntax, leftType).MakeCompilerGenerated();
-                leftConversion = (BoundConversion)CreateConversion(node, leftPlaceholder, best.LeftConversion, isCast: false, conversionGroupOpt: null, best.Signature.LeftType, diagnostics);
-            }
+            var leftPlaceholder = new BoundValuePlaceholder(left.Syntax, leftType).MakeCompilerGenerated();
+            var leftConversion = CreateConversion(node, leftPlaceholder, best.LeftConversion, isCast: false, conversionGroupOpt: null, best.Signature.LeftType, diagnostics);
 
             return new BoundCompoundAssignmentOperator(node, bestSignature, left, rightConverted,
-                leftPlaceholder, leftConversion, finalPlaceholder, (BoundConversion)finalConversion, resultKind, originalUserDefinedOperators, leftType, hasError);
+                leftPlaceholder, leftConversion, finalPlaceholder, finalConversion, resultKind, originalUserDefinedOperators, leftType, hasError);
         }
 
         /// <summary>

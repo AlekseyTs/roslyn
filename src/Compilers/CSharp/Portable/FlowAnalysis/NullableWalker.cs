@@ -8366,7 +8366,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     resultOfOperandConversionType = VisitConversion(
                         conversionOpt: null,
                         node.Operand,
-                        GetConversion(node.OperandConversion, node.OperandPlaceholder),
+                        BoundNode.GetConversion(node.OperandConversion, node.OperandPlaceholder),
                         targetTypeOfOperandConversion,
                         operandType,
                         checkConversion: true,
@@ -8396,7 +8396,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 resultOfIncrementType = VisitConversion(
                     conversionOpt: null,
                     node,
-                    GetConversion(node.ResultConversion, node.ResultPlaceholder),
+                    BoundNode.GetConversion(node.ResultConversion, node.ResultPlaceholder),
                     operandTypeWithAnnotations,
                     resultOfIncrementType,
                     checkConversion: true,
@@ -8424,17 +8424,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             return null;
         }
 
-        private static Conversion GetConversion(BoundExpression? conversion, BoundValuePlaceholder? placeholder)
-        {
-            return conversion switch
-            {
-                null => Conversion.NoConversion,
-                BoundConversion boundConversion => boundConversion.Conversion,
-                BoundValuePlaceholder valuePlaceholder when (object)valuePlaceholder == placeholder => Conversion.Identity,
-                _ => throw ExceptionUtilities.UnexpectedValue(conversion)
-            };
-        }
-
         public override BoundNode? VisitCompoundAssignmentOperator(BoundCompoundAssignmentOperator node)
         {
             var left = node.Left;
@@ -8455,7 +8444,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 leftOnRightType = VisitConversion(
                     conversionOpt: null,
                     node.Left,
-                    node.LeftConversion?.Conversion ?? Conversion.Identity,
+                    BoundNode.GetConversion(node.LeftConversion, node.LeftPlaceholder),
                     TypeWithAnnotations.Create(node.Operator.LeftType),
                     leftOnRightType,
                     checkConversion: true,
@@ -8489,7 +8478,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 resultType = VisitConversion(
                     conversionOpt: null,
                     node,
-                    node.FinalConversion?.Conversion ?? Conversion.Identity,
+                    BoundNode.GetConversion(node.FinalConversion, node.FinalPlaceholder),
                     leftLValueType,
                     resultType,
                     checkConversion: true,
