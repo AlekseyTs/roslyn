@@ -955,7 +955,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
     internal sealed partial class BoundIncrementOperator : BoundExpression
     {
-        public BoundIncrementOperator(SyntaxNode syntax, UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundConversion? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundConversion? resultConversion, LookupResultKind resultKind, ImmutableArray<MethodSymbol> originalUserDefinedOperatorsOpt, TypeSymbol type, bool hasErrors = false)
+        public BoundIncrementOperator(SyntaxNode syntax, UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundExpression? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundExpression? resultConversion, LookupResultKind resultKind, ImmutableArray<MethodSymbol> originalUserDefinedOperatorsOpt, TypeSymbol type, bool hasErrors = false)
             : base(BoundKind.IncrementOperator, syntax, type, hasErrors || operand.HasErrors() || operandPlaceholder.HasErrors() || operandConversion.HasErrors() || resultPlaceholder.HasErrors() || resultConversion.HasErrors())
         {
 
@@ -987,11 +987,11 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public BoundValuePlaceholder? OperandPlaceholder { get; }
 
-        public BoundConversion? OperandConversion { get; }
+        public BoundExpression? OperandConversion { get; }
 
         public BoundValuePlaceholder? ResultPlaceholder { get; }
 
-        public BoundConversion? ResultConversion { get; }
+        public BoundExpression? ResultConversion { get; }
 
         private readonly LookupResultKind _ResultKind;
         public override LookupResultKind ResultKind { get { return _ResultKind; } }
@@ -1000,7 +1000,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         [DebuggerStepThrough]
         public override BoundNode? Accept(BoundTreeVisitor visitor) => visitor.VisitIncrementOperator(this);
 
-        public BoundIncrementOperator Update(UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundConversion? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundConversion? resultConversion, LookupResultKind resultKind, ImmutableArray<MethodSymbol> originalUserDefinedOperatorsOpt, TypeSymbol type)
+        public BoundIncrementOperator Update(UnaryOperatorKind operatorKind, BoundExpression operand, MethodSymbol? methodOpt, TypeSymbol? constrainedToTypeOpt, BoundValuePlaceholder? operandPlaceholder, BoundExpression? operandConversion, BoundValuePlaceholder? resultPlaceholder, BoundExpression? resultConversion, LookupResultKind resultKind, ImmutableArray<MethodSymbol> originalUserDefinedOperatorsOpt, TypeSymbol type)
         {
             if (operatorKind != this.OperatorKind || operand != this.Operand || !Symbols.SymbolEqualityComparer.ConsiderEverything.Equals(methodOpt, this.MethodOpt) || !TypeSymbol.Equals(constrainedToTypeOpt, this.ConstrainedToTypeOpt, TypeCompareKind.ConsiderEverything) || operandPlaceholder != this.OperandPlaceholder || operandConversion != this.OperandConversion || resultPlaceholder != this.ResultPlaceholder || resultConversion != this.ResultConversion || resultKind != this.ResultKind || originalUserDefinedOperatorsOpt != this.OriginalUserDefinedOperatorsOpt || !TypeSymbol.Equals(type, this.Type, TypeCompareKind.ConsiderEverything))
             {
@@ -10003,9 +10003,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundExpression operand = (BoundExpression)this.Visit(node.Operand);
             BoundValuePlaceholder? operandPlaceholder = node.OperandPlaceholder;
-            BoundConversion? operandConversion = node.OperandConversion;
+            BoundExpression? operandConversion = node.OperandConversion;
             BoundValuePlaceholder? resultPlaceholder = node.ResultPlaceholder;
-            BoundConversion? resultConversion = node.ResultConversion;
+            BoundExpression? resultConversion = node.ResultConversion;
             TypeSymbol? constrainedToTypeOpt = this.VisitType(node.ConstrainedToTypeOpt);
             TypeSymbol? type = this.VisitType(node.Type);
             return node.Update(node.OperatorKind, operand, node.MethodOpt, constrainedToTypeOpt, operandPlaceholder, operandConversion, resultPlaceholder, resultConversion, node.ResultKind, node.OriginalUserDefinedOperatorsOpt, type);
@@ -11348,9 +11348,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<MethodSymbol> originalUserDefinedOperatorsOpt = GetUpdatedArray(node, node.OriginalUserDefinedOperatorsOpt);
             BoundExpression operand = (BoundExpression)this.Visit(node.Operand);
             BoundValuePlaceholder? operandPlaceholder = node.OperandPlaceholder;
-            BoundConversion? operandConversion = node.OperandConversion;
+            BoundExpression? operandConversion = node.OperandConversion;
             BoundValuePlaceholder? resultPlaceholder = node.ResultPlaceholder;
-            BoundConversion? resultConversion = node.ResultConversion;
+            BoundExpression? resultConversion = node.ResultConversion;
             BoundIncrementOperator updatedNode;
 
             if (_updatedNullabilities.TryGetValue(node, out (NullabilityInfo Info, TypeSymbol? Type) infoAndType))
