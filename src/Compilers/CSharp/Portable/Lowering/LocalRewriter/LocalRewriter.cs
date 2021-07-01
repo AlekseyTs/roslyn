@@ -999,6 +999,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return null;
             }
 
+            public override BoundNode? VisitValuePlaceholder(BoundValuePlaceholder node)
+            {
+                Fail(node);
+                return null;
+            }
+
             public override BoundNode? VisitDeconstructValuePlaceholder(BoundDeconstructValuePlaceholder node)
             {
                 Fail(node);
