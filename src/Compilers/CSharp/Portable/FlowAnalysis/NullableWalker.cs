@@ -8366,7 +8366,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     resultOfOperandConversionType = VisitConversion(
                         conversionOpt: null,
                         node.Operand,
-                        GetConversion(node.OperandConversion, node.OperandPlaceholder),
+                        BoundNode.GetConversion(node.OperandConversion, node.OperandPlaceholder),
                         targetTypeOfOperandConversion,
                         operandType,
                         checkConversion: true,
@@ -8396,7 +8396,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 resultOfIncrementType = VisitConversion(
                     conversionOpt: null,
                     node,
-                    GetConversion(node.ResultConversion, node.ResultPlaceholder),
+                    BoundNode.GetConversion(node.ResultConversion, node.ResultPlaceholder),
                     operandTypeWithAnnotations,
                     resultOfIncrementType,
                     checkConversion: true,
@@ -8422,17 +8422,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             return null;
-        }
-
-        private static Conversion GetConversion(BoundExpression? conversion, BoundValuePlaceholder? placeholder)
-        {
-            return conversion switch
-            {
-                null => Conversion.NoConversion,
-                BoundConversion boundConversion => boundConversion.Conversion,
-                BoundValuePlaceholder valuePlaceholder when (object)valuePlaceholder == placeholder => Conversion.Identity,
-                _ => throw ExceptionUtilities.UnexpectedValue(conversion)
-            };
         }
 
         public override BoundNode? VisitCompoundAssignmentOperator(BoundCompoundAssignmentOperator node)
