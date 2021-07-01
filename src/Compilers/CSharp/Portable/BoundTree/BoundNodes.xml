@@ -81,6 +81,9 @@
   <AbstractNode Name="BoundValuePlaceholderBase" Base="BoundExpression">
   </AbstractNode>
 
+  <!--
+  This node will not survive the local rewriting.
+  -->
   <Node Name="BoundValuePlaceholder" Base="BoundValuePlaceholderBase">
   </Node>
   
