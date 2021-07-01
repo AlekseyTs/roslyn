@@ -145,7 +145,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 if (length == 1)
                 {
-                    result = _factory.Coalesce(result!, _factory.StringLiteral(""));
+                    Debug.Assert(result is not null);
+                    Debug.Assert(result.Type is not null);
+                    var placeholder = new BoundValuePlaceholder(result.Syntax, result.Type);
+                    result = new BoundNullCoalescingOperator(result.Syntax, result, _factory.StringLiteral(""), leftPlaceholder: placeholder, leftConversion: placeholder, BoundNullCoalescingOperatorResultKind.LeftType, result.Type) { WasCompilerGenerated = true };
                 }
             }
             else
