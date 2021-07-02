@@ -578,16 +578,23 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Generate the conversion back to the type of the original expression.
 
             // (X)(short)((int)(short)x + 1)
-            if (node.ResultConversion is BoundConversion { Conversion: { IsIdentity: false } })
-            {
-                Debug.Assert(node.ResultPlaceholder is not null);
-
-                AddPlaceholderReplacement(node.ResultPlaceholder, result);
-                result = VisitExpression(node.ResultConversion);
-                RemovePlaceholderReplacement(node.ResultPlaceholder);
-            }
+            result = ApplyConversionIfNotIdentity(node.ResultConversion, node.ResultPlaceholder, result);
 
             return result;
+        }
+
+        private BoundExpression ApplyConversionIfNotIdentity(BoundExpression? conversion, BoundValuePlaceholder? placeholder, BoundExpression replacement)
+        {
+            if (conversion is BoundConversion { Conversion: { IsIdentity: false } })
+            {
+                Debug.Assert(placeholder is not null);
+
+                AddPlaceholderReplacement(placeholder, replacement);
+                replacement = VisitExpression(conversion);
+                RemovePlaceholderReplacement(placeholder);
+            }
+
+            return replacement;
         }
 
         private BoundExpression MakeUserDefinedIncrementOperator(BoundIncrementOperator node, BoundExpression rewrittenValueToIncrement)
@@ -598,7 +605,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool isLifted = node.OperatorKind.IsLifted();
             bool @checked = node.OperatorKind.IsChecked();
 
-            BoundExpression rewrittenArgument = rewrittenValueToIncrement;
             SyntaxNode syntax = node.Syntax;
 
             TypeSymbol type = node.MethodOpt.GetParameterType(0);
@@ -608,14 +614,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Debug.Assert(TypeSymbol.Equals(node.MethodOpt.GetParameterType(0), node.MethodOpt.ReturnType, TypeCompareKind.ConsiderEverything2));
             }
 
-            if (node.OperandConversion is BoundConversion { Conversion: { IsIdentity: false } })
-            {
-                Debug.Assert(node.OperandPlaceholder is not null);
-
-                AddPlaceholderReplacement(node.OperandPlaceholder, rewrittenValueToIncrement);
-                rewrittenArgument = VisitExpression(node.OperandConversion);
-                RemovePlaceholderReplacement(node.OperandPlaceholder);
-            }
+            BoundExpression rewrittenArgument = ApplyConversionIfNotIdentity(node.OperandConversion, node.OperandPlaceholder, rewrittenValueToIncrement);
 
             if (!isLifted)
             {
@@ -724,14 +723,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // If we need to make a conversion from the original operand type to the operand type of the
             // underlying increment operation, do it now.
-            if (node.OperandConversion is BoundConversion { Conversion: { IsIdentity: false } })
-            {
-                Debug.Assert(node.OperandPlaceholder is not null);
-
-                AddPlaceholderReplacement(node.OperandPlaceholder, binaryOperand);
-                binaryOperand = VisitExpression(node.OperandConversion);
-                RemovePlaceholderReplacement(node.OperandPlaceholder);
-            }
+            binaryOperand = ApplyConversionIfNotIdentity(node.OperandConversion, node.OperandPlaceholder, binaryOperand);
 
             // Early-out for pointer increment - we don't need to convert the operands to a common type.
             if (node.OperatorKind.OperandTypes() == UnaryOperatorKind.Pointer)
