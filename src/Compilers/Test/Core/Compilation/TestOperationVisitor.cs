@@ -520,6 +520,12 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             Assert.NotNull(operation.TargetMethod);
             var isVirtual = operation.IsVirtual;
 
+            AssertConstrainedToType(operation.TargetMethod, operation.ConstrainedToType);
+            if (operation.ConstrainedToType is not null)
+            {
+                Assert.True(isVirtual);
+            }
+
             IEnumerable<IOperation> children;
             if (operation.Instance != null)
             {
@@ -628,6 +634,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
         private void VisitMemberReference(IMemberReferenceOperation operation, IEnumerable<IOperation> additionalChildren)
         {
             Assert.NotNull(operation.Member);
+            AssertConstrainedToType(operation.Member, operation.ConstrainedToType);
 
             IEnumerable<IOperation> children;
 
@@ -655,6 +662,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
         {
             Assert.Equal(OperationKind.FieldReference, operation.Kind);
             VisitMemberReference(operation);
+            Assert.Null(operation.ConstrainedToType);
 
             Assert.Same(operation.Member, operation.Field);
             var isDeclaration = operation.IsDeclaration;
@@ -667,6 +675,11 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
 
             Assert.Same(operation.Member, operation.Method);
             var isVirtual = operation.IsVirtual;
+
+            if (operation.ConstrainedToType is not null)
+            {
+                Assert.True(isVirtual);
+            }
         }
 
         public override void VisitPropertyReference(IPropertyReferenceOperation operation)
@@ -720,6 +733,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             var isLifted = operation.IsLifted;
             var isChecked = operation.IsChecked;
 
+            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
             Assert.Same(operation.Operand, operation.ChildOperations.Single());
         }
 
@@ -734,6 +748,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             var isChecked = operation.IsChecked;
             var isCompareText = operation.IsCompareText;
 
+            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
             AssertEx.Equal(new[] { operation.LeftOperand, operation.RightOperand }, operation.ChildOperations);
         }
 
@@ -754,6 +769,8 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             var isChecked = operation.IsChecked;
             var isTryCast = operation.IsTryCast;
 
+            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
+
             switch (operation.Language)
             {
                 case LanguageNames.CSharp:
@@ -770,6 +787,18 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             }
 
             Assert.Same(operation.Operand, operation.ChildOperations.Single());
+        }
+
+        private static void AssertConstrainedToType(ISymbol member, ITypeSymbol constrainedToType)
+        {
+            if (member is null || !member.IsStatic || (!member.IsVirtual && !member.IsAbstract))
+            {
+                Assert.Null(constrainedToType);
+            }
+            else
+            {
+                Assert.IsType<ITypeParameterSymbol>(constrainedToType);
+            }
         }
 
         public override void VisitConditional(IConditionalOperation operation)
@@ -1079,6 +1108,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
 
             var isLifted = operation.IsLifted;
             var isChecked = operation.IsChecked;
+            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
             VisitAssignment(operation);
         }
 
@@ -1090,6 +1120,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             var isLifted = operation.IsLifted;
             var isChecked = operation.IsChecked;
 
+            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
             Assert.Same(operation.Target, operation.ChildOperations.Single());
         }
 
