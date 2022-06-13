@@ -2451,7 +2451,7 @@ namespace Microsoft.CodeAnalysis.FlowAnalysis
                     condition = new UnaryOperation(isAndAlso ? UnaryOperatorKind.False : UnaryOperatorKind.True,
                                                    condition, isLifted: false, isChecked: false,
                                                    operatorMethod: unaryOperatorMethod,
-                                                   constrainedToType: binOp.ConstrainedToType,
+                                                   constrainedToType: unaryOperatorMethod is not null && (unaryOperatorMethod.IsAbstract || unaryOperatorMethod.IsVirtual) ? binOp.ConstrainedToType : null,
                                                    semanticModel: null, condition.Syntax, booleanType, constantValue: null, isImplicit: true);
                 }
                 else
@@ -2493,7 +2493,7 @@ namespace Microsoft.CodeAnalysis.FlowAnalysis
                                                              binOp.IsChecked,
                                                              binOp.IsCompareText,
                                                              binOp.OperatorMethod,
-                                                             binOp.ConstrainedToType,
+                                                             binOp.OperatorMethod is not null && (binOp.OperatorMethod.IsAbstract || binOp.OperatorMethod.IsVirtual) ? binOp.ConstrainedToType : null,
                                                              unaryOperatorMethod: null,
                                                              semanticModel: null,
                                                              binOp.Syntax,
@@ -2511,6 +2511,8 @@ namespace Microsoft.CodeAnalysis.FlowAnalysis
 
         private IOperation VisitUserDefinedBinaryConditionalOperator(IBinaryOperation binOp, int? captureIdForResult)
         {
+            Debug.Assert(binOp.OperatorMethod is not null);
+
             SpillEvalStack();
 
             var resultCaptureRegion = CurrentRegionRequired;
@@ -2551,7 +2553,8 @@ namespace Microsoft.CodeAnalysis.FlowAnalysis
             {
                 condition = new UnaryOperation(isAndAlso ? UnaryOperatorKind.False : UnaryOperatorKind.True,
                                                condition, isLifted: false, isChecked: false,
-                                               operatorMethod: unaryOperatorMethod, constrainedToType: binOp.ConstrainedToType,
+                                               operatorMethod: unaryOperatorMethod,
+                                               constrainedToType: unaryOperatorMethod.IsAbstract || unaryOperatorMethod.IsVirtual ? binOp.ConstrainedToType : null,
                                                semanticModel: null, condition.Syntax, unaryOperatorMethod.ReturnType, constantValue: null, isImplicit: true);
             }
             else
@@ -2580,7 +2583,7 @@ namespace Microsoft.CodeAnalysis.FlowAnalysis
                                                              binOp.IsChecked,
                                                              binOp.IsCompareText,
                                                              binOp.OperatorMethod,
-                                                             binOp.ConstrainedToType,
+                                                             binOp.OperatorMethod.IsAbstract || binOp.OperatorMethod.IsVirtual ? binOp.ConstrainedToType : null,
                                                              unaryOperatorMethod: null,
                                                              semanticModel: null,
                                                              binOp.Syntax,

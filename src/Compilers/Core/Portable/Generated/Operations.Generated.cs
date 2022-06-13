@@ -1057,8 +1057,9 @@ namespace Microsoft.CodeAnalysis.Operations
         /// </summary>
         IMethodSymbol? OperatorMethod { get; }
         /// <summary>
-        /// Type parameter which runtime type will be used to resolve virtual invocation of the <see cref="OperatorMethod" />, if any.
-        /// Null if <see cref="OperatorMethod" /> is resolved statically, or is null.
+        /// Type parameter which runtime type will be used to resolve virtual invocation of the <see cref="OperatorMethod" />
+        /// or corresponding true/false operator, if any.
+        /// Null if operators are resolved statically, or are not used.
         /// </summary>
         ITypeSymbol? ConstrainedToType { get; }
     }

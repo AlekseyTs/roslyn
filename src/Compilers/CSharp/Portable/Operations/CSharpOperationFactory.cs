@@ -1269,7 +1269,19 @@ namespace Microsoft.CodeAnalysis.Operations
             ITypeSymbol? type = boundCompoundAssignmentOperator.GetPublicTypeSymbol();
             bool isImplicit = boundCompoundAssignmentOperator.WasCompilerGenerated;
             return new CompoundAssignmentOperation(inConversion, outConversion, operatorKind, isLifted, isChecked, operatorMethod,
-                boundCompoundAssignmentOperator.Operator.ConstrainedToTypeOpt.GetPublicSymbol(), target, value, _semanticModel, syntax, type, isImplicit);
+                                                   GetConstrainedToTypeForOperator(method, boundCompoundAssignmentOperator.Operator.ConstrainedToTypeOpt).GetPublicSymbol(),
+                                                   target, value, _semanticModel, syntax, type, isImplicit);
+        }
+
+        private static TypeParameterSymbol? GetConstrainedToTypeForOperator(MethodSymbol? operatorMethod, TypeSymbol? constrainedToTypeOpt)
+        {
+            if (operatorMethod is not null && operatorMethod.IsStatic && (operatorMethod.IsAbstract || operatorMethod.IsVirtual) &&
+                constrainedToTypeOpt is TypeParameterSymbol typeParameter)
+            {
+                return typeParameter;
+            }
+
+            return null;
         }
 
         private IIncrementOrDecrementOperation CreateBoundIncrementOperatorOperation(BoundIncrementOperator boundIncrementOperator)
@@ -1283,7 +1295,9 @@ namespace Microsoft.CodeAnalysis.Operations
             SyntaxNode syntax = boundIncrementOperator.Syntax;
             ITypeSymbol? type = boundIncrementOperator.GetPublicTypeSymbol();
             bool isImplicit = boundIncrementOperator.WasCompilerGenerated;
-            return new IncrementOrDecrementOperation(isPostfix, isLifted, isChecked, target, operatorMethod, boundIncrementOperator.ConstrainedToTypeOpt.GetPublicSymbol(), operationKind, _semanticModel, syntax, type, isImplicit);
+            return new IncrementOrDecrementOperation(isPostfix, isLifted, isChecked, target, operatorMethod,
+                                                     GetConstrainedToTypeForOperator(boundIncrementOperator.MethodOpt, boundIncrementOperator.ConstrainedToTypeOpt).GetPublicSymbol(),
+                                                     operationKind, _semanticModel, syntax, type, isImplicit);
         }
 
         private IInvalidOperation CreateBoundBadExpressionOperation(BoundBadExpression boundBadExpression)
@@ -1327,7 +1341,9 @@ namespace Microsoft.CodeAnalysis.Operations
             bool isLifted = boundUnaryOperator.OperatorKind.IsLifted();
             bool isChecked = boundUnaryOperator.OperatorKind.IsChecked() || (boundUnaryOperator.MethodOpt is not null && SyntaxFacts.IsCheckedOperator(boundUnaryOperator.MethodOpt.Name));
             bool isImplicit = boundUnaryOperator.WasCompilerGenerated;
-            return new UnaryOperation(unaryOperatorKind, operand, isLifted, isChecked, operatorMethod, boundUnaryOperator.ConstrainedToTypeOpt.GetPublicSymbol(), _semanticModel, syntax, type, constantValue, isImplicit);
+            return new UnaryOperation(unaryOperatorKind, operand, isLifted, isChecked, operatorMethod,
+                                      GetConstrainedToTypeForOperator(boundUnaryOperator.MethodOpt, boundUnaryOperator.ConstrainedToTypeOpt).GetPublicSymbol(),
+                                      _semanticModel, syntax, type, constantValue, isImplicit);
         }
         private IOperation CreateBoundBinaryOperatorBase(BoundBinaryOperatorBase boundBinaryOperatorBase)
         {
@@ -1380,7 +1396,12 @@ namespace Microsoft.CodeAnalysis.Operations
                 bool isChecked = boundBinaryOperator.OperatorKind.IsChecked();
                 bool isCompareText = false;
                 bool isImplicit = boundBinaryOperator.WasCompilerGenerated;
-                return new BinaryOperation(operatorKind, left, right, isLifted, isChecked, isCompareText, operatorMethod, boundBinaryOperator.ConstrainedToTypeOpt.GetPublicSymbol(), unaryOperatorMethod,
+                TypeSymbol? constrainedToTypeOpt = GetConstrainedToTypeForOperator(boundBinaryOperator.LogicalOperator, boundBinaryOperator.ConstrainedToTypeOpt) ??
+                                                   GetConstrainedToTypeForOperator(boundBinaryOperator.OperatorKind.Operator() == CSharp.BinaryOperatorKind.And ?
+                                                                                       boundBinaryOperator.FalseOperator :
+                                                                                       boundBinaryOperator.TrueOperator,
+                                                                                   boundBinaryOperator.ConstrainedToTypeOpt);
+                return new BinaryOperation(operatorKind, left, right, isLifted, isChecked, isCompareText, operatorMethod, constrainedToTypeOpt.GetPublicSymbol(), unaryOperatorMethod,
                                            _semanticModel, syntax, type, constantValue, isImplicit);
             }
         }
@@ -1408,7 +1429,9 @@ namespace Microsoft.CodeAnalysis.Operations
             bool isCompareText = false;
             bool isImplicit = boundBinaryOperator.WasCompilerGenerated;
             return new BinaryOperation(operatorKind, left, right, isLifted, isChecked, isCompareText,
-                                       operatorMethod, boundBinaryOperator.ConstrainedToType.GetPublicSymbol(), unaryOperatorMethod,
+                                       operatorMethod,
+                                       GetConstrainedToTypeForOperator(boundBinaryOperator.Method, boundBinaryOperator.ConstrainedToType).GetPublicSymbol(),
+                                       unaryOperatorMethod,
                                        _semanticModel, syntax, type, constantValue, isImplicit);
         }
 

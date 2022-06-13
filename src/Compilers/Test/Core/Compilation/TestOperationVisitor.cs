@@ -747,8 +747,26 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             var isLifted = operation.IsLifted;
             var isChecked = operation.IsChecked;
             var isCompareText = operation.IsCompareText;
+            var constrainedToType = operation.ConstrainedToType;
 
-            AssertConstrainedToType(operatorMethod, operation.ConstrainedToType);
+            if (binaryOperationKind is BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr)
+            {
+                if ((operatorMethod is null || !operatorMethod.IsStatic || (!operatorMethod.IsVirtual && !operatorMethod.IsAbstract)) &&
+                    (unaryOperatorMethod is null || !unaryOperatorMethod.IsStatic || (!unaryOperatorMethod.IsVirtual && !unaryOperatorMethod.IsAbstract)))
+                {
+                    Assert.Null(constrainedToType);
+                }
+                else if (constrainedToType is not null) // In error cases we might not have the type parameter
+                {
+                    Assert.IsAssignableFrom<ITypeParameterSymbol>(constrainedToType);
+                }
+            }
+            else
+            {
+                Assert.Null(unaryOperatorMethod);
+                AssertConstrainedToType(operatorMethod, constrainedToType);
+            }
+
             AssertEx.Equal(new[] { operation.LeftOperand, operation.RightOperand }, operation.ChildOperations);
         }
 
@@ -795,7 +813,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             {
                 Assert.Null(constrainedToType);
             }
-            else
+            else if (constrainedToType is not null) // In error cases we might not have the type parameter
             {
                 Assert.IsAssignableFrom<ITypeParameterSymbol>(constrainedToType);
             }
