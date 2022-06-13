@@ -797,7 +797,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             }
             else
             {
-                Assert.IsType<ITypeParameterSymbol>(constrainedToType);
+                Assert.IsAssignableFrom<ITypeParameterSymbol>(constrainedToType);
             }
         }
 
