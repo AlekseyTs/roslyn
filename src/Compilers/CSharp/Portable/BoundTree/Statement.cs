@@ -34,4 +34,10 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         protected override ImmutableArray<BoundNode?> Children => ImmutableArray.Create<BoundNode?>(this.Operand);
     }
+
+    partial class BoundFixedSizeBufferElementAccess
+    {
+        // PROTOTYPE(SafeFixedSizeBuffers): remove once IOperation is implemented
+        protected override ImmutableArray<BoundNode?> Children => ImmutableArray.Create<BoundNode?>(this.Expression, this.Argument);
+    }
 }

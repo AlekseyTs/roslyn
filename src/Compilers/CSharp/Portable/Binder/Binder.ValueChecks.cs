@@ -726,6 +726,28 @@ namespace Microsoft.CodeAnalysis.CSharp
                             throw ExceptionUtilities.UnexpectedValue(implicitIndexer.IndexerOrSliceAccess.Kind);
                     }
 
+                case BoundKind.FixedSizeBufferElementAccess:
+                    {
+                        var elementAccess = (BoundFixedSizeBufferElementAccess)expr;
+
+                        if (elementAccess.IsValue || elementAccess.GetItemOrSliceHelper is WellKnownMember.System_Span_T__Slice_Int_Int or WellKnownMember.System_ReadOnlySpan_T__Slice_Int_Int)
+                        {
+                            // Strict RValue
+                            break;
+                        }
+
+                        var getItemOrSliceHelper = (MethodSymbol)Compilation.GetWellKnownTypeMember(elementAccess.GetItemOrSliceHelper);
+
+                        if (elementAccess.GetSpanOrReadOnlySpanHelper is null || getItemOrSliceHelper is null)
+                        {
+                            return true;
+                        }
+
+                        getItemOrSliceHelper = getItemOrSliceHelper.AsMember((NamedTypeSymbol)elementAccess.GetSpanOrReadOnlySpanHelper.ReturnType);
+
+                        return CheckMethodReturnValueKind(getItemOrSliceHelper, elementAccess.Syntax, node, valueKind, checkingReceiver, diagnostics);
+                    }
+
                 case BoundKind.ImplicitIndexerReceiverPlaceholder:
                     break;
 
@@ -3109,6 +3131,15 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                     break;
 
+                case BoundKind.FixedSizeBufferElementAccess:
+                    {
+                        var elementAccess = (BoundFixedSizeBufferElementAccess)expr;
+
+                        return elementAccess is { IsValue: true, GetItemOrSliceHelper: WellKnownMember.System_ReadOnlySpan_T__get_Item } ?
+                                   CallingMethodScope :
+                                   GetRefEscape(elementAccess.Expression, scopeOfTheContainingExpression);
+                    }
+
                 case BoundKind.PropertyAccess:
                     var propertyAccess = (BoundPropertyAccess)expr;
 
@@ -3358,6 +3389,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                             throw ExceptionUtilities.UnexpectedValue(implicitIndexerAccess.IndexerOrSliceAccess.Kind);
                     }
                     break;
+
+                case BoundKind.FixedSizeBufferElementAccess:
+                    {
+                        var elementAccess = (BoundFixedSizeBufferElementAccess)expr;
+
+                        return (elementAccess is { IsValue: true, GetItemOrSliceHelper: WellKnownMember.System_ReadOnlySpan_T__get_Item } ||
+                                CheckRefEscape(node, elementAccess.Expression, escapeFrom, escapeTo, checkingReceiver, diagnostics));
+                    }
 
                 case BoundKind.FunctionPointerInvocation:
                     var functionPointerInvocation = (BoundFunctionPointerInvocation)expr;
@@ -3657,6 +3696,16 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         default:
                             throw ExceptionUtilities.UnexpectedValue(implicitIndexerAccess.IndexerOrSliceAccess.Kind);
+                    }
+
+                case BoundKind.FixedSizeBufferElementAccess:
+                    {
+                        var elementAccess = (BoundFixedSizeBufferElementAccess)expr;
+
+                        return Math.Max(GetValEscape(elementAccess.Expression, scopeOfTheContainingExpression),
+                                        (elementAccess.GetItemOrSliceHelper is WellKnownMember.System_ReadOnlySpan_T__get_Item or WellKnownMember.System_Span_T__get_Item) ?
+                                            CallingMethodScope :
+                                            GetRefEscape(elementAccess.Expression, scopeOfTheContainingExpression));
                     }
 
                 case BoundKind.PropertyAccess:
@@ -4105,6 +4154,15 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         default:
                             throw ExceptionUtilities.UnexpectedValue(implicitIndexerAccess.IndexerOrSliceAccess.Kind);
+                    }
+
+                case BoundKind.FixedSizeBufferElementAccess:
+                    {
+                        var elementAccess = (BoundFixedSizeBufferElementAccess)expr;
+
+                        return CheckValEscape(node, elementAccess.Expression, escapeFrom, escapeTo, checkingReceiver, diagnostics) &&
+                               (elementAccess.GetItemOrSliceHelper is WellKnownMember.System_ReadOnlySpan_T__get_Item or WellKnownMember.System_Span_T__get_Item ||
+                                CheckRefEscape(node, elementAccess.Expression, escapeFrom, escapeTo, checkingReceiver, diagnostics));
                     }
 
                 case BoundKind.PropertyAccess:
@@ -4639,6 +4697,16 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var methodRefKind = ((BoundCall)expression).Method.RefKind;
                     return methodRefKind == RefKind.Ref ||
                            (IsAnyReadOnly(addressKind) && methodRefKind == RefKind.RefReadOnly);
+
+                // PROTOTYPE(SafeFixedSizeBuffers): Do we need to handle this node here? It looks like BoundKind.ImplicitIndexerAccess isn't handled.
+                //case BoundKind.FixedSizeBufferElementAccess:
+                //    {
+                //        var elementAccess = (BoundFixedSizeBufferElementAccess)expression;
+
+                //        return !elementAccess.IsValue &&
+                //               (elementAccess.GetItemOrSliceHelper == WellKnownMember.System_Span_T__get_Item ||
+                //                (IsAnyReadOnly(addressKind) && elementAccess.GetItemOrSliceHelper == WellKnownMember.System_ReadOnlySpan_T__get_Item));
+                //    }
 
                 case BoundKind.Dup:
                     //NB: Dup represents locals that do not need IL slot

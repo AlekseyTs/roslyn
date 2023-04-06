@@ -221,5 +221,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             return SpecializedCollections.EmptyEnumerable<(MethodSymbol Body, MethodSymbol Implemented)>();
         }
+
+        internal override bool IsSafeFixedSizeBuffer(out int length)
+        {
+            length = 0;
+            return false;
+        }
     }
 }

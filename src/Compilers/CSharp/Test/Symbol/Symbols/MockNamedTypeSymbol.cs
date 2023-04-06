@@ -337,5 +337,11 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         {
             return SpecializedCollections.EmptyEnumerable<(MethodSymbol Body, MethodSymbol Implemented)>();
         }
+
+        internal sealed override bool IsSafeFixedSizeBuffer(out int length)
+        {
+            length = 0;
+            return false;
+        }
     }
 }

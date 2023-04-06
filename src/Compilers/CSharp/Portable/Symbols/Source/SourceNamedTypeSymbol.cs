@@ -1542,6 +1542,13 @@ next:;
             base.PostDecodeWellKnownAttributes(boundAttributes, allAttributeSyntaxNodes, diagnostics, symbolPart, decodedData);
         }
 
+        internal override bool IsSafeFixedSizeBuffer(out int length)
+        {
+            // PROTOTYPE(SafeFixedSizeBuffers): implement for real
+            length = 0;
+            return false;
+        }
+
         /// <remarks>
         /// These won't be returned by GetAttributes on source methods, but they
         /// will be returned by GetAttributes on metadata symbols.

@@ -666,6 +666,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                     break;
 
+                case BoundKind.FixedSizeBufferElementAccess:
+                    Debug.Assert(originalLHS.GetRefKind() == RefKind.Ref);
+                    break;
+
                 case BoundKind.DynamicMemberAccess:
                     return TransformDynamicMemberAccess((BoundDynamicMemberAccess)originalLHS, stores, temps);
 

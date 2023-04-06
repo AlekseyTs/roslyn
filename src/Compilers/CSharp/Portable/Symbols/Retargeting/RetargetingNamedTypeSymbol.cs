@@ -412,5 +412,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
                 }
             }
         }
+
+        internal override bool IsSafeFixedSizeBuffer(out int length)
+        {
+            return _underlyingType.IsSafeFixedSizeBuffer(out length);
+        }
     }
 }

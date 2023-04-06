@@ -184,7 +184,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// Invalid type, used only to catch Visit methods that do not set
         /// _result.Type. See VisitExpressionWithoutStackGuard.
         /// </summary>
-        private static readonly TypeWithState _invalidType = TypeWithState.Create(ErrorTypeSymbol.UnknownResultType, NullableFlowState.NotNull);
+        private static readonly TypeWithState _invalidType = TypeWithState.Create(new UnsupportedMetadataTypeSymbol(), NullableFlowState.NotNull);
 
         /// <summary>
         /// Contains the map of expressions to inferred nullabilities and types used by the optional rewriter phase of the
@@ -4401,6 +4401,47 @@ namespace Microsoft.CodeAnalysis.CSharp
                 result = type?.ElementTypeWithAnnotations ?? default;
             }
             SetLvalueResultType(node, result);
+
+            return null;
+        }
+
+        public override BoundNode? VisitFixedSizeBufferElementAccess(BoundFixedSizeBufferElementAccess node)
+        {
+            Debug.Assert(!IsConditionalState);
+
+            var expressionType = VisitRvalueWithState(node.Expression).Type;
+
+            Debug.Assert(!IsConditionalState);
+            Debug.Assert(expressionType is not null);
+            Debug.Assert(expressionType.IsValueType);
+
+            VisitRvalue(node.Argument);
+
+            MethodSymbol? getSpanOrReadOnlySpanHelper = node.GetSpanOrReadOnlySpanHelper;
+            TypeWithAnnotations type;
+
+            if (getSpanOrReadOnlySpanHelper is null)
+            {
+                type = TypeWithAnnotations.Create(node.Type);
+            }
+            else
+            {
+                getSpanOrReadOnlySpanHelper = (MethodSymbol)AsMemberOfType(expressionType, getSpanOrReadOnlySpanHelper);
+
+                if (node.GetItemOrSliceHelper is WellKnownMember.System_Span_T__Slice_Int_Int or WellKnownMember.System_ReadOnlySpan_T__Slice_Int_Int)
+                {
+                    type = getSpanOrReadOnlySpanHelper.ReturnTypeWithAnnotations;
+                }
+                else
+                {
+                    type = ((NamedTypeSymbol)getSpanOrReadOnlySpanHelper.ReturnType).TypeArgumentsWithAnnotationsNoUseSiteDiagnostics[0];
+                    Debug.Assert(type.Type.Equals(node.Type, TypeCompareKind.AllIgnoreOptions));
+                }
+
+                SetUpdatedSymbol(node, node.GetSpanOrReadOnlySpanHelper!, getSpanOrReadOnlySpanHelper);
+            }
+
+            SetResult(node, type.ToTypeWithState(), type);
 
             return null;
         }

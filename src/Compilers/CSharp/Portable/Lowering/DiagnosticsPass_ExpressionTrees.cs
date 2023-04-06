@@ -107,6 +107,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.VisitImplicitIndexerAccess(node);
         }
 
+        public override BoundNode VisitFixedSizeBufferElementAccess(BoundFixedSizeBufferElementAccess node)
+        {
+            // PROTOTYPE(SafeFixedSizeBuffers): Disallow?
+            return base.VisitFixedSizeBufferElementAccess(node);
+        }
+
         public override BoundNode VisitFromEndIndexExpression(BoundFromEndIndexExpression node)
         {
             if (_inExpressionLambda)
