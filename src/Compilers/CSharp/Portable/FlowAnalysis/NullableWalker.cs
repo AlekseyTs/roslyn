@@ -8076,6 +8076,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     resultState = NullableFlowState.NotNull;
                     break;
 
+                // PROTOTYPE(InlineArrays):
                 case ConversionKind.InterpolatedStringHandler:
                     visitInterpolatedStringHandlerConstructor();
                     resultState = NullableFlowState.NotNull;

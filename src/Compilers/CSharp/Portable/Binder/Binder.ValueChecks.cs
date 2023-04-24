@@ -3782,6 +3782,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var conversion = (BoundConversion)expr;
                     Debug.Assert(conversion.ConversionKind != ConversionKind.StackAllocToSpanType, "StackAllocToSpanType unexpected");
 
+                    // PROTOTYPE(InlineArrays):
                     if (conversion.ConversionKind == ConversionKind.InterpolatedStringHandler)
                     {
                         return GetInterpolatedStringHandlerConversionEscapeScope(conversion.Operand, scopeOfTheContainingExpression);
@@ -4271,6 +4272,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var conversion = (BoundConversion)expr;
                     Debug.Assert(conversion.ConversionKind != ConversionKind.StackAllocToSpanType, "StackAllocToSpanType unexpected");
 
+                    // PROTOTYPE(InlineArrays):
                     if (conversion.ConversionKind == ConversionKind.InterpolatedStringHandler)
                     {
                         return CheckInterpolatedStringHandlerConversionEscape(conversion.Operand, escapeFrom, escapeTo, diagnostics);

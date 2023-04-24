@@ -619,6 +619,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.ImplicitEnumeration:
                 case ConversionKind.StackAllocToPointerType:
                 case ConversionKind.StackAllocToSpanType:
+                // PROTOTYPE(InlineArrays):
                 case ConversionKind.InterpolatedStringHandler:
 
                 // Not "standard".

@@ -6191,5 +6191,210 @@ class Program
 }
 ");
         }
+
+        [ConditionalFact(typeof(MonoOrCoreClrOnly))]
+        public void Conversion_Variable_01()
+        {
+            var src = @"
+class C
+{
+    public Buffer10<int> F;
+}
+
+class Program
+{
+    static void Main()
+    {
+        var x = new C();
+        System.Console.Write(M1(x)[0]);
+        M2(x)[0] = 111;
+        System.Console.Write(' ');
+        System.Console.Write(M1(x)[0]);
+    }
+
+    static System.ReadOnlySpan<int> M1(C x) => x.F;
+    static System.Span<int> M2(C x) => x.F;
+}
+";
+            var comp = CreateCompilation(src + Buffer10Definition, targetFramework: TargetFramework.NetCoreApp, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "0 111", verify: Verification.Fails).VerifyDiagnostics();
+
+            verifier.VerifyIL("Program.M1",
+@"
+{
+  // Code size       14 (0xe)
+  .maxstack  2
+  IL_0000:  ldarg.0
+  IL_0001:  ldflda     ""Buffer10<int> C.F""
+  IL_0006:  ldc.i4.s   10
+  IL_0008:  call       ""InlineArrayAsReadOnlySpan<Buffer10<int>, int>(in Buffer10<int>, int)""
+  IL_000d:  ret
+}
+");
+
+            verifier.VerifyIL("Program.M2",
+@"
+{
+  // Code size       14 (0xe)
+  .maxstack  2
+  IL_0000:  ldarg.0
+  IL_0001:  ldflda     ""Buffer10<int> C.F""
+  IL_0006:  ldc.i4.s   10
+  IL_0008:  call       ""InlineArrayAsSpan<Buffer10<int>, int>(ref Buffer10<int>, int)""
+  IL_000d:  ret
+}
+");
+#if false // PROTOTYPE(InlineArrays):
+            var tree = comp.SyntaxTrees.First();
+            var model = comp.GetSemanticModel(tree);
+
+            var m2 = tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Where(m => m.Identifier.ValueText == "M2").Single();
+            var m2Operation = model.GetOperation(m2);
+            VerifyOperationTree(comp, m2Operation,
+@"
+");
+#endif
+        }
+
+        [ConditionalFact(typeof(MonoOrCoreClrOnly))]
+        public void Conversion_Variable_Readonly_01()
+        {
+            var src = @"
+struct C
+{
+    public Buffer10<int> F;
+
+    public C()
+    {
+        var b = new Buffer10<int>();
+        b[0] = 111;
+        F = b;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var c = new C();
+        System.Console.Write(M2(c)[0]);
+    }
+
+    static System.ReadOnlySpan<int> M2(in C c) => c.F;
+}
+";
+            var comp = CreateCompilation(src + Buffer10Definition, targetFramework: TargetFramework.NetCoreApp, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "111", verify: Verification.Fails).VerifyDiagnostics();
+
+            verifier.VerifyIL("Program.M2",
+@"
+{
+  // Code size       14 (0xe)
+  .maxstack  2
+  IL_0000:  ldarg.0
+  IL_0001:  ldflda     ""Buffer10<int> C.F""
+  IL_0006:  ldc.i4.s   10
+  IL_0008:  call       ""InlineArrayAsReadOnlySpan<Buffer10<int>, int>(in Buffer10<int>, int)""
+  IL_000d:  ret
+}
+");
+        }
+
+        // Slice_Variable_Readonly_02
+
+        [ConditionalFact(typeof(MonoOrCoreClrOnly))]
+        public void Conversion_Variable_Readonly_04()
+        {
+            var src = @"
+struct C
+{
+    public Buffer10<int> F;
+
+    public C()
+    {
+        var b = new Buffer10<int>();
+        b[0] = 111;
+        F = b;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var c = new C();
+        System.Console.Write(M2(c));
+    }
+
+    static int M2(in C c)
+    {
+        return M4(c.F);
+    }
+
+    static int M4(System.Span<int> x)
+    {
+        return x[0];
+    }
+}
+";
+            var comp = CreateCompilation(src + Buffer10Definition, targetFramework: TargetFramework.NetCoreApp, options: TestOptions.ReleaseExe);
+
+            comp.VerifyDiagnostics(
+                // (24,19): error CS1503: Argument 1: cannot convert from 'System.ReadOnlySpan<int>' to 'System.Span<int>'
+                //         return M4(c.F[..]);
+                Diagnostic(ErrorCode.ERR_BadArgType, "c.F[..]").WithArguments("1", "System.ReadOnlySpan<int>", "System.Span<int>").WithLocation(24, 19)
+                );
+        }
+
+        [ConditionalFact(typeof(MonoOrCoreClrOnly))]
+        public void Conversion_Value_01()
+        {
+            var src = @"
+class Program
+{
+    static void Main()
+    {
+        System.Console.Write(M2());
+    }
+
+    static int M2() => M4(M3(), default);
+
+    static Buffer10<int> M3()
+    {
+        var b = new Buffer10<int>();
+        b[0] = 111;
+        return b;
+    }
+
+    static int M4(System.ReadOnlySpan<int> x, Buffer10<int> y)
+    {
+        return x[0];
+    }
+
+    static int M5() => M6(M3(), default);
+
+    static int M6(System.Span<int> x, Buffer10<int> y)
+    {
+        return x[0];
+    }
+}
+";
+            var comp = CreateCompilation(src + Buffer10Definition, targetFramework: TargetFramework.NetCoreApp, options: TestOptions.ReleaseExe);
+            comp.VerifyDiagnostics(
+                // (9,27): error CS8156: An expression cannot be used in this context because it may not be passed or returned by reference
+                //     static int M2() => M4(M3()[..], default);
+                Diagnostic(ErrorCode.ERR_RefReturnLvalueExpected, "M3()").WithLocation(9, 27)
+                );
+
+            // PROTOTYPE(InlineArrays)
+            //var tree = comp.SyntaxTrees.First();
+            //var model = comp.GetSemanticModel(tree);
+
+            //            var m2 = tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Where(m => m.Identifier.ValueText == "M2").Single();
+            //            var m2Operation = model.GetOperation(m2);
+            //            VerifyOperationTree(comp, m2Operation,
+            //@"
+            //");
+        }
     }
 }
