@@ -253,7 +253,64 @@ namespace Microsoft.CodeAnalysis.CSharp
                         .WithSuppression(source.IsSuppressed);
                 }
 
-                reportUseSiteDiagnosticsForUnderlyingConversions(conversion);
+                if (conversion.IsNullable)
+                {
+                    Debug.Assert(conversion.UnderlyingConversions.Length == 1);
+
+                    if (destination.IsNullableType())
+                    {
+                        switch (source.Type?.IsNullableType())
+                        {
+                            case true:
+                                _ = CreateConversion(
+                                        syntax,
+                                        new BoundValuePlaceholder(source.Syntax, source.Type.GetNullableUnderlyingType()),
+                                        conversion.UnderlyingConversions[0],
+                                        isCast: false,
+                                        conversionGroupOpt: null,
+                                        wasCompilerGenerated,
+                                        destination.GetNullableUnderlyingType(),
+                                        diagnostics);
+                                break;
+
+                            case false:
+                                _ = CreateConversion(
+                                        syntax,
+                                        source,
+                                        conversion.UnderlyingConversions[0],
+                                        isCast: false,
+                                        conversionGroupOpt: null,
+                                        wasCompilerGenerated,
+                                        destination.GetNullableUnderlyingType(),
+                                        diagnostics);
+                                break;
+                        }
+
+                        conversion.MarkUnderlyingConversionsChecked();
+                    }
+                    else if (source.Type?.IsNullableType() == true)
+                    {
+
+                        _ = CreateConversion(
+                                syntax,
+                                new BoundValuePlaceholder(source.Syntax, source.Type.GetNullableUnderlyingType()),
+                                conversion.UnderlyingConversions[0],
+                                isCast: false,
+                                conversionGroupOpt: null,
+                                wasCompilerGenerated,
+                                destination,
+                                diagnostics);
+
+                        conversion.MarkUnderlyingConversionsChecked();
+                    }
+                }
+
+                if (conversion.IsTupleConversion)
+                {
+
+                }
+
+                //reportUseSiteDiagnosticsForUnderlyingConversions(conversion);
 
                 return new BoundConversion(
                     syntax,
