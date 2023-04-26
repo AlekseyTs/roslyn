@@ -277,6 +277,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             public override BoundNode? VisitConversion(BoundConversion node)
             {
+                // PROTOTYPE(InlineArrays):
                 if (node.ConversionKind == ConversionKind.InterpolatedStringHandler)
                 {
                     Visit(node.Operand.GetInterpolatedStringHandlerData().Construction);

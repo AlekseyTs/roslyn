@@ -591,6 +591,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.ImplicitTupleLiteral:
                 case ConversionKind.StackAllocToPointerType:
                 case ConversionKind.StackAllocToSpanType:
+                case ConversionKind.InlineArray:
                     return true;
                 default:
                     return false;
@@ -1094,6 +1095,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 case BoundKind.UnconvertedObjectCreationExpression:
                     return Conversion.ObjectCreation;
+            }
+
+            if (source?.HasInlineArrayAttribute(out _) == true && source.TryGetInlineArrayElementType() is { HasType: true } elementType &&
+                (destination.OriginalDefinition.Equals(Compilation.GetWellKnownType(WellKnownType.System_Span_T), TypeCompareKind.AllIgnoreOptions) ||
+                 destination.OriginalDefinition.Equals(Compilation.GetWellKnownType(WellKnownType.System_ReadOnlySpan_T), TypeCompareKind.AllIgnoreOptions)) &&
+                 HasIdentityConversionInternal(elementType.Type, ((NamedTypeSymbol)destination).TypeArgumentsWithAnnotationsNoUseSiteDiagnostics.Single().Type))
+            {
+                return Conversion.InlineArray;
             }
 
             return Conversion.NoConversion;

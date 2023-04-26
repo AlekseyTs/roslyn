@@ -778,6 +778,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var assignment = (BoundAssignmentOperator)expr;
                     return CheckSimpleAssignmentValueKind(node, assignment, valueKind, diagnostics);
 
+                case BoundKind.ValuePlaceholder:
+                    // Strict RValue
+                    break;
+
                 default:
                     Debug.Assert(expr is not BoundValuePlaceholderBase, $"Placeholder kind {expr.Kind} should be explicitly handled");
                     break;
@@ -3782,6 +3786,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var conversion = (BoundConversion)expr;
                     Debug.Assert(conversion.ConversionKind != ConversionKind.StackAllocToSpanType, "StackAllocToSpanType unexpected");
 
+                    // PROTOTYPE(InlineArrays):
                     if (conversion.ConversionKind == ConversionKind.InterpolatedStringHandler)
                     {
                         return GetInterpolatedStringHandlerConversionEscapeScope(conversion.Operand, scopeOfTheContainingExpression);
@@ -4271,6 +4276,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     var conversion = (BoundConversion)expr;
                     Debug.Assert(conversion.ConversionKind != ConversionKind.StackAllocToSpanType, "StackAllocToSpanType unexpected");
 
+                    // PROTOTYPE(InlineArrays):
                     if (conversion.ConversionKind == ConversionKind.InterpolatedStringHandler)
                     {
                         return CheckInterpolatedStringHandlerConversionEscape(conversion.Operand, escapeFrom, escapeTo, diagnostics);

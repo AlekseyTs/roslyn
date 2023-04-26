@@ -213,6 +213,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.ImplicitDynamic:
                 case ConversionKind.ExplicitDynamic:
                 case ConversionKind.InterpolatedString:
+                // PROTOTYPE(InlineArrays):
                 case ConversionKind.InterpolatedStringHandler:
                     isTrivial = true;
                     break;
@@ -262,6 +263,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal static Conversion PinnedObjectToPointer => new Conversion(ConversionKind.PinnedObjectToPointer);
         internal static Conversion ImplicitPointer => new Conversion(ConversionKind.ImplicitPointer);
         internal static Conversion FunctionType => new Conversion(ConversionKind.FunctionType);
+        internal static Conversion InlineArray => new Conversion(ConversionKind.InlineArray);
 
         // trivial conversions that could be underlying in nullable conversion
         // NOTE: tuple conversions can be underlying as well, but they are not trivial 
@@ -371,7 +373,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal void AssertUnderlyingConversionsChecked()
         {
 #if DEBUG
-            Debug.Assert(_uncommonData?._nestedConversionsChecked ?? true);
+            Debug.Assert((_uncommonData?._nestedConversionsChecked ?? true) || IsDynamic && UnderlyingConversions.IsDefault);
 #endif
         }
 
@@ -388,6 +390,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     underlying.AssertUnderlyingConversionsCheckedRecursive();
                 }
+            }
+
+            if (IsUserDefined)
+            {
+                UserDefinedFromConversion.AssertUnderlyingConversionsCheckedRecursive();
+                UserDefinedToConversion.AssertUnderlyingConversionsCheckedRecursive();
             }
         }
 
@@ -416,6 +424,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         underlying.MarkUnderlyingConversionsCheckedRecursive();
                     }
+                }
+
+                if (IsUserDefined)
+                {
+                    UserDefinedFromConversion.MarkUnderlyingConversionsCheckedRecursive();
+                    UserDefinedToConversion.MarkUnderlyingConversionsCheckedRecursive();
                 }
             }
 #endif
@@ -683,6 +697,17 @@ namespace Microsoft.CodeAnalysis.CSharp
             get
             {
                 return Kind == ConversionKind.InterpolatedStringHandler;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the conversion is an inline array conversion.
+        /// </summary>
+        public bool IsInlineArray
+        {
+            get
+            {
+                return Kind == ConversionKind.InlineArray;
             }
         }
 
