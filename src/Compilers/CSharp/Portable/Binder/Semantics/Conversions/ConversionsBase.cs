@@ -591,6 +591,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.ImplicitTupleLiteral:
                 case ConversionKind.StackAllocToPointerType:
                 case ConversionKind.StackAllocToSpanType:
+                case ConversionKind.InlineArray:
                     return true;
                 default:
                     return false;
@@ -1094,6 +1095,15 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 case BoundKind.UnconvertedObjectCreationExpression:
                     return Conversion.ObjectCreation;
+            }
+
+            // Neither Span<T>, nor ReadOnlySpan<T> can be wrapped into a Nullable<T>, therefore no point of checking for an attempt to convert to Nullable types here. 
+            if ((destination.OriginalDefinition.Equals(Compilation.GetWellKnownType(WellKnownType.System_Span_T), TypeCompareKind.AllIgnoreOptions) ||
+                 destination.OriginalDefinition.Equals(Compilation.GetWellKnownType(WellKnownType.System_ReadOnlySpan_T), TypeCompareKind.AllIgnoreOptions)) &&
+                 source?.HasInlineArrayAttribute(out _) == true && source.TryGetInlineArrayElementType() is { HasType: true } elementType &&
+                 HasIdentityConversionInternal(elementType.Type, ((NamedTypeSymbol)destination).TypeArgumentsWithAnnotationsNoUseSiteDiagnostics.Single().Type))
+            {
+                return Conversion.InlineArray;
             }
 
             return Conversion.NoConversion;
