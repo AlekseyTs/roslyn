@@ -6,6 +6,7 @@ Imports System.Collections.Immutable
 Imports System.Diagnostics
 Imports System.Runtime.InteropServices
 Imports Microsoft.CodeAnalysis.Text
+Imports Microsoft.CodeAnalysis.VisualBasic.CodeGen
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports TypeKind = Microsoft.CodeAnalysis.TypeKind
@@ -19,10 +20,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                     Return False
 
                 Case BoundKind.Parameter
-                    Return DirectCast(receiver, BoundParameter).ParameterSymbol.IsByRef
+                    Return DirectCast(receiver, BoundParameter).ParameterSymbol.IsByRef OrElse CodeGenerator.IsPossibleReferenceTypeReceiverOfConstrainedCall(receiver)
 
                 Case BoundKind.Local
-                    Return DirectCast(receiver, BoundLocal).LocalSymbol.IsByRef
+                    Return DirectCast(receiver, BoundLocal).LocalSymbol.IsByRef OrElse CodeGenerator.IsPossibleReferenceTypeReceiverOfConstrainedCall(receiver)
 
                 Case Else
                     Return Not receiver.IsDefaultValue()

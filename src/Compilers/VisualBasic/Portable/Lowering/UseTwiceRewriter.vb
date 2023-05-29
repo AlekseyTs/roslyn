@@ -7,6 +7,7 @@ Imports System.Runtime.InteropServices
 Imports Microsoft.CodeAnalysis.Collections
 Imports Microsoft.CodeAnalysis.PooledObjects
 Imports Microsoft.CodeAnalysis.Text
+Imports Microsoft.CodeAnalysis.VisualBasic.CodeGen
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports TypeKind = Microsoft.CodeAnalysis.TypeKind
@@ -61,7 +62,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                     Debug.Assert(value.Kind <> BoundKind.ByRefArgumentWithCopyBack AndAlso
                                  value.Kind <> BoundKind.LateBoundArgumentSupportingAssignmentWithCapture)
 
-                    Dim result = UseTwiceExpression(containingMember, value, temporaries)
+                    Dim result = UseTwiceExpression(containingMember, value, temporaries, isReceiver:=False)
 
                     ' LValue-ness of expressions must be preserved
                     Debug.Assert(result.First.IsLValue = result.Second.IsLValue AndAlso result.Second.IsLValue = value.IsLValue)
@@ -95,7 +96,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 receiver = New Result(New BoundSequence(capture.Syntax, ImmutableArray(Of LocalSymbol).Empty, ImmutableArray.Create(Of BoundExpression)(capture), boundTemp, boundTemp.Type),
                                       boundTemp)
             Else
-                receiver = UseTwiceExpression(containingMember, receiverOpt, temporaries)
+                receiver = UseTwiceExpression(containingMember, receiverOpt, temporaries, isReceiver:=True)
             End If
 
             ' LValue-ness of a receiver should be preserved because it affects how helper method is called.
@@ -106,7 +107,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         Private Shared Function UseTwiceExpression(
             containingMember As Symbol,
             value As BoundExpression,
-            temporaries As ArrayBuilder(Of SynthesizedLocal)
+            temporaries As ArrayBuilder(Of SynthesizedLocal),
+            isReceiver As Boolean
         ) As Result
 
             If Not value.IsLValue Then
@@ -122,8 +124,14 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                     Return UseTwiceFieldAccess(containingMember, DirectCast(value, BoundFieldAccess), temporaries)
                 Case BoundKind.Local,
                      BoundKind.Parameter,
-                     BoundKind.PseudoVariable,
-                     BoundKind.WithLValueExpressionPlaceholder
+                     BoundKind.PseudoVariable
+
+                    If isReceiver AndAlso CodeGenerator.IsPossibleReferenceTypeReceiverOfConstrainedCall(value) Then
+                        'Return UseTwiceLValue(containingMember, value, temporaries)
+                    End If
+
+                    Return New Result(value, value)
+                Case BoundKind.WithLValueExpressionPlaceholder
                     Return New Result(value, value)
                 Case Else
                     Debug.Assert(value.Kind <> BoundKind.RangeVariable)
@@ -210,12 +218,9 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
 
             Debug.Assert(node.IsLValue)
 
-#If DONT_USE_BYREF_LOCALS_FOR_USE_TWICE Then
-#Else
             If IsInvariantArray(node.Expression.Type) Then
                 Return UseTwiceLValue(containingMember, node, arg)
             End If
-#End If
 
             ' Note, as an alternative we could capture reference to the array element in a ByRef temp.
             ' However, without an introduction of an indirect assignment node, IL-gen is unable to distinguish 
@@ -277,22 +282,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 Return New Result(node, node)
 
             Else
-#If DONT_USE_BYREF_LOCALS_FOR_USE_TWICE Then
-                ' Note, as an alternative we could capture reference to the field in a ByRef temp.
-                ' However, without an introduction of an indirect assignment node, IL-gen is unable to distinguish 
-                ' when it should assign indirect or should assign a reference. For now, decided to not introduce 
-                ' special bound nodes for this purpose. Besides, it is not clear whether ByRef temps will make Async 
-                ' easier to implement.
-
-                Dim receiver As Result = UseTwiceReceiver(containingMember, node.ReceiverOpt, arg)
-                Dim first = node.Update(receiver.First, fieldSymbol, node.IsLValue, suppressVirtualCalls:=False, node.ConstantsInProgressOpt, node.Type)
-                Dim second = node.Update(receiver.Second, fieldSymbol, node.IsLValue, suppressVirtualCalls:=False, node.ConstantsInProgressOpt, node.Type)
-
-                Debug.Assert(first.IsLValue AndAlso second.IsLValue)
-                Return New Result(first, second)
-#Else
                 Return UseTwiceLValue(containingMember, node, arg)
-#End If
             End If
 
         End Function
@@ -322,7 +312,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 receiver = New Result(New BoundSequence(capture.Syntax, ImmutableArray(Of LocalSymbol).Empty, ImmutableArray.Create(Of BoundExpression)(capture), boundTemp, boundTemp.Type),
                                       boundTemp)
             Else
-                receiver = UseTwiceExpression(containingMember, receiverOpt, arg)
+                receiver = UseTwiceExpression(containingMember, receiverOpt, arg, isReceiver:=True)
             End If
 
             ' Visit args.
@@ -508,19 +498,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                                        initializer.Update(secondArgsArray.AsImmutableOrNull(), initializer.Type), Nothing, Nothing, boundArray.Type)
         End Sub
 
-#If DONT_USE_BYREF_LOCALS_FOR_USE_TWICE Then
-        Private Shared Function UseTwiceReceiver(containingMember As Symbol, receiverOpt As BoundExpression, arg As ArrayBuilder(Of SynthesizedLocal)) As Result
-            If receiverOpt Is Nothing Then
-                Return New Result(Nothing, Nothing)
-            ElseIf receiverOpt.IsLValue AndAlso receiverOpt.Type.IsReferenceType Then
-                Dim boundTemp As BoundLocal = Nothing
-                Dim first = CaptureInATemp(containingMember, receiverOpt.MakeRValue(), arg, boundTemp)
-                Return New Result(first, boundTemp)
-            Else
-                Return UseTwiceExpression(containingMember, receiverOpt, arg)
-            End If
-        End Function
-#End If
     End Class
 
 End Namespace

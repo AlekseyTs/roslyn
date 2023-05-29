@@ -4,6 +4,8 @@
 
 Imports System.Collections.Immutable
 Imports System.Reflection.Metadata
+Imports System.Runtime.CompilerServices
+Imports System.Runtime.InteropServices
 Imports Microsoft.CodeAnalysis.CodeGen
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 
@@ -1043,17 +1045,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                     End If
 
                 Else
-                    ' receiver is generic and method must come from the base or an interface or a generic constraint
-                    ' if the receiver is actually a value type it would need to be boxed.
-                    ' let .constrained sort this out. 
-
-                    Debug.Assert(Not receiverType.IsReferenceType OrElse receiver.Kind <> BoundKind.ComplexConditionalAccessReceiver)
-                    callKind = If(receiverType.IsReferenceType AndAlso
-                                   (receiver.Kind = BoundKind.ConditionalAccessReceiverPlaceholder OrElse Not AllowedToTakeRef(receiver, AddressKind.ReadOnly)),
-                                    CallKind.CallVirt,
-                                    CallKind.ConstrainedCallVirt)
-
-                    tempOpt = EmitReceiverRef(receiver, isAccessConstrained:=callKind = CallKind.ConstrainedCallVirt, addressKind:=AddressKind.ReadOnly)
+                    tempOpt = EmitGenericReceiver([call], callKind)
                 End If
 
             End If
@@ -1172,6 +1164,99 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGen
                 End If
             End If
         End Sub
+
+        <MethodImpl(MethodImplOptions.NoInlining)>
+        Private Function EmitGenericReceiver([call] As BoundCall, <Out> ByRef callKind As CallKind) As LocalDefinition
+            Dim receiver = [call].ReceiverOpt
+            Dim receiverType = receiver.Type
+
+            ' receiver is generic and method must come from the base or an interface or a generic constraint
+            ' if the receiver is actually a value type it would need to be boxed.
+            ' let .constrained sort this out. 
+
+            Debug.Assert(Not receiverType.IsReferenceType OrElse receiver.Kind <> BoundKind.ComplexConditionalAccessReceiver)
+            callKind = If(receiverType.IsReferenceType AndAlso
+                           (receiver.Kind = BoundKind.ConditionalAccessReceiverPlaceholder OrElse Not AllowedToTakeRef(receiver, AddressKind.ReadOnly)),
+                            CallKind.CallVirt,
+                            CallKind.ConstrainedCallVirt)
+
+            Dim tempOpt As LocalDefinition = EmitReceiverRef(receiver, isAccessConstrained:=callKind = CallKind.ConstrainedCallVirt, addressKind:=AddressKind.ReadOnly)
+
+            If callKind = CallKind.ConstrainedCallVirt AndAlso tempOpt Is Nothing AndAlso Not receiverType.IsValueType AndAlso
+               Not ReceiverIsKnownToReferToTempIfReferenceType(receiver) AndAlso
+               receiver.Kind <> BoundKind.ConditionalAccessReceiverPlaceholder AndAlso
+               Not IsSafeToDereferenceReceiverRefAfterEvaluatingArguments([call].Arguments) Then
+
+                ' A case where T is actually a class must be handled specially.
+                ' Taking a reference to a class instance is fragile because the value behind the 
+                ' reference might change while arguments are evaluated. However, the call should be
+                ' performed on the instance that is behind reference at the time we push the
+                ' reference to the stack. So, for a class we need to emit a reference to a temporary
+                ' location, rather than to the original location
+                '
+                ' Struct values are never nulls.
+                ' We will emit a check for such case, but the check is really a JIT-time 
+                ' constant since JIT will know if T is a struct or not.
+                '
+                ' if ((object)default(T) == null) 
+                ' {
+                '     temp = receiverRef
+                '     receiverRef = ref temp
+                ' }
+
+                Dim whenNotNullLabel As Object = Nothing
+
+                If Not receiverType.IsReferenceType Then
+                    ' if ((object)default(T) == null) 
+                    EmitInitObj(receiverType, True, receiver.Syntax)
+                    EmitBox(receiverType, receiver.Syntax)
+                    whenNotNullLabel = New Object()
+                    _builder.EmitBranch(ILOpCode.Brtrue, whenNotNullLabel)
+                End If
+
+                '     temp = receiverRef
+                '     receiverRef = ref temp
+                EmitLoadIndirect(receiverType, receiver.Syntax)
+                tempOpt = AllocateTemp(receiverType, receiver.Syntax)
+                _builder.EmitLocalStore(tempOpt)
+                _builder.EmitLocalAddress(tempOpt)
+
+                If whenNotNullLabel IsNot Nothing Then
+                    _builder.MarkLabel(whenNotNullLabel)
+                End If
+            End If
+
+            Return tempOpt
+        End Function
+
+        Friend Shared Function IsPossibleReferenceTypeReceiverOfConstrainedCall(receiver As BoundExpression) As Boolean
+            Dim receiverType = receiver.Type
+
+            If receiverType.IsVerifierReference() OrElse receiverType.IsVerifierValue() Then
+                Return False
+            End If
+
+            Return Not receiverType.IsValueType
+        End Function
+
+        Friend Shared Function ReceiverIsKnownToReferToTempIfReferenceType(receiver As BoundExpression) As Boolean
+            Dim sequence = TryCast(receiver, BoundSequence)
+            While sequence IsNot Nothing
+                receiver = sequence.ValueOpt
+                sequence = TryCast(receiver, BoundSequence)
+            End While
+
+            ' BoundLocal { LocalSymbol.IsKnownToReferToTempIfReferenceType: true } Or
+            If TypeOf receiver Is BoundComplexConditionalAccessReceiver Then
+                Return True
+            End If
+
+            Return False
+        End Function
+
+        Friend Shared Function IsSafeToDereferenceReceiverRefAfterEvaluatingArguments(arguments As ImmutableArray(Of BoundExpression)) As Boolean
+            Return arguments.All(Function(a) a.ConstantValueOpt IsNot Nothing)
+        End Function
 
         ''' <summary>
         ''' Used to decide if we need to emit 'call' or 'callvirt' for structure method.

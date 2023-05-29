@@ -4,6 +4,7 @@
 
 Imports System.Collections.Generic
 Imports System.Collections.Immutable
+Imports System.Linq.Expressions
 Imports System.Runtime.InteropServices
 Imports System.Threading
 Imports Microsoft.Cci
@@ -11,6 +12,7 @@ Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Collections
 Imports Microsoft.CodeAnalysis.PooledObjects
 Imports Microsoft.CodeAnalysis.Text
+Imports Microsoft.CodeAnalysis.VisualBasic.CodeGen
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports TypeKind = Microsoft.CodeAnalysis.TypeKind
@@ -95,19 +97,68 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 Dim receiverOpt As BoundExpression = rewritten.ReceiverOpt
                 Dim arguments As ImmutableArray(Of BoundExpression) = rewritten.Arguments
 
-                If Not NeedsSpill(arguments) AndAlso Not NeedsSpill(receiverOpt) Then
-                    Return rewritten
+                Dim builder As SpillBuilder
+
+                If Not NeedsSpill(arguments) Then
+                    If Not NeedsSpill(receiverOpt) Then
+                        Return rewritten
+                    End If
+
+                    builder = New SpillBuilder()
+                    Dim spill = DirectCast(receiverOpt, BoundSpillSequence)
+                    builder.AddSpill(spill)
+                    receiverOpt = spill.ValueOpt
+                Else
+                    builder = New SpillBuilder()
+
+                    If receiverOpt IsNot Nothing Then
+
+                        receiverOpt = SpillValue(receiverOpt, isReceiver:=True, evaluateSideEffects:=True, builder:=builder)
+
+                        If node.ReceiverOpt.IsLValue AndAlso
+                           CodeGenerator.IsPossibleReferenceTypeReceiverOfConstrainedCall(receiverOpt) AndAlso
+                           Not CodeGenerator.ReceiverIsKnownToReferToTempIfReferenceType(receiverOpt) AndAlso
+                           Not CodeGenerator.IsSafeToDereferenceReceiverRefAfterEvaluatingArguments(node.Arguments) Then
+
+                            Dim receiverType = receiverOpt.Type
+
+                            ' A case where T Is actually a class must be handled specially.
+                            ' Taking a reference to a class instance Is fragile because the value behind the 
+                            ' reference might change while arguments are evaluated. However, the call should be
+                            ' performed on the instance that is behind reference at the time we push the
+                            ' reference to the stack. So, for a class we need to emit a reference to a temporary
+                            ' location, rather than to the original location
+
+                            Dim cacheLocal = Me.F.SynthesizedLocal(receiverType)
+                            builder.AddLocal(cacheLocal)
+
+                            Dim cache = Me.F.Local(cacheLocal, isLValue:=True)
+                            Dim cacheInit = Me.F.Assignment(cache, receiverOpt.MakeRValue())
+
+                            If receiverType.IsReferenceType Then
+                                builder.AddStatement(cacheInit)
+                                receiverOpt = cache
+                            Else
+                                ' If condition `(object)default(T) != null` is true at execution time,
+                                ' the T Is a value type. And it is a reference type otherwise.
+                                Dim isValueTypeCheck = Me.F.ReferenceIsNotNothing(Me.F.DirectCast(Me.F.DirectCast(Me.F.Null(), receiverType),
+                                                                                      Me.F.SpecialType(SpecialType.System_Object)))
+
+                                builder.AddStatement(Me.F.If(Me.F.Not(isValueTypeCheck), cacheInit))
+
+                                receiverOpt = New BoundComplexConditionalAccessReceiver(receiverOpt.Syntax, receiverOpt, cache, receiverType)
+                            End If
+                        End If
+                    End If
+
+                    arguments = SpillExpressionList(builder, arguments)
                 End If
-
-                Dim builder As New SpillBuilder()
-
-                Dim result = SpillExpressionsWithReceiver(receiverOpt, isReceiverOfAMethodCall:=True, expressions:=arguments, spillBuilder:=builder)
 
                 Return builder.BuildSequenceAndFree(Me.F,
                                                     rewritten.Update(rewritten.Method,
                                                                      rewritten.MethodGroupOpt,
-                                                                     result.ReceiverOpt,
-                                                                     result.Arguments,
+                                                                     receiverOpt,
+                                                                     arguments,
                                                                      rewritten.DefaultArguments,
                                                                      rewritten.ConstantValueOpt,
                                                                      isLValue:=rewritten.IsLValue,
@@ -125,7 +176,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 End If
 
                 Dim builder As New SpillBuilder()
-                arguments = SpillExpressionList(builder, arguments, firstArgumentIsAReceiverOfAMethodCall:=False)
+                arguments = SpillExpressionList(builder, arguments)
 
                 Return builder.BuildSequenceAndFree(Me.F,
                                                     rewritten.Update(rewritten.ConstructorOpt,
@@ -726,11 +777,11 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 End If
 
                 Dim builder As New SpillBuilder()
-                bounds = SpillExpressionList(builder, bounds, firstArgumentIsAReceiverOfAMethodCall:=False)
+                bounds = SpillExpressionList(builder, bounds)
 
                 If rewrittenInitializer IsNot Nothing Then
                     rewrittenInitializer = rewrittenInitializer.Update(
-                                                SpillExpressionList(builder, rewrittenInitializer.Initializers, firstArgumentIsAReceiverOfAMethodCall:=False),
+                                                SpillExpressionList(builder, rewrittenInitializer.Initializers),
                                                 rewrittenInitializer.Type)
                 End If
 
@@ -782,10 +833,13 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 End If
 
                 Dim builder As New SpillBuilder()
-                Dim result = SpillExpressionsWithReceiver(expression, isReceiverOfAMethodCall:=False, expressions:=indices, spillBuilder:=builder)
+
+                Dim allExpressions = ImmutableArray.Create(Of BoundExpression)(expression).Concat(indices)
+                Dim allSpilledExpressions = SpillExpressionList(builder, allExpressions)
+
                 Return builder.BuildSequenceAndFree(Me.F,
-                                                    rewritten.Update(result.ReceiverOpt,
-                                                                     result.Arguments,
+                                                    rewritten.Update(expression:=allSpilledExpressions.First(),
+                                                                     indices:=allSpilledExpressions.RemoveAt(0),
                                                                      rewritten.IsLValue,
                                                                      rewritten.Type))
             End Function
