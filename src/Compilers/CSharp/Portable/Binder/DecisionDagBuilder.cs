@@ -3997,6 +3997,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                         return;
                     }
 
+                    if (test is BoundDagNonNullTest)
+                    {
+                        ;
+                    }
+
                     if (!isInputRelated(test, Input))
                     {
                         whenTrue = whenFalse = this;
@@ -4012,6 +4017,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                     // BoundDagExplicitNullTest CAN reach here when a `null` arm exists in a
                     // different switch arm (e.g., `null => ..., int and (1 or 2 or 3) => ...`),
                     // because the explicit null test is selected before the type test.
+
+                    Debug.Assert(test is not BoundDagNonNullTest);
+
                     if (test is BoundDagExplicitNullTest)
                     {
                         foundExplicitNullTest = true;
@@ -4033,7 +4041,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         // For explicit null tests, skip the type check since the test
                         // may be on a base type (e.g., object) while the ValueSet is on
                         // a derived type (e.g., int via a type evaluation).
-                        if (test is not BoundDagExplicitNullTest &&
+                        if (test is not (BoundDagExplicitNullTest or BoundDagNonNullTest) &&
                             !test.Input.Type.Equals(valueSetInput.Type, TypeCompareKind.AllIgnoreOptions))
                         {
                             return false;
