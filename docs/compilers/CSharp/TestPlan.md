@@ -1,18 +1,86 @@
 
-- [x] Language version
-  - Extension indexers require preview/next language version (C# 14 rejects, Next/Preview accepts)
+- [x] Language version: Extension indexers require preview/next language version (C# 14 rejects, Next/Preview accepts)
+  - [x] At declaration
+  - [x] At consumption
 
 - [x] Parsing of indexers in extension blocks
 
-- [x] Declaration tests
+- [ ] Declaration tests
   - [x] Basic declarations tests for features that ordinary indexers support today 
   - [x] Receiver must be named
-  - [ ] The following modifiers are not allowed: `abstract`, `virtual`, `override`, `new`, `sealed`, `partial`, `protected` (or any of the related accessibility modifiers)
-  - [ ] Init accessors are not allowed
-  - [ ] No implicit `this` accessor in the body
+  - [x] The following modifiers are not allowed:
+    - [x] `abstract`
+    - [x] `virtual`
+    - [x] `override`
+    - [x] `new`
+    - [x] `sealed`
+    - [x] `partial`
+    - [x] `protected` (or any of the related accessibility modifiers)
+    - [x] static
+  - [x] Init accessors are not allowed
+  - [ ] No implicit `this` accessor in the body     
+  - [x] IndexerName attribute
+      - Source/metadat 
+      - Single indexer
+      - Multiple indexers with matching and different attribute values     
+
+- [ ] Consumption
+  - [x] Basic consumption scenarios
+  - [ ] Not supported on `base` as a receiver
+  - [ ] Not supported on a type as a receiver
+  - [x] Lookup/overload resolution priorities
+    - Instance indexers come first
+    - Then instance based impleicit indexers
+    - Then extension explicit indexers
+    - Then extension implicit indexers
+  - [x] Extension scoping rules
+  - [x] Various ambiguity scenarios
+  - [x] Type inference
+  - [x] Implicit indexers
+    - [x] Various permutations of Count/Length
+    - [x] Arrays/string scenarios
+  - [x] Assignment scenarios including increment, compound assignment, deconstruction assignment, etc.  
+  - [x] Order of evaluation for read/write scenarios
+    - [x] Receiver is a class
+    - [x] Receiver is a struct
+    - [x] Receiver is an LValue
+    - [x] Receiver is an RVAlue
+  - [x] Other implicit element-access forms
+    - [x] List patterns
+    - [x] Object initializers
+    - [x] Spread elements
+  - [x] String interpolation handlers
+  - [x] Params
+  - [x] Disallowed in Expression Trees
+  - [x] Dynamic arguments are disallowed
+  - [x] In `nameof`
+  - [x] Consumption of implementation methods for accessors
      
-        
+- [x] Nullable analysis
+
+- [x] Ref safety analysis
+
+- [ ] Analyzer Actions for extension.
+- [ ] SemanticModel APIs
+  - [ ] Lookup related as well
+- [x] IOperation/Flow graph
+- [ ] Symbol display
+
+- [x] Cref in XML doc comments
+  - Indexer
+  - Accessor implementation methods 
+
+- [ ] Unsafe evolution (extension indexers marked as RequiresUnsafe)
+
+- [x] Metadata
+  - [x] Production
+  - [x] Consumption
+
+- [ ] Interoperability with VB
+  - Consumption of implementation methods
      
+- [ ] Public API
+
 ## Test Categories
 
 ### 1. Declaration Tests
