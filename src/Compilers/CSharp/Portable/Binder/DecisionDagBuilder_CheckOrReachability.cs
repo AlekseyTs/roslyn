@@ -995,7 +995,7 @@ start:
                             new BoundTypeExpression(recursivePattern.Syntax, aliasOpt: null, recursivePattern.InputType.StrippedType()),
                         recursivePattern.DeconstructMethod, recursivePattern.Deconstruction,
                         recursivePattern.Properties, recursivePattern.IsExplicitNotNullTest,
-                        isUnionMatching: false, recursivePattern.Variable, recursivePattern.VariableAccess,
+                        unionMatchingMode: UnionMatchingMode.None, recursivePattern.Variable, recursivePattern.VariableAccess,
                         inputType, recursivePattern.NarrowedType);
                 }
 
@@ -1103,7 +1103,7 @@ start:
                 {
                     // `{ }`
                     initialCheck = new BoundRecursivePattern(node.Syntax, declaredType: null, deconstructMethod: null, deconstruction: default,
-                        ImmutableArray<BoundPropertySubpattern>.Empty, isExplicitNotNullTest: false, isUnionMatching: false, variable: null, variableAccess: null, node.InputType, node.InputType);
+                        ImmutableArray<BoundPropertySubpattern>.Empty, isExplicitNotNullTest: false, unionMatchingMode: UnionMatchingMode.None, variable: null, variableAccess: null, node.InputType, node.InputType);
                 }
                 TryPushOperand(NegateIfNeeded(initialCheck));
                 Debug.Assert(_evalSequence.Count == startOfLeft + 1);
@@ -1128,7 +1128,7 @@ start:
                         BoundPattern newRecursive = new BoundRecursivePattern(
                             newPattern.Syntax, declaredType: node.DeclaredType, deconstructMethod: node.DeconstructMethod,
                             deconstruction: newSubPatterns,
-                            properties: default, isExplicitNotNullTest: false, isUnionMatching: false, variable: null, variableAccess: null,
+                            properties: default, isExplicitNotNullTest: false, unionMatchingMode: UnionMatchingMode.None, variable: null, variableAccess: null,
                             node.InputType, node.NarrowedType, node.HasErrors);
 
                         if (wasCompilerGenerated)
@@ -1163,7 +1163,7 @@ start:
                         BoundPattern newRecursive = new BoundRecursivePattern(
                             newPattern.Syntax, declaredType: node.DeclaredType, deconstructMethod: null, deconstruction: default,
                             properties: newSubPatterns,
-                            isExplicitNotNullTest: false, isUnionMatching: false, variable: null, variableAccess: null,
+                            isExplicitNotNullTest: false, unionMatchingMode: UnionMatchingMode.None, variable: null, variableAccess: null,
                             node.InputType, node.NarrowedType, node.HasErrors);
 
                         if (wasCompilerGenerated)

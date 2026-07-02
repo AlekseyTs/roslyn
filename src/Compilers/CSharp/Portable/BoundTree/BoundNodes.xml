@@ -2538,7 +2538,7 @@
     <Field Name="Deconstruction" Type="ImmutableArray&lt;BoundPositionalSubpattern&gt;" Null="allow"/>
     <Field Name="Properties" Type="ImmutableArray&lt;BoundPropertySubpattern&gt;" Null="allow"/>
     <Field Name="IsExplicitNotNullTest" Type="bool"/>
-    <Field Name="IsUnionMatching" Type="bool" PropertyOverrides="true"/>
+    <Field Name="UnionMatchingMode" Type="UnionMatchingMode"/>
   </Node>
 
   <!--
