@@ -686,6 +686,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             for (int i = 0; i < arrayLength; i++)
             {
                 var element = VisitExpression((BoundExpression)elements[i]);
+                Debug.Assert(inlineArrayLocal.LocalSymbol.RefKind == RefKind.None); // Using a regular local for the inline array, no need to check it for null byref.
                 var call = _factory.Call(null, elementRef, inlineArrayLocal, _factory.Literal(i), useStrictArgumentRefKinds: true);
                 var assignment = new BoundAssignmentOperator(syntax, call, element, type: call.Type) { WasCompilerGenerated = true };
                 sideEffects.Add(assignment);
@@ -699,6 +700,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 _factory.ModuleBuilderOpt.EnsureInlineArrayAsReadOnlySpanExists(syntax, _factory.WellKnownType(WellKnownType.System_ReadOnlySpan_T), intType, _diagnostics.DiagnosticBag) :
                 _factory.ModuleBuilderOpt.EnsureInlineArrayAsSpanExists(syntax, _factory.WellKnownType(WellKnownType.System_Span_T), intType, _diagnostics.DiagnosticBag);
             inlineArrayAsSpan = inlineArrayAsSpan.Construct(ImmutableArray.Create(TypeWithAnnotations.Create(inlineArrayType), elementType));
+            Debug.Assert(inlineArrayLocal.LocalSymbol.RefKind == RefKind.None); // Using a regular local for the inline array, no need to check it for null byref.
             var span = _factory.Call(
                 receiver: null,
                 inlineArrayAsSpan,

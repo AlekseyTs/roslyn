@@ -616,7 +616,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             var forEachSyntax = (CSharpSyntaxNode)node.Syntax;
             LocalSymbol? preambleLocal = null;
             RefKind collectionTempRefKind = RefKind.None;
-            BoundStatement? collectionVarInitializationPreamble = getPreamble?.Invoke(this, forEachSyntax, enumeratorInfo, ref rewrittenExpression, out preambleLocal, out collectionTempRefKind);
+            GetForEachStatementAsForCollectionValidation? collectionValidation = null;
+            BoundStatement? collectionVarInitializationPreamble = getPreamble?.Invoke(this, forEachSyntax, enumeratorInfo, ref rewrittenExpression, out preambleLocal, out collectionTempRefKind, out collectionValidation);
 
             // Collection a
             LocalSymbol collectionTemp = _factory.SynthesizedLocal(collectionType, forEachSyntax, kind: SynthesizedLocalKind.ForEachArray, refKind: collectionTempRefKind);
@@ -624,15 +625,29 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Collection a = /*node.Expression*/;
             BoundStatement arrayVarDecl = MakeLocalDeclaration(forEachSyntax, collectionTemp, rewrittenExpression);
 
-            if (collectionVarInitializationPreamble is object)
+            // Reference to a.
+            BoundLocal boundArrayVar = MakeBoundLocal(forEachSyntax, collectionTemp, collectionType);
+
+            if (collectionVarInitializationPreamble is object || collectionValidation is object)
             {
-                arrayVarDecl = new BoundStatementList(arrayVarDecl.Syntax, ImmutableArray.Create(collectionVarInitializationPreamble, arrayVarDecl)).MakeCompilerGenerated();
+                var builder = ArrayBuilder<BoundStatement>.GetInstance(3);
+
+                if (collectionVarInitializationPreamble is object)
+                {
+                    builder.Add(collectionVarInitializationPreamble);
+                }
+
+                builder.Add(arrayVarDecl);
+
+                if (collectionValidation is object)
+                {
+                    builder.Add(collectionValidation(this, boundArrayVar));
+                }
+
+                arrayVarDecl = new BoundStatementList(arrayVarDecl.Syntax, builder.ToImmutableAndFree()).MakeCompilerGenerated();
             }
 
             InstrumentForEachStatementCollectionVarDeclaration(node, ref arrayVarDecl);
-
-            // Reference to a.
-            BoundLocal boundArrayVar = MakeBoundLocal(forEachSyntax, collectionTemp, collectionType);
 
             // int p
             LocalSymbol positionVar = _factory.SynthesizedLocal(intType, syntax: forEachSyntax, kind: SynthesizedLocalKind.ForEachArrayIndex);
@@ -703,7 +718,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             return result;
         }
 
-        private delegate BoundStatement? GetForEachStatementAsForPreamble(LocalRewriter rewriter, SyntaxNode syntax, ForEachEnumeratorInfo enumeratorInfo, ref BoundExpression rewrittenExpression, out LocalSymbol? preambleLocal, out RefKind collectionTempRefKind);
+        private delegate BoundStatement GetForEachStatementAsForCollectionValidation(LocalRewriter rewriter, BoundLocal boundArrayVar);
+        private delegate BoundStatement? GetForEachStatementAsForPreamble(
+            LocalRewriter rewriter,
+            SyntaxNode syntax,
+            ForEachEnumeratorInfo enumeratorInfo,
+            ref BoundExpression rewrittenExpression,
+            out LocalSymbol? preambleLocal,
+            out RefKind collectionTempRefKind,
+            out GetForEachStatementAsForCollectionValidation? collectionValidation);
         private delegate BoundExpression GetForEachStatementAsForItem<TArg>(LocalRewriter rewriter, SyntaxNode syntax, ForEachEnumeratorInfo enumeratorInfo, BoundLocal boundArrayVar, BoundLocal boundPositionVar, TArg arg);
         private delegate BoundExpression GetForEachStatementAsForLength<TArg>(LocalRewriter rewriter, SyntaxNode syntax, BoundLocal boundArrayVar, TArg arg);
 
@@ -742,7 +765,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private static GetForEachStatementAsForPreamble GetInlineArrayForEachStatementPreambleDelegate()
         {
-            return static (LocalRewriter rewriter, SyntaxNode syntax, ForEachEnumeratorInfo enumeratorInfo, ref BoundExpression rewrittenExpression, out LocalSymbol? preambleLocal, out RefKind collectionTempRefKind) =>
+            return static (LocalRewriter rewriter, SyntaxNode syntax, ForEachEnumeratorInfo enumeratorInfo, ref BoundExpression rewrittenExpression, out LocalSymbol? preambleLocal, out RefKind collectionTempRefKind, out GetForEachStatementAsForCollectionValidation? collectionValidation) =>
             {
                 Debug.Assert(rewrittenExpression.Type is not null);
 
@@ -757,6 +780,24 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 collectionTempRefKind = enumeratorInfo.InlineArraySpanType == WellKnownType.System_Span_T ? RefKind.Ref : RefKindExtensions.StrictIn;
+
+                if (rewriter.ShouldPerformInlineArrayNullCheck(rewrittenExpression))
+                {
+                    collectionValidation = static (LocalRewriter rewriter, BoundLocal boundInlineArrayRefVar) =>
+                    {
+                        // Note that IL doesn't refer to 'object' type, but we need it for the bound nodes. 
+                        // We do not care if it is bad or missing though.
+                        return rewriter._factory.If(
+                            rewriter.CreateInlineArrayNullTestExpression(boundInlineArrayRefVar),
+                            rewriter._factory.Throw(rewriter._factory.Null(rewriter._factory.Compilation.GetSpecialType(SpecialType.System_Object)))
+                            );
+                    };
+                }
+                else
+                {
+                    collectionValidation = null;
+                }
+
                 return collectionVarInitializationPreamble;
             };
         }

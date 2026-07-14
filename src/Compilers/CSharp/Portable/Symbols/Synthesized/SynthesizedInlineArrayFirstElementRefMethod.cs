@@ -27,6 +27,33 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             try
             {
                 // return ref Unsafe.As<TBuffer, TElement>(ref buffer)
+                TypeSymbol pointerType = new PointerTypeSymbol(TypeWithAnnotations.Create(TypeParameters[0]));
+
+                // For refernce, the following code is used by Unsafe.IsNullRef helper: 
+                //
+                //      ldarg.0
+                //      ldc.i4.0
+                //      conv.u
+                //      ceq
+                //      ret
+                //
+                // Bound nodes below generate similar code.
+
+                //var nullCheck = f.If(
+                //    f.Binary(
+                //        BinaryOperatorKind.Equal,
+                //        compilationState.Compilation.GetSpecialType(SpecialType.System_Boolean),
+                //         new BoundAddressOfOperator(f.Syntax, f.Parameter(Parameters[0]), isManaged: true, pointerType),
+                //         f.Null(pointerType)),
+                //    f.Throw(f.Null(compilationState.Compilation.GetSpecialType(SpecialType.System_Object)))
+                //    );
+
+                //var body = f.StatementList(
+                //    nullCheck,
+                //    f.Return(f.Call(null,
+                //                    f.WellKnownMethod(WellKnownMember.System_Runtime_CompilerServices_Unsafe__As_T).Construct(ImmutableArray<TypeSymbol>.CastUp(TypeParameters)),
+                //                    f.Parameter(Parameters[0])))
+                //    );
 
                 var body = f.Return(f.Call(null,
                                            f.WellKnownMethod(WellKnownMember.System_Runtime_CompilerServices_Unsafe__As_T).Construct(ImmutableArray<TypeSymbol>.CastUp(TypeParameters)),

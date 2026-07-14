@@ -4639,7 +4639,7 @@ class Program
         }
 
         [ConditionalFact(typeof(CoreClrOnly))]
-        public void ElementAccess_Await_09()
+        public void ElementAccess_Await_09_01()
         {
             var src = @"
 using System.Threading.Tasks;
@@ -4761,6 +4761,154 @@ class Program
     IL_00b6:  ldloca.s   V_5
     IL_00b8:  ldloc.2
     IL_00b9:  call       ""ref readonly int System.ReadOnlySpan<int>.this[int].get""
+    IL_00be:  ldind.i4
+    IL_00bf:  stloc.1
+    IL_00c0:  leave.s    IL_00db
+  }
+  catch System.Exception
+  {
+    IL_00c2:  stloc.s    V_6
+    IL_00c4:  ldarg.0
+    IL_00c5:  ldc.i4.s   -2
+    IL_00c7:  stfld      ""int Program.<M1>d__1.<>1__state""
+    IL_00cc:  ldarg.0
+    IL_00cd:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Program.<M1>d__1.<>t__builder""
+    IL_00d2:  ldloc.s    V_6
+    IL_00d4:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetException(System.Exception)""
+    IL_00d9:  leave.s    IL_00ef
+  }
+  IL_00db:  ldarg.0
+  IL_00dc:  ldc.i4.s   -2
+  IL_00de:  stfld      ""int Program.<M1>d__1.<>1__state""
+  IL_00e3:  ldarg.0
+  IL_00e4:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Program.<M1>d__1.<>t__builder""
+  IL_00e9:  ldloc.1
+  IL_00ea:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetResult(int)""
+  IL_00ef:  ret
+}
+");
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly))]
+        public void ElementAccess_Await_09_02()
+        {
+            var src = @"
+using System.Threading.Tasks;
+
+class C
+{
+    public Buffer10<Buffer10<int>> F;
+}
+
+class Program
+{
+    static void Main()
+    {
+        var x = new C();
+        System.Console.Write(M1(x).Result);
+    }
+
+    static async Task<int> M1(C x) => GetC(x).F[Get01()][await FromResult(Get02(x))];
+
+    static C GetC(C x) => x;
+    static int Get01() => 0;
+    static int Get02(C c)
+    {
+        c.F[0][0] = 111;
+        return 0;
+    }
+
+    static async Task<T> FromResult<T>(T r)
+    {
+        await Task.Yield();
+        await Task.Delay(2);
+        return await Task.FromResult(r);
+    }
+}
+";
+            var comp = CreateCompilation(src + Buffer10Definition, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "111", verify: Verification.Fails).VerifyDiagnostics();
+
+            verifier.VerifyIL("Program.<M1>d__1.System.Runtime.CompilerServices.IAsyncStateMachine.MoveNext",
+@"
+{
+  // Code size      240 (0xf0)
+  .maxstack  3
+  .locals init (int V_0,
+            int V_1,
+            int V_2,
+            System.Runtime.CompilerServices.TaskAwaiter<int> V_3,
+            System.Span<Buffer10<int>> V_4,
+            System.Span<int> V_5,
+            System.Exception V_6)
+  IL_0000:  ldarg.0
+  IL_0001:  ldfld      ""int Program.<M1>d__1.<>1__state""
+  IL_0006:  stloc.0
+  .try
+  {
+    IL_0007:  ldloc.0
+    IL_0008:  brfalse.s  IL_0068
+    IL_000a:  ldarg.0
+    IL_000b:  ldarg.0
+    IL_000c:  ldfld      ""C Program.<M1>d__1.x""
+    IL_0011:  call       ""C Program.GetC(C)""
+    IL_0016:  stfld      ""C Program.<M1>d__1.<>7__wrap1""
+    IL_001b:  ldarg.0
+    IL_001c:  call       ""int Program.Get01()""
+    IL_0021:  stfld      ""int Program.<M1>d__1.<>7__wrap2""
+    IL_0026:  ldarg.0
+    IL_0027:  ldfld      ""C Program.<M1>d__1.x""
+    IL_002c:  call       ""int Program.Get02(C)""
+    IL_0031:  call       ""System.Threading.Tasks.Task<int> Program.FromResult<int>(int)""
+    IL_0036:  callvirt   ""System.Runtime.CompilerServices.TaskAwaiter<int> System.Threading.Tasks.Task<int>.GetAwaiter()""
+    IL_003b:  stloc.3
+    IL_003c:  ldloca.s   V_3
+    IL_003e:  call       ""bool System.Runtime.CompilerServices.TaskAwaiter<int>.IsCompleted.get""
+    IL_0043:  brtrue.s   IL_0084
+    IL_0045:  ldarg.0
+    IL_0046:  ldc.i4.0
+    IL_0047:  dup
+    IL_0048:  stloc.0
+    IL_0049:  stfld      ""int Program.<M1>d__1.<>1__state""
+    IL_004e:  ldarg.0
+    IL_004f:  ldloc.3
+    IL_0050:  stfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Program.<M1>d__1.<>u__1""
+    IL_0055:  ldarg.0
+    IL_0056:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Program.<M1>d__1.<>t__builder""
+    IL_005b:  ldloca.s   V_3
+    IL_005d:  ldarg.0
+    IL_005e:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<int>, Program.<M1>d__1>(ref System.Runtime.CompilerServices.TaskAwaiter<int>, ref Program.<M1>d__1)""
+    IL_0063:  leave      IL_00ef
+    IL_0068:  ldarg.0
+    IL_0069:  ldfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Program.<M1>d__1.<>u__1""
+    IL_006e:  stloc.3
+    IL_006f:  ldarg.0
+    IL_0070:  ldflda     ""System.Runtime.CompilerServices.TaskAwaiter<int> Program.<M1>d__1.<>u__1""
+    IL_0075:  initobj    ""System.Runtime.CompilerServices.TaskAwaiter<int>""
+    IL_007b:  ldarg.0
+    IL_007c:  ldc.i4.m1
+    IL_007d:  dup
+    IL_007e:  stloc.0
+    IL_007f:  stfld      ""int Program.<M1>d__1.<>1__state""
+    IL_0084:  ldloca.s   V_3
+    IL_0086:  call       ""int System.Runtime.CompilerServices.TaskAwaiter<int>.GetResult()""
+    IL_008b:  stloc.2
+    IL_008c:  ldarg.0
+    IL_008d:  ldfld      ""C Program.<M1>d__1.<>7__wrap1""
+    IL_0092:  ldflda     ""Buffer10<Buffer10<int>> C.F""
+    IL_0097:  ldc.i4.s   10
+    IL_0099:  call       ""System.Span<Buffer10<int>> <PrivateImplementationDetails>.InlineArrayAsSpan<Buffer10<Buffer10<int>>, Buffer10<int>>(ref Buffer10<Buffer10<int>>, int)""
+    IL_009e:  stloc.s    V_4
+    IL_00a0:  ldloca.s   V_4
+    IL_00a2:  ldarg.0
+    IL_00a3:  ldfld      ""int Program.<M1>d__1.<>7__wrap2""
+    IL_00a8:  call       ""ref Buffer10<int> System.Span<Buffer10<int>>.this[int].get""
+    IL_00ad:  ldc.i4.s   10
+    IL_00af:  call       ""System.Span<int> <PrivateImplementationDetails>.InlineArrayAsSpan<Buffer10<int>, int>(ref Buffer10<int>, int)""
+    IL_00b4:  stloc.s    V_5
+    IL_00b6:  ldloca.s   V_5
+    IL_00b8:  ldloc.2
+    IL_00b9:  call       ""ref int System.Span<int>.this[int].get""
     IL_00be:  ldind.i4
     IL_00bf:  stloc.1
     IL_00c0:  leave.s    IL_00db
@@ -7235,7 +7383,7 @@ class Program
             verifier.VerifyIL("Program.M2",
 @"
 {
-  // Code size       70 (0x46)
+  // Code size       77 (0x4d)
   .maxstack  3
   .locals init (System.Range V_0,
                 int V_1,
@@ -7244,33 +7392,39 @@ class Program
                 System.Span<int> V_4)
   IL_0000:  ldarg.0
   IL_0001:  call       ""ref Buffer10<int> Program.GetBuffer(C)""
-  IL_0006:  ldarg.1
-  IL_0007:  call       ""System.Range Program.GetRange(System.Range)""
-  IL_000c:  stloc.0
-  IL_000d:  ldloca.s   V_0
-  IL_000f:  call       ""System.Index System.Range.Start.get""
-  IL_0014:  stloc.3
-  IL_0015:  ldloca.s   V_3
-  IL_0017:  ldc.i4.s   10
-  IL_0019:  call       ""int System.Index.GetOffset(int)""
-  IL_001e:  stloc.1
-  IL_001f:  ldloca.s   V_0
-  IL_0021:  call       ""System.Index System.Range.End.get""
-  IL_0026:  stloc.3
-  IL_0027:  ldloca.s   V_3
-  IL_0029:  ldc.i4.s   10
-  IL_002b:  call       ""int System.Index.GetOffset(int)""
-  IL_0030:  ldloc.1
-  IL_0031:  sub
-  IL_0032:  stloc.2
-  IL_0033:  ldc.i4.s   10
-  IL_0035:  call       ""System.Span<int> <PrivateImplementationDetails>.InlineArrayAsSpan<Buffer10<int>, int>(ref Buffer10<int>, int)""
-  IL_003a:  stloc.s    V_4
-  IL_003c:  ldloca.s   V_4
-  IL_003e:  ldloc.1
-  IL_003f:  ldloc.2
-  IL_0040:  call       ""System.Span<int> System.Span<int>.Slice(int, int)""
-  IL_0045:  ret
+  IL_0006:  dup
+  IL_0007:  ldc.i4.0
+  IL_0008:  conv.u
+  IL_0009:  bne.un.s   IL_000d
+  IL_000b:  ldnull
+  IL_000c:  throw
+  IL_000d:  ldarg.1
+  IL_000e:  call       ""System.Range Program.GetRange(System.Range)""
+  IL_0013:  stloc.0
+  IL_0014:  ldloca.s   V_0
+  IL_0016:  call       ""System.Index System.Range.Start.get""
+  IL_001b:  stloc.3
+  IL_001c:  ldloca.s   V_3
+  IL_001e:  ldc.i4.s   10
+  IL_0020:  call       ""int System.Index.GetOffset(int)""
+  IL_0025:  stloc.1
+  IL_0026:  ldloca.s   V_0
+  IL_0028:  call       ""System.Index System.Range.End.get""
+  IL_002d:  stloc.3
+  IL_002e:  ldloca.s   V_3
+  IL_0030:  ldc.i4.s   10
+  IL_0032:  call       ""int System.Index.GetOffset(int)""
+  IL_0037:  ldloc.1
+  IL_0038:  sub
+  IL_0039:  stloc.2
+  IL_003a:  ldc.i4.s   10
+  IL_003c:  call       ""System.Span<int> <PrivateImplementationDetails>.InlineArrayAsSpan<Buffer10<int>, int>(ref Buffer10<int>, int)""
+  IL_0041:  stloc.s    V_4
+  IL_0043:  ldloca.s   V_4
+  IL_0045:  ldloc.1
+  IL_0046:  ldloc.2
+  IL_0047:  call       ""System.Span<int> System.Span<int>.Slice(int, int)""
+  IL_004c:  ret
 }
 ");
         }
@@ -7305,42 +7459,48 @@ class Program
             verifier.VerifyIL("Program.M2",
 @"
 {
-  // Code size       70 (0x46)
+  // Code size       77 (0x4d)
   .maxstack  3
   .locals init (System.Range V_0,
-                int V_1,
-                int V_2,
-                System.Index V_3,
-                System.ReadOnlySpan<int> V_4)
+            int V_1,
+            int V_2,
+            System.Index V_3,
+            System.ReadOnlySpan<int> V_4)
   IL_0000:  ldarg.0
   IL_0001:  call       ""ref readonly Buffer10<int> Program.GetBuffer(C)""
-  IL_0006:  ldarg.1
-  IL_0007:  call       ""System.Range Program.GetRange(System.Range)""
-  IL_000c:  stloc.0
-  IL_000d:  ldloca.s   V_0
-  IL_000f:  call       ""System.Index System.Range.Start.get""
-  IL_0014:  stloc.3
-  IL_0015:  ldloca.s   V_3
-  IL_0017:  ldc.i4.s   10
-  IL_0019:  call       ""int System.Index.GetOffset(int)""
-  IL_001e:  stloc.1
-  IL_001f:  ldloca.s   V_0
-  IL_0021:  call       ""System.Index System.Range.End.get""
-  IL_0026:  stloc.3
-  IL_0027:  ldloca.s   V_3
-  IL_0029:  ldc.i4.s   10
-  IL_002b:  call       ""int System.Index.GetOffset(int)""
-  IL_0030:  ldloc.1
-  IL_0031:  sub
-  IL_0032:  stloc.2
-  IL_0033:  ldc.i4.s   10
-  IL_0035:  call       ""System.ReadOnlySpan<int> <PrivateImplementationDetails>.InlineArrayAsReadOnlySpan<Buffer10<int>, int>(in Buffer10<int>, int)""
-  IL_003a:  stloc.s    V_4
-  IL_003c:  ldloca.s   V_4
-  IL_003e:  ldloc.1
-  IL_003f:  ldloc.2
-  IL_0040:  call       ""System.ReadOnlySpan<int> System.ReadOnlySpan<int>.Slice(int, int)""
-  IL_0045:  ret
+  IL_0006:  dup
+  IL_0007:  ldc.i4.0
+  IL_0008:  conv.u
+  IL_0009:  bne.un.s   IL_000d
+  IL_000b:  ldnull
+  IL_000c:  throw
+  IL_000d:  ldarg.1
+  IL_000e:  call       ""System.Range Program.GetRange(System.Range)""
+  IL_0013:  stloc.0
+  IL_0014:  ldloca.s   V_0
+  IL_0016:  call       ""System.Index System.Range.Start.get""
+  IL_001b:  stloc.3
+  IL_001c:  ldloca.s   V_3
+  IL_001e:  ldc.i4.s   10
+  IL_0020:  call       ""int System.Index.GetOffset(int)""
+  IL_0025:  stloc.1
+  IL_0026:  ldloca.s   V_0
+  IL_0028:  call       ""System.Index System.Range.End.get""
+  IL_002d:  stloc.3
+  IL_002e:  ldloca.s   V_3
+  IL_0030:  ldc.i4.s   10
+  IL_0032:  call       ""int System.Index.GetOffset(int)""
+  IL_0037:  ldloc.1
+  IL_0038:  sub
+  IL_0039:  stloc.2
+  IL_003a:  ldc.i4.s   10
+  IL_003c:  call       ""System.ReadOnlySpan<int> <PrivateImplementationDetails>.InlineArrayAsReadOnlySpan<Buffer10<int>, int>(in Buffer10<int>, int)""
+  IL_0041:  stloc.s    V_4
+  IL_0043:  ldloca.s   V_4
+  IL_0045:  ldloc.1
+  IL_0046:  ldloc.2
+  IL_0047:  call       ""System.ReadOnlySpan<int> System.ReadOnlySpan<int>.Slice(int, int)""
+  IL_004c:  ret
 }
 ");
         }
@@ -20099,14 +20259,14 @@ class Program
             verifier.VerifyIL("Program.<Test>d__3.System.Runtime.CompilerServices.IAsyncStateMachine.MoveNext",
 @"
 {
-  // Code size      295 (0x127)
+  // Code size      302 (0x12e)
   .maxstack  3
   .locals init (int V_0,
-                System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter V_1,
-                System.Runtime.CompilerServices.YieldAwaitable V_2,
-                Buffer4<int>& V_3,
-                int V_4,
-                System.Exception V_5)
+            System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter V_1,
+            System.Runtime.CompilerServices.YieldAwaitable V_2,
+            Buffer4<int>& V_3,
+            int V_4,
+            System.Exception V_5)
   IL_0000:  ldarg.0
   IL_0001:  ldfld      ""int Program.<Test>d__3.<>1__state""
   IL_0006:  stloc.0
@@ -20116,7 +20276,7 @@ class Program
     IL_0008:  brfalse.s  IL_004b
     IL_000a:  ldloc.0
     IL_000b:  ldc.i4.1
-    IL_000c:  beq        IL_00d5
+    IL_000c:  beq        IL_00dc
     IL_0011:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
     IL_0016:  stloc.2
     IL_0017:  ldloca.s   V_2
@@ -20138,7 +20298,7 @@ class Program
     IL_003e:  ldloca.s   V_1
     IL_0040:  ldarg.0
     IL_0041:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
-    IL_0046:  leave      IL_0126
+    IL_0046:  leave      IL_012d
     IL_004b:  ldarg.0
     IL_004c:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
     IL_0051:  stloc.1
@@ -20154,80 +20314,86 @@ class Program
     IL_0069:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
     IL_006e:  call       ""ref Buffer4<int> Program.GetBuffer()""
     IL_0073:  stloc.3
-    IL_0074:  ldc.i4.0
-    IL_0075:  stloc.s    V_4
-    IL_0077:  br.s       IL_0099
-    IL_0079:  ldloc.3
-    IL_007a:  ldloc.s    V_4
-    IL_007c:  call       ""ref int <PrivateImplementationDetails>.InlineArrayElementRef<Buffer4<int>, int>(ref Buffer4<int>, int)""
-    IL_0081:  ldind.i4
-    IL_0082:  call       ""void Program.Increment()""
-    IL_0087:  ldc.i4.s   32
-    IL_0089:  call       ""void System.Console.Write(char)""
-    IL_008e:  call       ""void System.Console.Write(int)""
-    IL_0093:  ldloc.s    V_4
-    IL_0095:  ldc.i4.1
-    IL_0096:  add
-    IL_0097:  stloc.s    V_4
-    IL_0099:  ldloc.s    V_4
-    IL_009b:  ldc.i4.4
-    IL_009c:  blt.s      IL_0079
-    IL_009e:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
-    IL_00a3:  stloc.2
-    IL_00a4:  ldloca.s   V_2
-    IL_00a6:  call       ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter System.Runtime.CompilerServices.YieldAwaitable.GetAwaiter()""
-    IL_00ab:  stloc.1
-    IL_00ac:  ldloca.s   V_1
-    IL_00ae:  call       ""bool System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.IsCompleted.get""
-    IL_00b3:  brtrue.s   IL_00f1
-    IL_00b5:  ldarg.0
-    IL_00b6:  ldc.i4.1
-    IL_00b7:  dup
-    IL_00b8:  stloc.0
-    IL_00b9:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_00be:  ldarg.0
-    IL_00bf:  ldloc.1
-    IL_00c0:  stfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_0074:  ldloc.3
+    IL_0075:  ldc.i4.0
+    IL_0076:  conv.u
+    IL_0077:  bne.un.s   IL_007b
+    IL_0079:  ldnull
+    IL_007a:  throw
+    IL_007b:  ldc.i4.0
+    IL_007c:  stloc.s    V_4
+    IL_007e:  br.s       IL_00a0
+    IL_0080:  ldloc.3
+    IL_0081:  ldloc.s    V_4
+    IL_0083:  call       ""ref int <PrivateImplementationDetails>.InlineArrayElementRef<Buffer4<int>, int>(ref Buffer4<int>, int)""
+    IL_0088:  ldind.i4
+    IL_0089:  call       ""void Program.Increment()""
+    IL_008e:  ldc.i4.s   32
+    IL_0090:  call       ""void System.Console.Write(char)""
+    IL_0095:  call       ""void System.Console.Write(int)""
+    IL_009a:  ldloc.s    V_4
+    IL_009c:  ldc.i4.1
+    IL_009d:  add
+    IL_009e:  stloc.s    V_4
+    IL_00a0:  ldloc.s    V_4
+    IL_00a2:  ldc.i4.4
+    IL_00a3:  blt.s      IL_0080
+    IL_00a5:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
+    IL_00aa:  stloc.2
+    IL_00ab:  ldloca.s   V_2
+    IL_00ad:  call       ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter System.Runtime.CompilerServices.YieldAwaitable.GetAwaiter()""
+    IL_00b2:  stloc.1
+    IL_00b3:  ldloca.s   V_1
+    IL_00b5:  call       ""bool System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.IsCompleted.get""
+    IL_00ba:  brtrue.s   IL_00f8
+    IL_00bc:  ldarg.0
+    IL_00bd:  ldc.i4.1
+    IL_00be:  dup
+    IL_00bf:  stloc.0
+    IL_00c0:  stfld      ""int Program.<Test>d__3.<>1__state""
     IL_00c5:  ldarg.0
-    IL_00c6:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-    IL_00cb:  ldloca.s   V_1
-    IL_00cd:  ldarg.0
-    IL_00ce:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
-    IL_00d3:  leave.s    IL_0126
-    IL_00d5:  ldarg.0
-    IL_00d6:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
-    IL_00db:  stloc.1
+    IL_00c6:  ldloc.1
+    IL_00c7:  stfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00cc:  ldarg.0
+    IL_00cd:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+    IL_00d2:  ldloca.s   V_1
+    IL_00d4:  ldarg.0
+    IL_00d5:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
+    IL_00da:  leave.s    IL_012d
     IL_00dc:  ldarg.0
-    IL_00dd:  ldflda     ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
-    IL_00e2:  initobj    ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter""
-    IL_00e8:  ldarg.0
-    IL_00e9:  ldc.i4.m1
-    IL_00ea:  dup
-    IL_00eb:  stloc.0
-    IL_00ec:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_00f1:  ldloca.s   V_1
-    IL_00f3:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
-    IL_00f8:  leave.s    IL_0113
+    IL_00dd:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00e2:  stloc.1
+    IL_00e3:  ldarg.0
+    IL_00e4:  ldflda     ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00e9:  initobj    ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter""
+    IL_00ef:  ldarg.0
+    IL_00f0:  ldc.i4.m1
+    IL_00f1:  dup
+    IL_00f2:  stloc.0
+    IL_00f3:  stfld      ""int Program.<Test>d__3.<>1__state""
+    IL_00f8:  ldloca.s   V_1
+    IL_00fa:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
+    IL_00ff:  leave.s    IL_011a
   }
   catch System.Exception
   {
-    IL_00fa:  stloc.s    V_5
-    IL_00fc:  ldarg.0
-    IL_00fd:  ldc.i4.s   -2
-    IL_00ff:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_0104:  ldarg.0
-    IL_0105:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-    IL_010a:  ldloc.s    V_5
-    IL_010c:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetException(System.Exception)""
-    IL_0111:  leave.s    IL_0126
+    IL_0101:  stloc.s    V_5
+    IL_0103:  ldarg.0
+    IL_0104:  ldc.i4.s   -2
+    IL_0106:  stfld      ""int Program.<Test>d__3.<>1__state""
+    IL_010b:  ldarg.0
+    IL_010c:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+    IL_0111:  ldloc.s    V_5
+    IL_0113:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetException(System.Exception)""
+    IL_0118:  leave.s    IL_012d
   }
-  IL_0113:  ldarg.0
-  IL_0114:  ldc.i4.s   -2
-  IL_0116:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_011b:  ldarg.0
-  IL_011c:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-  IL_0121:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetResult()""
-  IL_0126:  ret
+  IL_011a:  ldarg.0
+  IL_011b:  ldc.i4.s   -2
+  IL_011d:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_0122:  ldarg.0
+  IL_0123:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+  IL_0128:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetResult()""
+  IL_012d:  ret
 }
 ");
 
@@ -20622,14 +20788,14 @@ class Program
             verifier.VerifyIL("Program.<Test>d__3.System.Runtime.CompilerServices.IAsyncStateMachine.MoveNext",
 @"
 {
-  // Code size      295 (0x127)
+  // Code size      302 (0x12e)
   .maxstack  3
   .locals init (int V_0,
-                System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter V_1,
-                System.Runtime.CompilerServices.YieldAwaitable V_2,
-                Buffer4<int>& V_3,
-                int V_4,
-                System.Exception V_5)
+            System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter V_1,
+            System.Runtime.CompilerServices.YieldAwaitable V_2,
+            Buffer4<int>& V_3,
+            int V_4,
+            System.Exception V_5)
   IL_0000:  ldarg.0
   IL_0001:  ldfld      ""int Program.<Test>d__3.<>1__state""
   IL_0006:  stloc.0
@@ -20639,7 +20805,7 @@ class Program
     IL_0008:  brfalse.s  IL_004b
     IL_000a:  ldloc.0
     IL_000b:  ldc.i4.1
-    IL_000c:  beq        IL_00d5
+    IL_000c:  beq        IL_00dc
     IL_0011:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
     IL_0016:  stloc.2
     IL_0017:  ldloca.s   V_2
@@ -20661,7 +20827,7 @@ class Program
     IL_003e:  ldloca.s   V_1
     IL_0040:  ldarg.0
     IL_0041:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
-    IL_0046:  leave      IL_0126
+    IL_0046:  leave      IL_012d
     IL_004b:  ldarg.0
     IL_004c:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
     IL_0051:  stloc.1
@@ -20677,80 +20843,86 @@ class Program
     IL_0069:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
     IL_006e:  call       ""ref readonly Buffer4<int> Program.GetBuffer()""
     IL_0073:  stloc.3
-    IL_0074:  ldc.i4.0
-    IL_0075:  stloc.s    V_4
-    IL_0077:  br.s       IL_0099
-    IL_0079:  ldloc.3
-    IL_007a:  ldloc.s    V_4
-    IL_007c:  call       ""ref readonly int <PrivateImplementationDetails>.InlineArrayElementRefReadOnly<Buffer4<int>, int>(in Buffer4<int>, int)""
-    IL_0081:  ldind.i4
-    IL_0082:  call       ""void Program.Increment()""
-    IL_0087:  ldc.i4.s   32
-    IL_0089:  call       ""void System.Console.Write(char)""
-    IL_008e:  call       ""void System.Console.Write(int)""
-    IL_0093:  ldloc.s    V_4
-    IL_0095:  ldc.i4.1
-    IL_0096:  add
-    IL_0097:  stloc.s    V_4
-    IL_0099:  ldloc.s    V_4
-    IL_009b:  ldc.i4.4
-    IL_009c:  blt.s      IL_0079
-    IL_009e:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
-    IL_00a3:  stloc.2
-    IL_00a4:  ldloca.s   V_2
-    IL_00a6:  call       ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter System.Runtime.CompilerServices.YieldAwaitable.GetAwaiter()""
-    IL_00ab:  stloc.1
-    IL_00ac:  ldloca.s   V_1
-    IL_00ae:  call       ""bool System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.IsCompleted.get""
-    IL_00b3:  brtrue.s   IL_00f1
-    IL_00b5:  ldarg.0
-    IL_00b6:  ldc.i4.1
-    IL_00b7:  dup
-    IL_00b8:  stloc.0
-    IL_00b9:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_00be:  ldarg.0
-    IL_00bf:  ldloc.1
-    IL_00c0:  stfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_0074:  ldloc.3
+    IL_0075:  ldc.i4.0
+    IL_0076:  conv.u
+    IL_0077:  bne.un.s   IL_007b
+    IL_0079:  ldnull
+    IL_007a:  throw
+    IL_007b:  ldc.i4.0
+    IL_007c:  stloc.s    V_4
+    IL_007e:  br.s       IL_00a0
+    IL_0080:  ldloc.3
+    IL_0081:  ldloc.s    V_4
+    IL_0083:  call       ""ref readonly int <PrivateImplementationDetails>.InlineArrayElementRefReadOnly<Buffer4<int>, int>(in Buffer4<int>, int)""
+    IL_0088:  ldind.i4
+    IL_0089:  call       ""void Program.Increment()""
+    IL_008e:  ldc.i4.s   32
+    IL_0090:  call       ""void System.Console.Write(char)""
+    IL_0095:  call       ""void System.Console.Write(int)""
+    IL_009a:  ldloc.s    V_4
+    IL_009c:  ldc.i4.1
+    IL_009d:  add
+    IL_009e:  stloc.s    V_4
+    IL_00a0:  ldloc.s    V_4
+    IL_00a2:  ldc.i4.4
+    IL_00a3:  blt.s      IL_0080
+    IL_00a5:  call       ""System.Runtime.CompilerServices.YieldAwaitable System.Threading.Tasks.Task.Yield()""
+    IL_00aa:  stloc.2
+    IL_00ab:  ldloca.s   V_2
+    IL_00ad:  call       ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter System.Runtime.CompilerServices.YieldAwaitable.GetAwaiter()""
+    IL_00b2:  stloc.1
+    IL_00b3:  ldloca.s   V_1
+    IL_00b5:  call       ""bool System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.IsCompleted.get""
+    IL_00ba:  brtrue.s   IL_00f8
+    IL_00bc:  ldarg.0
+    IL_00bd:  ldc.i4.1
+    IL_00be:  dup
+    IL_00bf:  stloc.0
+    IL_00c0:  stfld      ""int Program.<Test>d__3.<>1__state""
     IL_00c5:  ldarg.0
-    IL_00c6:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-    IL_00cb:  ldloca.s   V_1
-    IL_00cd:  ldarg.0
-    IL_00ce:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
-    IL_00d3:  leave.s    IL_0126
-    IL_00d5:  ldarg.0
-    IL_00d6:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
-    IL_00db:  stloc.1
+    IL_00c6:  ldloc.1
+    IL_00c7:  stfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00cc:  ldarg.0
+    IL_00cd:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+    IL_00d2:  ldloca.s   V_1
+    IL_00d4:  ldarg.0
+    IL_00d5:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, Program.<Test>d__3>(ref System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter, ref Program.<Test>d__3)""
+    IL_00da:  leave.s    IL_012d
     IL_00dc:  ldarg.0
-    IL_00dd:  ldflda     ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
-    IL_00e2:  initobj    ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter""
-    IL_00e8:  ldarg.0
-    IL_00e9:  ldc.i4.m1
-    IL_00ea:  dup
-    IL_00eb:  stloc.0
-    IL_00ec:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_00f1:  ldloca.s   V_1
-    IL_00f3:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
-    IL_00f8:  leave.s    IL_0113
+    IL_00dd:  ldfld      ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00e2:  stloc.1
+    IL_00e3:  ldarg.0
+    IL_00e4:  ldflda     ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter Program.<Test>d__3.<>u__1""
+    IL_00e9:  initobj    ""System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter""
+    IL_00ef:  ldarg.0
+    IL_00f0:  ldc.i4.m1
+    IL_00f1:  dup
+    IL_00f2:  stloc.0
+    IL_00f3:  stfld      ""int Program.<Test>d__3.<>1__state""
+    IL_00f8:  ldloca.s   V_1
+    IL_00fa:  call       ""void System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter.GetResult()""
+    IL_00ff:  leave.s    IL_011a
   }
   catch System.Exception
   {
-    IL_00fa:  stloc.s    V_5
-    IL_00fc:  ldarg.0
-    IL_00fd:  ldc.i4.s   -2
-    IL_00ff:  stfld      ""int Program.<Test>d__3.<>1__state""
-    IL_0104:  ldarg.0
-    IL_0105:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-    IL_010a:  ldloc.s    V_5
-    IL_010c:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetException(System.Exception)""
-    IL_0111:  leave.s    IL_0126
+    IL_0101:  stloc.s    V_5
+    IL_0103:  ldarg.0
+    IL_0104:  ldc.i4.s   -2
+    IL_0106:  stfld      ""int Program.<Test>d__3.<>1__state""
+    IL_010b:  ldarg.0
+    IL_010c:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+    IL_0111:  ldloc.s    V_5
+    IL_0113:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetException(System.Exception)""
+    IL_0118:  leave.s    IL_012d
   }
-  IL_0113:  ldarg.0
-  IL_0114:  ldc.i4.s   -2
-  IL_0116:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_011b:  ldarg.0
-  IL_011c:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
-  IL_0121:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetResult()""
-  IL_0126:  ret
+  IL_011a:  ldarg.0
+  IL_011b:  ldc.i4.s   -2
+  IL_011d:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_0122:  ldarg.0
+  IL_0123:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder Program.<Test>d__3.<>t__builder""
+  IL_0128:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.SetResult()""
+  IL_012d:  ret
 }
 ");
             comp = CreateCompilation(src + Buffer4Definition, targetFramework: TargetFramework.Net80, options: TestOptions.DebugExe);
@@ -21720,19 +21892,19 @@ class Program
             verifier.VerifyIL("Program.<Test>d__3.System.Collections.IEnumerator.MoveNext",
 @"
 {
-  // Code size      126 (0x7e)
+  // Code size      133 (0x85)
   .maxstack  2
   .locals init (int V_0,
-                Buffer4<int>& V_1,
-                int V_2)
+            Buffer4<int>& V_1,
+            int V_2)
   IL_0000:  ldarg.0
   IL_0001:  ldfld      ""int Program.<Test>d__3.<>1__state""
   IL_0006:  stloc.0
   IL_0007:  ldloc.0
   IL_0008:  switch    (
-        IL_001b,
-        IL_0032,
-        IL_0075)
+    IL_001b,
+    IL_0032,
+    IL_007c)
   IL_0019:  ldc.i4.0
   IL_001a:  ret
   IL_001b:  ldarg.0
@@ -21751,37 +21923,43 @@ class Program
   IL_0034:  stfld      ""int Program.<Test>d__3.<>1__state""
   IL_0039:  call       ""ref Buffer4<int> Program.GetBuffer()""
   IL_003e:  stloc.1
-  IL_003f:  ldc.i4.0
-  IL_0040:  stloc.2
-  IL_0041:  br.s       IL_0060
-  IL_0043:  ldloc.1
-  IL_0044:  ldloc.2
-  IL_0045:  call       ""ref int <PrivateImplementationDetails>.InlineArrayElementRef<Buffer4<int>, int>(ref Buffer4<int>, int)""
-  IL_004a:  ldind.i4
-  IL_004b:  call       ""void Program.Increment()""
-  IL_0050:  ldc.i4.s   32
-  IL_0052:  call       ""void System.Console.Write(char)""
-  IL_0057:  call       ""void System.Console.Write(int)""
-  IL_005c:  ldloc.2
-  IL_005d:  ldc.i4.1
-  IL_005e:  add
-  IL_005f:  stloc.2
-  IL_0060:  ldloc.2
-  IL_0061:  ldc.i4.4
-  IL_0062:  blt.s      IL_0043
-  IL_0064:  ldarg.0
-  IL_0065:  ldc.i4.s   -2
-  IL_0067:  stfld      ""int Program.<Test>d__3.<>2__current""
-  IL_006c:  ldarg.0
-  IL_006d:  ldc.i4.2
-  IL_006e:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_0073:  ldc.i4.1
-  IL_0074:  ret
-  IL_0075:  ldarg.0
-  IL_0076:  ldc.i4.m1
-  IL_0077:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_007c:  ldc.i4.0
-  IL_007d:  ret
+  IL_003f:  ldloc.1
+  IL_0040:  ldc.i4.0
+  IL_0041:  conv.u
+  IL_0042:  bne.un.s   IL_0046
+  IL_0044:  ldnull
+  IL_0045:  throw
+  IL_0046:  ldc.i4.0
+  IL_0047:  stloc.2
+  IL_0048:  br.s       IL_0067
+  IL_004a:  ldloc.1
+  IL_004b:  ldloc.2
+  IL_004c:  call       ""ref int <PrivateImplementationDetails>.InlineArrayElementRef<Buffer4<int>, int>(ref Buffer4<int>, int)""
+  IL_0051:  ldind.i4
+  IL_0052:  call       ""void Program.Increment()""
+  IL_0057:  ldc.i4.s   32
+  IL_0059:  call       ""void System.Console.Write(char)""
+  IL_005e:  call       ""void System.Console.Write(int)""
+  IL_0063:  ldloc.2
+  IL_0064:  ldc.i4.1
+  IL_0065:  add
+  IL_0066:  stloc.2
+  IL_0067:  ldloc.2
+  IL_0068:  ldc.i4.4
+  IL_0069:  blt.s      IL_004a
+  IL_006b:  ldarg.0
+  IL_006c:  ldc.i4.s   -2
+  IL_006e:  stfld      ""int Program.<Test>d__3.<>2__current""
+  IL_0073:  ldarg.0
+  IL_0074:  ldc.i4.2
+  IL_0075:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_007a:  ldc.i4.1
+  IL_007b:  ret
+  IL_007c:  ldarg.0
+  IL_007d:  ldc.i4.m1
+  IL_007e:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_0083:  ldc.i4.0
+  IL_0084:  ret
 }
 ");
             comp = CreateCompilation(src + Buffer4Definition, targetFramework: TargetFramework.Net80, options: TestOptions.DebugExe);
@@ -22039,7 +22217,7 @@ class Program
             verifier.VerifyIL("Program.<Test>d__3.System.Collections.IEnumerator.MoveNext",
 @"
 {
-  // Code size      126 (0x7e)
+  // Code size      133 (0x85)
   .maxstack  2
   .locals init (int V_0,
                 Buffer4<int>& V_1,
@@ -22051,7 +22229,7 @@ class Program
   IL_0008:  switch    (
         IL_001b,
         IL_0032,
-        IL_0075)
+        IL_007c)
   IL_0019:  ldc.i4.0
   IL_001a:  ret
   IL_001b:  ldarg.0
@@ -22070,37 +22248,43 @@ class Program
   IL_0034:  stfld      ""int Program.<Test>d__3.<>1__state""
   IL_0039:  call       ""ref readonly Buffer4<int> Program.GetBuffer()""
   IL_003e:  stloc.1
-  IL_003f:  ldc.i4.0
-  IL_0040:  stloc.2
-  IL_0041:  br.s       IL_0060
-  IL_0043:  ldloc.1
-  IL_0044:  ldloc.2
-  IL_0045:  call       ""ref readonly int <PrivateImplementationDetails>.InlineArrayElementRefReadOnly<Buffer4<int>, int>(in Buffer4<int>, int)""
-  IL_004a:  ldind.i4
-  IL_004b:  call       ""void Program.Increment()""
-  IL_0050:  ldc.i4.s   32
-  IL_0052:  call       ""void System.Console.Write(char)""
-  IL_0057:  call       ""void System.Console.Write(int)""
-  IL_005c:  ldloc.2
-  IL_005d:  ldc.i4.1
-  IL_005e:  add
-  IL_005f:  stloc.2
-  IL_0060:  ldloc.2
-  IL_0061:  ldc.i4.4
-  IL_0062:  blt.s      IL_0043
-  IL_0064:  ldarg.0
-  IL_0065:  ldc.i4.s   -2
-  IL_0067:  stfld      ""int Program.<Test>d__3.<>2__current""
-  IL_006c:  ldarg.0
-  IL_006d:  ldc.i4.2
-  IL_006e:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_0073:  ldc.i4.1
-  IL_0074:  ret
-  IL_0075:  ldarg.0
-  IL_0076:  ldc.i4.m1
-  IL_0077:  stfld      ""int Program.<Test>d__3.<>1__state""
-  IL_007c:  ldc.i4.0
-  IL_007d:  ret
+  IL_003f:  ldloc.1
+  IL_0040:  ldc.i4.0
+  IL_0041:  conv.u
+  IL_0042:  bne.un.s   IL_0046
+  IL_0044:  ldnull
+  IL_0045:  throw
+  IL_0046:  ldc.i4.0
+  IL_0047:  stloc.2
+  IL_0048:  br.s       IL_0067
+  IL_004a:  ldloc.1
+  IL_004b:  ldloc.2
+  IL_004c:  call       ""ref readonly int <PrivateImplementationDetails>.InlineArrayElementRefReadOnly<Buffer4<int>, int>(in Buffer4<int>, int)""
+  IL_0051:  ldind.i4
+  IL_0052:  call       ""void Program.Increment()""
+  IL_0057:  ldc.i4.s   32
+  IL_0059:  call       ""void System.Console.Write(char)""
+  IL_005e:  call       ""void System.Console.Write(int)""
+  IL_0063:  ldloc.2
+  IL_0064:  ldc.i4.1
+  IL_0065:  add
+  IL_0066:  stloc.2
+  IL_0067:  ldloc.2
+  IL_0068:  ldc.i4.4
+  IL_0069:  blt.s      IL_004a
+  IL_006b:  ldarg.0
+  IL_006c:  ldc.i4.s   -2
+  IL_006e:  stfld      ""int Program.<Test>d__3.<>2__current""
+  IL_0073:  ldarg.0
+  IL_0074:  ldc.i4.2
+  IL_0075:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_007a:  ldc.i4.1
+  IL_007b:  ret
+  IL_007c:  ldarg.0
+  IL_007d:  ldc.i4.m1
+  IL_007e:  stfld      ""int Program.<Test>d__3.<>1__state""
+  IL_0083:  ldc.i4.0
+  IL_0084:  ret
 }
 ");
             comp = CreateCompilation(src + Buffer4Definition, targetFramework: TargetFramework.Net80, options: TestOptions.DebugExe);
@@ -24307,6 +24491,737 @@ static class E
                 // (2,5): error CS0656: Missing compiler required member 'System.Span`1.Slice'
                 // _ = c.F[1..];
                 Diagnostic(ErrorCode.ERR_MissingPredefinedMember, "c.F[1..]").WithArguments("System.Span`1", "Slice").WithLocation(2, 5));
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_FirstElementRef()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref byte e = ref s[0];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            comp.MakeTypeMissing(SpecialType.System_Boolean);
+            comp.MakeTypeMissing(WellKnownType.System_Runtime_CompilerServices_RuntimeCompatibilityAttribute);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_FirstElementRefReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref readonly byte e = ref s[0];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_ElementRef()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref byte e = ref s[1];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_ElementRefReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref readonly byte e = ref s[1];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_AsSpan()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    Span<byte> span = s;
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_AsReadOnlySpan()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ReadOnlySpan<byte> span = s;
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_Slice_FullRange()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    Span<byte> span = s[..];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_Slice_FullRange_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ReadOnlySpan<byte> span = s[..];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_Slice()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    Span<byte> span = s[1..5];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_Slice_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ReadOnlySpan<byte> span = s[1..5];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_NonConstantIndex()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+int index = 2;
+try
+{
+    ref byte e = ref s[index];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_NonConstantIndex_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+int index = 2;
+try
+{
+    ref readonly byte e = ref s[index];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_ForEach()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    foreach (var item in s)
+    {
+        Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+    }
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_ForEach_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    foreach (var item in s)
+    {
+        Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+    }
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_IndexAccess()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref byte e = ref s[^1];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_IndexAccess_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    ref readonly byte e = ref s[^1];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_SpreadInCollectionExpression()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+try
+{
+    byte[] arr = [..s];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_SpreadInCollectionExpression_ReadOnly()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+try
+{
+    byte[] arr = [..s];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [Fact]
+        public void NullCheck_InlineArray_As_Field_01()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S2 s2 = ref Unsafe.NullRef<S2>();
+try
+{
+    ref readonly S b = ref s2.S;
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+struct S2
+{
+    public S S;
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [Fact]
+        public void NullCheck_InlineArray_As_Field_02()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S2 s2 = ref Unsafe.NullRef<S2>();
+try
+{
+    ref readonly byte b = ref s2.S[0];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+struct S2
+{
+    public S S;
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [Fact]
+        public void NullCheck_InlineArray_As_Field_03()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+S2 s2 = default;
+try
+{
+    ref readonly byte b = ref s2.S[0];
+    Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS");
+}
+
+ref struct S2
+{
+#pragma warning disable CS9265 // Field 'S2.S' is never ref-assigned to, and will always have its default value (null reference)
+    public ref S S;
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [Fact]
+        public void NullCheck_InlineArray_As_This()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref readonly S s = ref Unsafe.NullRef<S>();
+
+try
+{
+    s.Test();
+    Console.WriteLine("ERROR #1: Should have thrown NullReferenceException");
+}
+catch (NullReferenceException)
+{
+    Console.WriteLine("PASS #1");
+}
+
+[InlineArray(10)]
+public struct S
+{
+    public byte F;
+
+    public void Test()
+    {
+        try
+        {
+            ref readonly byte b = ref this[0];
+            Console.WriteLine("ERROR #2: Should have thrown NullReferenceException");
+        }
+        catch (NullReferenceException)
+        {
+            Console.WriteLine("PASS #2");
+        }
+    }
+}
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS #1", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_InlineArray_As_Parameter_01()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+Test(ref s);
+
+static void Test(ref S s)
+{
+    try
+    {
+        ref byte e = ref s[0];
+        Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+    }
+    catch (NullReferenceException)
+    {
+        Console.WriteLine("PASS");
+    }
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_InlineArray_As_Parameter_02()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+Test(ref s);
+
+static void Test(ref readonly S s)
+{
+    try
+    {
+        ref readonly byte e = ref s[0];
+        Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+    }
+    catch (NullReferenceException)
+    {
+        Console.WriteLine("PASS");
+    }
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
+        }
+
+        [ConditionalFact(typeof(CoreClrOnly)), WorkItem("https://github.com/dotnet/roslyn/issues/84344")]
+        public void NullCheck_InlineArray_As_Parameter_03()
+        {
+            var src = """
+using System;
+using System.Runtime.CompilerServices;
+
+ref S s = ref Unsafe.NullRef<S>();
+Test(in s);
+
+static void Test(in S s)
+{
+    try
+    {
+        ref readonly byte e = ref s[0];
+        Console.WriteLine("ERROR: Should have thrown NullReferenceException");
+    }
+    catch (NullReferenceException)
+    {
+        Console.WriteLine("PASS");
+    }
+}
+
+[InlineArray(10)]
+public struct S { public byte F; }
+""";
+
+            var comp = CreateCompilation(src, targetFramework: TargetFramework.Net80, options: TestOptions.ReleaseExe);
+            var verifier = CompileAndVerify(comp, expectedOutput: "PASS", verify: Verification.Skipped);
+            verifier.VerifyDiagnostics();
         }
     }
 }

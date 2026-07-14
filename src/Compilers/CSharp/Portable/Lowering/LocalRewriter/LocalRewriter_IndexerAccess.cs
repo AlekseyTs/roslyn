@@ -245,13 +245,31 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(node.Argument.Type is object);
 
             var rewrittenReceiver = VisitExpression(node.Expression);
-            BoundAssignmentOperator? receiverStore = null;
+            bool rewrittenReceiverIsCachedRefOrValue = false;
+
+            var localsBuilder = ArrayBuilder<LocalSymbol>.GetInstance();
+            var sideEffectsBuilder = ArrayBuilder<BoundExpression>.GetInstance();
 
             if (node.IsValue && node.GetItemOrSliceHelper == WellKnownMember.System_ReadOnlySpan_T__get_Item)
             {
                 // Clone receiver because it is a value, but we need a variable to be able to get a span
-                rewrittenReceiver = _factory.StoreToTemp(rewrittenReceiver, out receiverStore);
+                BoundLocal tempAccess = _factory.StoreToTemp(rewrittenReceiver, out BoundAssignmentOperator receiverStore);
+                rewrittenReceiver = tempAccess;
+                rewrittenReceiverIsCachedRefOrValue = true;
+                localsBuilder.Add(tempAccess.LocalSymbol);
+                sideEffectsBuilder.Add(receiverStore);
             }
+
+            if (AddInlineArrayNullCheckIfNeeded(
+                ref rewrittenReceiver,
+                isRefReadonly: node.GetItemOrSliceHelper is WellKnownMember.System_ReadOnlySpan_T__Slice_Int_Int or WellKnownMember.System_ReadOnlySpan_T__get_Item,
+                localsBuilder,
+                sideEffectsBuilder))
+            {
+                rewrittenReceiverIsCachedRefOrValue = true;
+            }
+
+            Debug.Assert(rewrittenReceiverIsCachedRefOrValue || (sideEffectsBuilder.Count == 0 && localsBuilder.Count == 0));
 
             var getItemOrSliceHelper = (MethodSymbol?)_compilation.GetWellKnownTypeMember(node.GetItemOrSliceHelper);
             Debug.Assert(getItemOrSliceHelper is object);
@@ -278,7 +296,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     // createSpan(ref receiver, length).Slice(range converted to start, range converted to size)
 
-                    Debug.Assert(receiverStore is null);
                     Debug.Assert(Binder.IsWellKnownSystemRange(node.Argument.Type, _compilation));
 
                     MethodSymbol createSpan = getCreateSpanHelper(node, spanType: getItemOrSliceHelper.ContainingType, intType: (NamedTypeSymbol)getItemOrSliceHelper.Parameters[0].Type);
@@ -308,8 +325,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                     else
                     {
-                        var localsBuilder = ArrayBuilder<LocalSymbol>.GetInstance();
-                        var sideEffectsBuilder = ArrayBuilder<BoundExpression>.GetInstance();
+                        Debug.Assert(rewrittenReceiverIsCachedRefOrValue || (sideEffectsBuilder.Count == 0 && localsBuilder.Count == 0));
 
                         BoundExpression startExpr;
                         BoundExpression rangeSizeExpr;
@@ -327,7 +343,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         BoundExpression possiblyRefCapturedReceiver = rewrittenReceiver;
 
-                        if (sideEffectsBuilder.Count != 0)
+                        if (!rewrittenReceiverIsCachedRefOrValue && sideEffectsBuilder.Count != 0)
                         {
                             possiblyRefCapturedReceiver = _factory.StoreToTemp(possiblyRefCapturedReceiver, out var refCapture, createSpan.Parameters[0].RefKind == RefKind.In ? RefKindExtensions.StrictIn : RefKind.Ref);
                             localsBuilder.Insert(0, ((BoundLocal)possiblyRefCapturedReceiver).LocalSymbol);
@@ -346,18 +362,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                             result = _factory.Call(_factory.Call(null, createSpan, possiblyRefCapturedReceiver, _factory.Literal(length), useStrictArgumentRefKinds: true),
                                 getItemOrSliceHelper, startExpr, rangeSizeExpr);
                         }
-
-                        result = _factory.Sequence(localsBuilder.ToImmutableAndFree(), sideEffectsBuilder.ToImmutableAndFree(), result);
                     }
                 }
             }
 
-            if (receiverStore is not null)
-            {
-                result = _factory.Sequence(ImmutableArray.Create(((BoundLocal)rewrittenReceiver).LocalSymbol),
-                                           ImmutableArray.Create((BoundExpression)receiverStore),
-                                           result);
-            }
+            result = _factory.Sequence(localsBuilder.ToImmutableAndFree(), sideEffectsBuilder.ToImmutableAndFree(), result);
 
             return result;
 
@@ -458,6 +467,90 @@ namespace Microsoft.CodeAnalysis.CSharp
                 getItemOrSliceHelper = getItemOrSliceHelper.AsMember((NamedTypeSymbol)createSpan.ReturnType);
                 return _factory.Call(_factory.Call(null, createSpan, rewrittenReceiver, _factory.Literal(length), useStrictArgumentRefKinds: true), getItemOrSliceHelper, index);
             }
+        }
+
+        private bool AddInlineArrayNullCheckIfNeeded(ref BoundExpression inlineArray, bool isRefReadonly, ArrayBuilder<LocalSymbol> localsBuilder, ArrayBuilder<BoundExpression> sideEffectsBuilder)
+        {
+            if (!ShouldPerformInlineArrayNullCheck(inlineArray))
+            {
+                return false;
+            }
+
+            BoundLocal tempAccess = _factory.StoreToTemp(
+                inlineArray,
+                out var refCapture,
+                isRefReadonly ? RefKindExtensions.StrictIn : RefKind.Ref);
+            inlineArray = tempAccess;
+            localsBuilder.Add(tempAccess.LocalSymbol);
+            sideEffectsBuilder.Add(refCapture);
+
+            // Note that IL doesn't refer to 'object' type, but we need it for the bound nodes. 
+            // We do not care if it is bad or missing though.
+
+            BoundExpression nullRef = _factory.Null(_factory.Compilation.GetSpecialType(SpecialType.System_Object));
+            Debug.Assert(nullRef.Type is object);
+            sideEffectsBuilder.Add(_factory.Conditional(
+                                        condition: CreateInlineArrayNullTestExpression(inlineArray),
+                                        consequence: _factory.ThrowExpression(nullRef, nullRef.Type),
+                                        alternative: nullRef,
+                                        nullRef.Type,
+                                        isRef: false
+                                        ));
+            return true;
+        }
+
+        private bool ShouldPerformInlineArrayNullCheck(BoundExpression inlineArray)
+        {
+            switch (inlineArray)
+            {
+                case BoundLocal { LocalSymbol.RefKind: RefKind.None }:
+                case BoundParameter { ParameterSymbol.RefKind: RefKind.None }:
+                    return false;
+
+                case BoundFieldAccess { FieldSymbol.RefKind: RefKind.None } field:
+                    // Getting a ref to a field of a struct at 'null' byref throws a NullReferenceException, so no need for an additional explicit null check.
+                    // See unit-test NullCheck_InlineArray_As_Field_01
+                    return false;
+
+                case BoundThisReference:
+                    // The assumption is that calling an instance method on a 'null' byref throws a NullReferenceException, so no need for an additional explicit null check.
+                    // See unit-test NullCheck_InlineArray_As_This
+                    return false;
+
+                case BoundArrayAccess:
+                    // Even if it is even possible to get an array at 'null' byref, the assumption is that getting a ref for its first element
+                    // will reliably throw a NullReferenceException, so no need for an additional explicit null check.
+                    return false;
+
+                case BoundCall call when (call.Method.OriginalDefinition == _factory.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Span_T__get_Item) ||
+                                          call.Method.OriginalDefinition == _factory.Compilation.GetWellKnownTypeMember(WellKnownMember.System_ReadOnlySpan_T__get_Item)):
+                    // We assume that a ref to a span element doesn't require an explicit null check,
+                    // because user already managed to get a span for the memory location
+                    return false;
+            }
+
+            return true;
+        }
+
+        private BoundBinaryOperator CreateInlineArrayNullTestExpression(BoundExpression inlineArray)
+        {
+            // For refernce, the following code is used by Unsafe.IsNullRef helper: 
+            //
+            //      ldarg.0
+            //      ldc.i4.0
+            //      conv.u
+            //      ceq
+            //      ret
+            //
+            // Bound nodes below generate similar code.
+            // Note that IL doesn't refer to 'bool' type, but we need it for the bound node. 
+            // We do not care if it is bad or missing though.
+
+            TypeSymbol pointerType = new PointerTypeSymbol(TypeWithAnnotations.Create(inlineArray.Type));
+            return _factory.Binary(BinaryOperatorKind.Equal,
+                                   _factory.Compilation.GetSpecialType(SpecialType.System_Boolean),
+                                   new BoundAddressOfOperator(_factory.Syntax, inlineArray, isManaged: true, pointerType),
+                                   _factory.Null(pointerType));
         }
 
         public override BoundNode? VisitListPatternIndexPlaceholder(BoundListPatternIndexPlaceholder node)

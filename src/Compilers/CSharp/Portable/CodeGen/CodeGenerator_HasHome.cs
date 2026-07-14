@@ -92,7 +92,7 @@ internal partial class CodeGenerator
                 // locals in a mutating call
                 var local = ((BoundLocal)expression).LocalSymbol;
                 return !((CodeGenerator.IsStackLocal(local, stackLocalsOpt) && local.RefKind == RefKind.None) ||
-                    (!IsAnyReadOnly(addressKind) && local.RefKind == RefKind.RefReadOnly));
+                    (!IsAnyReadOnly(addressKind) && local.RefKind is RefKind.RefReadOnly or RefKindExtensions.StrictIn));
 
             case BoundKind.Call:
                 var methodRefKind = ((BoundCall)expression).Method.RefKind;
@@ -103,7 +103,7 @@ internal partial class CodeGenerator
                 //NB: Dup represents locals that do not need IL slot
                 var dupRefKind = ((BoundDup)expression).RefKind;
                 return dupRefKind == RefKind.Ref ||
-                    (IsAnyReadOnly(addressKind) && dupRefKind == RefKind.RefReadOnly);
+                    (IsAnyReadOnly(addressKind) && dupRefKind is RefKind.RefReadOnly or RefKindExtensions.StrictIn);
 
             case BoundKind.FieldAccess:
                 return FieldAccessHasHome((BoundFieldAccess)expression, addressKind, containingSymbol, peVerifyCompatEnabled, stackLocalsOpt);

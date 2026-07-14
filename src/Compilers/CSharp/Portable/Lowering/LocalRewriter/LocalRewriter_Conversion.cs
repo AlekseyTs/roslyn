@@ -603,21 +603,31 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         NamedTypeSymbol spanType = (NamedTypeSymbol)rewrittenType;
                         MethodSymbol createSpan;
+                        bool isRefReadonly;
 
                         if (spanType.OriginalDefinition.Equals(_compilation.GetWellKnownType(WellKnownType.System_ReadOnlySpan_T), TypeCompareKind.AllIgnoreOptions))
                         {
                             createSpan = _factory.ModuleBuilderOpt.EnsureInlineArrayAsReadOnlySpanExists(syntax, spanType.OriginalDefinition, _factory.SpecialType(SpecialType.System_Int32), _diagnostics.DiagnosticBag);
+                            isRefReadonly = true;
                         }
                         else
                         {
                             Debug.Assert(spanType.OriginalDefinition.Equals(_compilation.GetWellKnownType(WellKnownType.System_Span_T), TypeCompareKind.AllIgnoreOptions));
                             createSpan = _factory.ModuleBuilderOpt.EnsureInlineArrayAsSpanExists(syntax, spanType.OriginalDefinition, _factory.SpecialType(SpecialType.System_Int32), _diagnostics.DiagnosticBag);
+                            isRefReadonly = false;
                         }
 
                         createSpan = createSpan.Construct(rewrittenOperand.Type, spanType.TypeArgumentsWithAnnotationsNoUseSiteDiagnostics.Single().Type);
                         _ = rewrittenOperand.Type.HasInlineArrayAttribute(out int length);
 
-                        return _factory.Call(null, createSpan, rewrittenOperand, _factory.Literal(length), useStrictArgumentRefKinds: true);
+                        var localsBuilder = ArrayBuilder<LocalSymbol>.GetInstance();
+                        var sideEffectsBuilder = ArrayBuilder<BoundExpression>.GetInstance();
+
+                        AddInlineArrayNullCheckIfNeeded(ref rewrittenOperand, isRefReadonly, localsBuilder, sideEffectsBuilder);
+
+                        return _factory.Sequence(
+                            localsBuilder.ToImmutableAndFree(), sideEffectsBuilder.ToImmutableAndFree(),
+                            _factory.Call(null, createSpan, rewrittenOperand, _factory.Literal(length), useStrictArgumentRefKinds: true));
                     }
 
                 case ConversionKind.ImplicitSpan:
