@@ -2247,14 +2247,9 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             if (isLast)
             {
-                if (node.IsRef &&
-                    !node.WasCompilerGenerated &&
-                    left.LocalSymbol.RefKind == RefKind.Ref &&
-                    right is BoundArrayAccess arrayAccess &&
-                    // Value types do not need runtime element type checks.
-                    !arrayAccess.Type.IsValueType)
+                if (node.IsRef)
                 {
-                    return new BoundRefArrayAccess(arrayAccess.Syntax, arrayAccess);
+                    return new BoundRefAssignmentRHS(right.Syntax, left.LocalSymbol.RefKind, right, right.Type);
                 }
 
                 // assigned local is not used later => just emit the Right

@@ -94,6 +94,11 @@ internal partial class CodeGenerator
                 return !((CodeGenerator.IsStackLocal(local, stackLocalsOpt) && local.RefKind == RefKind.None) ||
                     (!IsAnyReadOnly(addressKind) && local.RefKind == RefKind.RefReadOnly));
 
+            case BoundKind.RefAssignmentRHS:
+                var right = (BoundRefAssignmentRHS)expression;
+                Debug.Assert(right.RefKind != RefKind.None);
+                return IsAnyReadOnly(addressKind) || right.RefKind != RefKind.RefReadOnly;
+
             case BoundKind.Call:
                 var methodRefKind = ((BoundCall)expression).Method.RefKind;
                 return methodRefKind == RefKind.Ref ||

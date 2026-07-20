@@ -1123,7 +1123,7 @@ public class Test
             // load before the await that could be removed
             v.VerifyIL("Test.<F>d__2.System.Runtime.CompilerServices.IAsyncStateMachine.MoveNext",
 @"{
-  // Code size      273 (0x111)
+  // Code size      277 (0x115)
   .maxstack  5
   .locals init (int V_0,
                 int V_1,
@@ -1139,7 +1139,7 @@ public class Test
    ~IL_0007:  ldloc.0
     IL_0008:  brfalse.s  IL_000c
     IL_000a:  br.s       IL_000e
-    IL_000c:  br.s       IL_0088
+    IL_000c:  br.s       IL_008c
    -IL_000e:  nop
    -IL_000f:  ldarg.0
     IL_0010:  ldarg.0
@@ -1162,118 +1162,118 @@ public class Test
     IL_0035:  ldarg.0
     IL_0036:  ldfld      ""int[] Test.<F>d__2.<>s__4""
     IL_003b:  ldc.i4.3
-    IL_003c:  ldelem.i4
-    IL_003d:  pop
-    IL_003e:  ldarg.0
-    IL_003f:  ldarg.0
-    IL_0040:  ldfld      ""int[] Test.<F>d__2.<>s__4""
-    IL_0045:  ldc.i4.3
-    IL_0046:  ldelem.i4
-    IL_0047:  stfld      ""int Test.<F>d__2.<>s__2""
-    IL_004c:  call       ""System.Threading.Tasks.Task<int> Test.G()""
-    IL_0051:  callvirt   ""System.Runtime.CompilerServices.TaskAwaiter<int> System.Threading.Tasks.Task<int>.GetAwaiter()""
-    IL_0056:  stloc.3
-   ~IL_0057:  ldloca.s   V_3
-    IL_0059:  call       ""bool System.Runtime.CompilerServices.TaskAwaiter<int>.IsCompleted.get""
-    IL_005e:  brtrue.s   IL_00a4
-    IL_0060:  ldarg.0
-    IL_0061:  ldc.i4.0
-    IL_0062:  dup
-    IL_0063:  stloc.0
-    IL_0064:  stfld      ""int Test.<F>d__2.<>1__state""
-   <IL_0069:  ldarg.0
-    IL_006a:  ldloc.3
-    IL_006b:  stfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_0070:  ldarg.0
-    IL_0071:  stloc.s    V_4
-    IL_0073:  ldarg.0
-    IL_0074:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-    IL_0079:  ldloca.s   V_3
-    IL_007b:  ldloca.s   V_4
-    IL_007d:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<int>, Test.<F>d__2>(ref System.Runtime.CompilerServices.TaskAwaiter<int>, ref Test.<F>d__2)""
-    IL_0082:  nop
-    IL_0083:  leave      IL_0110
-   >IL_0088:  ldarg.0
-    IL_0089:  ldfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_008e:  stloc.3
-    IL_008f:  ldarg.0
-    IL_0090:  ldflda     ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_0095:  initobj    ""System.Runtime.CompilerServices.TaskAwaiter<int>""
-    IL_009b:  ldarg.0
-    IL_009c:  ldc.i4.m1
-    IL_009d:  dup
-    IL_009e:  stloc.0
-    IL_009f:  stfld      ""int Test.<F>d__2.<>1__state""
-    IL_00a4:  ldarg.0
-    IL_00a5:  ldloca.s   V_3
-    IL_00a7:  call       ""int System.Runtime.CompilerServices.TaskAwaiter<int>.GetResult()""
-    IL_00ac:  stfld      ""int Test.<F>d__2.<>s__3""
-    IL_00b1:  ldarg.0
-    IL_00b2:  ldfld      ""int Test.<F>d__2.<>s__1""
-    IL_00b7:  ldarg.0
-    IL_00b8:  ldfld      ""int[] Test.<F>d__2.<>s__4""
-    IL_00bd:  ldc.i4.3
-    IL_00be:  ldarg.0
-    IL_00bf:  ldfld      ""int Test.<F>d__2.<>s__2""
-    IL_00c4:  ldarg.0
-    IL_00c5:  ldfld      ""int Test.<F>d__2.<>s__3""
-    IL_00ca:  add
-    IL_00cb:  dup
-    IL_00cc:  stloc.2
-    IL_00cd:  stelem.i4
-    IL_00ce:  ldloc.2
-    IL_00cf:  ldc.i4.4
-    IL_00d0:  call       ""int Test.H(int, int, int)""
-    IL_00d5:  pop
-    IL_00d6:  ldarg.0
-    IL_00d7:  ldnull
-    IL_00d8:  stfld      ""int[] Test.<F>d__2.<>s__4""
-   -IL_00dd:  ldc.i4.1
-    IL_00de:  stloc.1
-    IL_00df:  leave.s    IL_00fb
+    IL_003c:  ldelema    ""int""
+    IL_0041:  pop
+    IL_0042:  ldarg.0
+    IL_0043:  ldarg.0
+    IL_0044:  ldfld      ""int[] Test.<F>d__2.<>s__4""
+    IL_0049:  ldc.i4.3
+    IL_004a:  ldelem.i4
+    IL_004b:  stfld      ""int Test.<F>d__2.<>s__2""
+    IL_0050:  call       ""System.Threading.Tasks.Task<int> Test.G()""
+    IL_0055:  callvirt   ""System.Runtime.CompilerServices.TaskAwaiter<int> System.Threading.Tasks.Task<int>.GetAwaiter()""
+    IL_005a:  stloc.3
+   ~IL_005b:  ldloca.s   V_3
+    IL_005d:  call       ""bool System.Runtime.CompilerServices.TaskAwaiter<int>.IsCompleted.get""
+    IL_0062:  brtrue.s   IL_00a8
+    IL_0064:  ldarg.0
+    IL_0065:  ldc.i4.0
+    IL_0066:  dup
+    IL_0067:  stloc.0
+    IL_0068:  stfld      ""int Test.<F>d__2.<>1__state""
+   <IL_006d:  ldarg.0
+    IL_006e:  ldloc.3
+    IL_006f:  stfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_0074:  ldarg.0
+    IL_0075:  stloc.s    V_4
+    IL_0077:  ldarg.0
+    IL_0078:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+    IL_007d:  ldloca.s   V_3
+    IL_007f:  ldloca.s   V_4
+    IL_0081:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<int>, Test.<F>d__2>(ref System.Runtime.CompilerServices.TaskAwaiter<int>, ref Test.<F>d__2)""
+    IL_0086:  nop
+    IL_0087:  leave      IL_0114
+   >IL_008c:  ldarg.0
+    IL_008d:  ldfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_0092:  stloc.3
+    IL_0093:  ldarg.0
+    IL_0094:  ldflda     ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_0099:  initobj    ""System.Runtime.CompilerServices.TaskAwaiter<int>""
+    IL_009f:  ldarg.0
+    IL_00a0:  ldc.i4.m1
+    IL_00a1:  dup
+    IL_00a2:  stloc.0
+    IL_00a3:  stfld      ""int Test.<F>d__2.<>1__state""
+    IL_00a8:  ldarg.0
+    IL_00a9:  ldloca.s   V_3
+    IL_00ab:  call       ""int System.Runtime.CompilerServices.TaskAwaiter<int>.GetResult()""
+    IL_00b0:  stfld      ""int Test.<F>d__2.<>s__3""
+    IL_00b5:  ldarg.0
+    IL_00b6:  ldfld      ""int Test.<F>d__2.<>s__1""
+    IL_00bb:  ldarg.0
+    IL_00bc:  ldfld      ""int[] Test.<F>d__2.<>s__4""
+    IL_00c1:  ldc.i4.3
+    IL_00c2:  ldarg.0
+    IL_00c3:  ldfld      ""int Test.<F>d__2.<>s__2""
+    IL_00c8:  ldarg.0
+    IL_00c9:  ldfld      ""int Test.<F>d__2.<>s__3""
+    IL_00ce:  add
+    IL_00cf:  dup
+    IL_00d0:  stloc.2
+    IL_00d1:  stelem.i4
+    IL_00d2:  ldloc.2
+    IL_00d3:  ldc.i4.4
+    IL_00d4:  call       ""int Test.H(int, int, int)""
+    IL_00d9:  pop
+    IL_00da:  ldarg.0
+    IL_00db:  ldnull
+    IL_00dc:  stfld      ""int[] Test.<F>d__2.<>s__4""
+   -IL_00e1:  ldc.i4.1
+    IL_00e2:  stloc.1
+    IL_00e3:  leave.s    IL_00ff
   }
   catch System.Exception
   {
-   ~IL_00e1:  stloc.s    V_5
-    IL_00e3:  ldarg.0
-    IL_00e4:  ldc.i4.s   -2
-    IL_00e6:  stfld      ""int Test.<F>d__2.<>1__state""
-    IL_00eb:  ldarg.0
-    IL_00ec:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-    IL_00f1:  ldloc.s    V_5
-    IL_00f3:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetException(System.Exception)""
-    IL_00f8:  nop
-    IL_00f9:  leave.s    IL_0110
+   ~IL_00e5:  stloc.s    V_5
+    IL_00e7:  ldarg.0
+    IL_00e8:  ldc.i4.s   -2
+    IL_00ea:  stfld      ""int Test.<F>d__2.<>1__state""
+    IL_00ef:  ldarg.0
+    IL_00f0:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+    IL_00f5:  ldloc.s    V_5
+    IL_00f7:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetException(System.Exception)""
+    IL_00fc:  nop
+    IL_00fd:  leave.s    IL_0114
   }
- -IL_00fb:  ldarg.0
-  IL_00fc:  ldc.i4.s   -2
-  IL_00fe:  stfld      ""int Test.<F>d__2.<>1__state""
- ~IL_0103:  ldarg.0
-  IL_0104:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-  IL_0109:  ldloc.1
-  IL_010a:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetResult(int)""
-  IL_010f:  nop
-  IL_0110:  ret
+ -IL_00ff:  ldarg.0
+  IL_0100:  ldc.i4.s   -2
+  IL_0102:  stfld      ""int Test.<F>d__2.<>1__state""
+ ~IL_0107:  ldarg.0
+  IL_0108:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+  IL_010d:  ldloc.1
+  IL_010e:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetResult(int)""
+  IL_0113:  nop
+  IL_0114:  ret
 }", sequencePointDisplay: SequencePointDisplayMode.Minimal);
 
             var comp = CreateRuntimeAsyncCompilation(source);
             var verifier = CompileAndVerify(comp, verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F]: Unexpected type on the stack. { Offset = 0x40, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F]: Unexpected type on the stack. { Offset = 0x44, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Test.F(int[])", """
                 {
-                  // Code size       65 (0x41)
+                  // Code size       69 (0x45)
                   .maxstack  4
                   .locals init (int[] V_0,
-                                int& V_1,
-                                int V_2,
-                                int V_3,
-                                int V_4)
+                            int& V_1,
+                            int V_2,
+                            int V_3,
+                            int V_4)
                   IL_0000:  ldarg.0
                   IL_0001:  ldc.i4.1
                   IL_0002:  ldelema    "int"
@@ -1289,32 +1289,32 @@ public class Test
                   IL_0012:  stloc.0
                   IL_0013:  ldloc.0
                   IL_0014:  ldc.i4.3
-                  IL_0015:  ldelem.i4
-                  IL_0016:  pop
-                  IL_0017:  ldloc.0
-                  IL_0018:  ldc.i4.3
-                  IL_0019:  ldelem.i4
-                  IL_001a:  stloc.2
-                  IL_001b:  call       "System.Threading.Tasks.Task<int> Test.G()"
-                  IL_0020:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0025:  stloc.3
-                  IL_0026:  ldloc.0
-                  IL_0027:  ldc.i4.3
-                  IL_0028:  ldelema    "int"
-                  IL_002d:  stloc.1
-                  IL_002e:  ldloc.1
-                  IL_002f:  ldloc.2
-                  IL_0030:  ldloc.3
-                  IL_0031:  add
-                  IL_0032:  dup
-                  IL_0033:  stloc.s    V_4
-                  IL_0035:  stind.i4
-                  IL_0036:  ldloc.s    V_4
-                  IL_0038:  ldc.i4.4
-                  IL_0039:  call       "int Test.H(int, int, int)"
-                  IL_003e:  pop
-                  IL_003f:  ldc.i4.1
-                  IL_0040:  ret
+                  IL_0015:  ldelema    "int"
+                  IL_001a:  pop
+                  IL_001b:  ldloc.0
+                  IL_001c:  ldc.i4.3
+                  IL_001d:  ldelem.i4
+                  IL_001e:  stloc.2
+                  IL_001f:  call       "System.Threading.Tasks.Task<int> Test.G()"
+                  IL_0024:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0029:  stloc.3
+                  IL_002a:  ldloc.0
+                  IL_002b:  ldc.i4.3
+                  IL_002c:  ldelema    "int"
+                  IL_0031:  stloc.1
+                  IL_0032:  ldloc.1
+                  IL_0033:  ldloc.2
+                  IL_0034:  ldloc.3
+                  IL_0035:  add
+                  IL_0036:  dup
+                  IL_0037:  stloc.s    V_4
+                  IL_0039:  stind.i4
+                  IL_003a:  ldloc.s    V_4
+                  IL_003c:  ldc.i4.4
+                  IL_003d:  call       "int Test.H(int, int, int)"
+                  IL_0042:  pop
+                  IL_0043:  ldc.i4.1
+                  IL_0044:  ret
                 }
                 """);
         }
@@ -1348,21 +1348,21 @@ public class Test
 
             v.VerifyIL("Test.<F>d__2.System.Runtime.CompilerServices.IAsyncStateMachine.MoveNext", @"
 {
-  // Code size      251 (0xfb)
+  // Code size      255 (0xff)
   .maxstack  5
   .locals init (int V_0,
-                int V_1,
-                int V_2,
-                int V_3,
-                System.Runtime.CompilerServices.TaskAwaiter<int> V_4,
-                System.Exception V_5)
+            int V_1,
+            int V_2,
+            int V_3,
+            System.Runtime.CompilerServices.TaskAwaiter<int> V_4,
+            System.Exception V_5)
  ~IL_0000:  ldarg.0
   IL_0001:  ldfld      ""int Test.<F>d__2.<>1__state""
   IL_0006:  stloc.0
   .try
   {
    ~IL_0007:  ldloc.0
-    IL_0008:  brfalse.s  IL_007d
+    IL_0008:  brfalse.s  IL_0081
    -IL_000a:  ldarg.0
     IL_000b:  ldarg.0
     IL_000c:  ldfld      ""int[] Test.<F>d__2.array""
@@ -1384,111 +1384,111 @@ public class Test
     IL_0030:  ldarg.0
     IL_0031:  ldfld      ""int[] Test.<F>d__2.<>7__wrap3""
     IL_0036:  ldc.i4.3
-    IL_0037:  ldelem.i4
-    IL_0038:  pop
-    IL_0039:  ldarg.0
-    IL_003a:  ldarg.0
-    IL_003b:  ldfld      ""int[] Test.<F>d__2.<>7__wrap3""
-    IL_0040:  ldc.i4.3
-    IL_0041:  ldelem.i4
-    IL_0042:  stfld      ""int Test.<F>d__2.<>7__wrap2""
-    IL_0047:  call       ""System.Threading.Tasks.Task<int> Test.G()""
-    IL_004c:  callvirt   ""System.Runtime.CompilerServices.TaskAwaiter<int> System.Threading.Tasks.Task<int>.GetAwaiter()""
-    IL_0051:  stloc.s    V_4
-   ~IL_0053:  ldloca.s   V_4
-    IL_0055:  call       ""bool System.Runtime.CompilerServices.TaskAwaiter<int>.IsCompleted.get""
-    IL_005a:  brtrue.s   IL_009a
-    IL_005c:  ldarg.0
-    IL_005d:  ldc.i4.0
-    IL_005e:  dup
-    IL_005f:  stloc.0
-    IL_0060:  stfld      ""int Test.<F>d__2.<>1__state""
-   <IL_0065:  ldarg.0
-    IL_0066:  ldloc.s    V_4
-    IL_0068:  stfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_006d:  ldarg.0
-    IL_006e:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-    IL_0073:  ldloca.s   V_4
-    IL_0075:  ldarg.0
-    IL_0076:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<int>, Test.<F>d__2>(ref System.Runtime.CompilerServices.TaskAwaiter<int>, ref Test.<F>d__2)""
-    IL_007b:  leave.s    IL_00fa
-   >IL_007d:  ldarg.0
-    IL_007e:  ldfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_0083:  stloc.s    V_4
-    IL_0085:  ldarg.0
-    IL_0086:  ldflda     ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
-    IL_008b:  initobj    ""System.Runtime.CompilerServices.TaskAwaiter<int>""
-    IL_0091:  ldarg.0
-    IL_0092:  ldc.i4.m1
-    IL_0093:  dup
-    IL_0094:  stloc.0
-    IL_0095:  stfld      ""int Test.<F>d__2.<>1__state""
-    IL_009a:  ldloca.s   V_4
-    IL_009c:  call       ""int System.Runtime.CompilerServices.TaskAwaiter<int>.GetResult()""
-    IL_00a1:  stloc.2
-    IL_00a2:  ldarg.0
-    IL_00a3:  ldfld      ""int Test.<F>d__2.<>7__wrap1""
-    IL_00a8:  ldarg.0
-    IL_00a9:  ldfld      ""int[] Test.<F>d__2.<>7__wrap3""
-    IL_00ae:  ldc.i4.3
-    IL_00af:  ldarg.0
-    IL_00b0:  ldfld      ""int Test.<F>d__2.<>7__wrap2""
-    IL_00b5:  ldloc.2
-    IL_00b6:  add
-    IL_00b7:  dup
-    IL_00b8:  stloc.3
-    IL_00b9:  stelem.i4
-    IL_00ba:  ldloc.3
-    IL_00bb:  ldc.i4.4
-    IL_00bc:  call       ""int Test.H(int, int, int)""
-    IL_00c1:  pop
-    IL_00c2:  ldarg.0
-    IL_00c3:  ldnull
-    IL_00c4:  stfld      ""int[] Test.<F>d__2.<>7__wrap3""
-   -IL_00c9:  ldc.i4.1
-    IL_00ca:  stloc.1
-    IL_00cb:  leave.s    IL_00e6
+    IL_0037:  ldelema    ""int""
+    IL_003c:  pop
+    IL_003d:  ldarg.0
+    IL_003e:  ldarg.0
+    IL_003f:  ldfld      ""int[] Test.<F>d__2.<>7__wrap3""
+    IL_0044:  ldc.i4.3
+    IL_0045:  ldelem.i4
+    IL_0046:  stfld      ""int Test.<F>d__2.<>7__wrap2""
+    IL_004b:  call       ""System.Threading.Tasks.Task<int> Test.G()""
+    IL_0050:  callvirt   ""System.Runtime.CompilerServices.TaskAwaiter<int> System.Threading.Tasks.Task<int>.GetAwaiter()""
+    IL_0055:  stloc.s    V_4
+   ~IL_0057:  ldloca.s   V_4
+    IL_0059:  call       ""bool System.Runtime.CompilerServices.TaskAwaiter<int>.IsCompleted.get""
+    IL_005e:  brtrue.s   IL_009e
+    IL_0060:  ldarg.0
+    IL_0061:  ldc.i4.0
+    IL_0062:  dup
+    IL_0063:  stloc.0
+    IL_0064:  stfld      ""int Test.<F>d__2.<>1__state""
+   <IL_0069:  ldarg.0
+    IL_006a:  ldloc.s    V_4
+    IL_006c:  stfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_0071:  ldarg.0
+    IL_0072:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+    IL_0077:  ldloca.s   V_4
+    IL_0079:  ldarg.0
+    IL_007a:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<int>, Test.<F>d__2>(ref System.Runtime.CompilerServices.TaskAwaiter<int>, ref Test.<F>d__2)""
+    IL_007f:  leave.s    IL_00fe
+   >IL_0081:  ldarg.0
+    IL_0082:  ldfld      ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_0087:  stloc.s    V_4
+    IL_0089:  ldarg.0
+    IL_008a:  ldflda     ""System.Runtime.CompilerServices.TaskAwaiter<int> Test.<F>d__2.<>u__1""
+    IL_008f:  initobj    ""System.Runtime.CompilerServices.TaskAwaiter<int>""
+    IL_0095:  ldarg.0
+    IL_0096:  ldc.i4.m1
+    IL_0097:  dup
+    IL_0098:  stloc.0
+    IL_0099:  stfld      ""int Test.<F>d__2.<>1__state""
+    IL_009e:  ldloca.s   V_4
+    IL_00a0:  call       ""int System.Runtime.CompilerServices.TaskAwaiter<int>.GetResult()""
+    IL_00a5:  stloc.2
+    IL_00a6:  ldarg.0
+    IL_00a7:  ldfld      ""int Test.<F>d__2.<>7__wrap1""
+    IL_00ac:  ldarg.0
+    IL_00ad:  ldfld      ""int[] Test.<F>d__2.<>7__wrap3""
+    IL_00b2:  ldc.i4.3
+    IL_00b3:  ldarg.0
+    IL_00b4:  ldfld      ""int Test.<F>d__2.<>7__wrap2""
+    IL_00b9:  ldloc.2
+    IL_00ba:  add
+    IL_00bb:  dup
+    IL_00bc:  stloc.3
+    IL_00bd:  stelem.i4
+    IL_00be:  ldloc.3
+    IL_00bf:  ldc.i4.4
+    IL_00c0:  call       ""int Test.H(int, int, int)""
+    IL_00c5:  pop
+    IL_00c6:  ldarg.0
+    IL_00c7:  ldnull
+    IL_00c8:  stfld      ""int[] Test.<F>d__2.<>7__wrap3""
+   -IL_00cd:  ldc.i4.1
+    IL_00ce:  stloc.1
+    IL_00cf:  leave.s    IL_00ea
   }
   catch System.Exception
   {
-   ~IL_00cd:  stloc.s    V_5
-    IL_00cf:  ldarg.0
-    IL_00d0:  ldc.i4.s   -2
-    IL_00d2:  stfld      ""int Test.<F>d__2.<>1__state""
-    IL_00d7:  ldarg.0
-    IL_00d8:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-    IL_00dd:  ldloc.s    V_5
-    IL_00df:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetException(System.Exception)""
-    IL_00e4:  leave.s    IL_00fa
+   ~IL_00d1:  stloc.s    V_5
+    IL_00d3:  ldarg.0
+    IL_00d4:  ldc.i4.s   -2
+    IL_00d6:  stfld      ""int Test.<F>d__2.<>1__state""
+    IL_00db:  ldarg.0
+    IL_00dc:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+    IL_00e1:  ldloc.s    V_5
+    IL_00e3:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetException(System.Exception)""
+    IL_00e8:  leave.s    IL_00fe
   }
- -IL_00e6:  ldarg.0
-  IL_00e7:  ldc.i4.s   -2
-  IL_00e9:  stfld      ""int Test.<F>d__2.<>1__state""
- ~IL_00ee:  ldarg.0
-  IL_00ef:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
-  IL_00f4:  ldloc.1
-  IL_00f5:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetResult(int)""
-  IL_00fa:  ret
+ -IL_00ea:  ldarg.0
+  IL_00eb:  ldc.i4.s   -2
+  IL_00ed:  stfld      ""int Test.<F>d__2.<>1__state""
+ ~IL_00f2:  ldarg.0
+  IL_00f3:  ldflda     ""System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int> Test.<F>d__2.<>t__builder""
+  IL_00f8:  ldloc.1
+  IL_00f9:  call       ""void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<int>.SetResult(int)""
+  IL_00fe:  ret
 }", sequencePointDisplay: SequencePointDisplayMode.Minimal);
 
             var comp = CreateRuntimeAsyncCompilation(source);
             var verifier = CompileAndVerify(comp, verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F]: Unexpected type on the stack. { Offset = 0x40, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F]: Unexpected type on the stack. { Offset = 0x44, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Test.F(int[])", """
                 {
-                  // Code size       65 (0x41)
+                  // Code size       69 (0x45)
                   .maxstack  4
                   .locals init (int[] V_0,
-                                int& V_1,
-                                int V_2,
-                                int V_3,
-                                int V_4)
+                            int& V_1,
+                            int V_2,
+                            int V_3,
+                            int V_4)
                   IL_0000:  ldarg.0
                   IL_0001:  ldc.i4.1
                   IL_0002:  ldelema    "int"
@@ -1504,32 +1504,32 @@ public class Test
                   IL_0012:  stloc.0
                   IL_0013:  ldloc.0
                   IL_0014:  ldc.i4.3
-                  IL_0015:  ldelem.i4
-                  IL_0016:  pop
-                  IL_0017:  ldloc.0
-                  IL_0018:  ldc.i4.3
-                  IL_0019:  ldelem.i4
-                  IL_001a:  stloc.2
-                  IL_001b:  call       "System.Threading.Tasks.Task<int> Test.G()"
-                  IL_0020:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0025:  stloc.3
-                  IL_0026:  ldloc.0
-                  IL_0027:  ldc.i4.3
-                  IL_0028:  ldelema    "int"
-                  IL_002d:  stloc.1
-                  IL_002e:  ldloc.1
-                  IL_002f:  ldloc.2
-                  IL_0030:  ldloc.3
-                  IL_0031:  add
-                  IL_0032:  dup
-                  IL_0033:  stloc.s    V_4
-                  IL_0035:  stind.i4
-                  IL_0036:  ldloc.s    V_4
-                  IL_0038:  ldc.i4.4
-                  IL_0039:  call       "int Test.H(int, int, int)"
-                  IL_003e:  pop
-                  IL_003f:  ldc.i4.1
-                  IL_0040:  ret
+                  IL_0015:  ldelema    "int"
+                  IL_001a:  pop
+                  IL_001b:  ldloc.0
+                  IL_001c:  ldc.i4.3
+                  IL_001d:  ldelem.i4
+                  IL_001e:  stloc.2
+                  IL_001f:  call       "System.Threading.Tasks.Task<int> Test.G()"
+                  IL_0024:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0029:  stloc.3
+                  IL_002a:  ldloc.0
+                  IL_002b:  ldc.i4.3
+                  IL_002c:  ldelema    "int"
+                  IL_0031:  stloc.1
+                  IL_0032:  ldloc.1
+                  IL_0033:  ldloc.2
+                  IL_0034:  ldloc.3
+                  IL_0035:  add
+                  IL_0036:  dup
+                  IL_0037:  stloc.s    V_4
+                  IL_0039:  stind.i4
+                  IL_003a:  ldloc.s    V_4
+                  IL_003c:  ldc.i4.4
+                  IL_003d:  call       "int Test.H(int, int, int)"
+                  IL_0042:  pop
+                  IL_0043:  ldc.i4.1
+                  IL_0044:  ret
                 }
                 """);
         }
@@ -1575,7 +1575,7 @@ public class Test
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F]: Unexpected type on the stack. { Offset = 0x43, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F]: Unexpected type on the stack. { Offset = 0x47, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     [Main]: Return value missing on the stack. { Offset = 0x11 }
                     """
             });
@@ -1583,7 +1583,7 @@ public class Test
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Test.F(int[])", """
                 {
-                  // Code size       68 (0x44)
+                  // Code size       72 (0x48)
                   .maxstack  3
                   .locals init (int V_0,
                                 int V_1,
@@ -1596,40 +1596,40 @@ public class Test
                   IL_000b:  stloc.0
                   IL_000c:  ldc.i4.1
                   IL_000d:  ldloc.0
-                  IL_000e:  bne.un.s   IL_0037
+                  IL_000e:  bne.un.s   IL_003b
                   IL_0010:  ldarg.0
                   IL_0011:  dup
                   IL_0012:  ldc.i4.3
-                  IL_0013:  ldelem.i4
-                  IL_0014:  pop
-                  IL_0015:  dup
-                  IL_0016:  ldc.i4.3
-                  IL_0017:  ldelem.i4
-                  IL_0018:  stloc.2
-                  IL_0019:  ldc.i4.2
-                  IL_001a:  call       "System.Threading.Tasks.Task<int> Test.G(int)"
-                  IL_001f:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0024:  stloc.3
-                  IL_0025:  ldc.i4.3
-                  IL_0026:  ldelema    "int"
-                  IL_002b:  ldloc.2
-                  IL_002c:  ldloc.3
-                  IL_002d:  add
-                  IL_002e:  dup
-                  IL_002f:  stloc.s    V_4
-                  IL_0031:  stind.i4
-                  IL_0032:  ldloc.s    V_4
-                  IL_0034:  stloc.1
-                  IL_0035:  br.s       IL_0039
-                  IL_0037:  ldc.i4.1
+                  IL_0013:  ldelema    "int"
+                  IL_0018:  pop
+                  IL_0019:  dup
+                  IL_001a:  ldc.i4.3
+                  IL_001b:  ldelem.i4
+                  IL_001c:  stloc.2
+                  IL_001d:  ldc.i4.2
+                  IL_001e:  call       "System.Threading.Tasks.Task<int> Test.G(int)"
+                  IL_0023:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0028:  stloc.3
+                  IL_0029:  ldc.i4.3
+                  IL_002a:  ldelema    "int"
+                  IL_002f:  ldloc.2
+                  IL_0030:  ldloc.3
+                  IL_0031:  add
+                  IL_0032:  dup
+                  IL_0033:  stloc.s    V_4
+                  IL_0035:  stind.i4
+                  IL_0036:  ldloc.s    V_4
                   IL_0038:  stloc.1
-                  IL_0039:  ldc.i4.0
-                  IL_003a:  ldloc.1
-                  IL_003b:  ldc.i4.4
-                  IL_003c:  call       "int Test.H(int, int, int)"
-                  IL_0041:  pop
-                  IL_0042:  ldc.i4.1
-                  IL_0043:  ret
+                  IL_0039:  br.s       IL_003d
+                  IL_003b:  ldc.i4.1
+                  IL_003c:  stloc.1
+                  IL_003d:  ldc.i4.0
+                  IL_003e:  ldloc.1
+                  IL_003f:  ldc.i4.4
+                  IL_0040:  call       "int Test.H(int, int, int)"
+                  IL_0045:  pop
+                  IL_0046:  ldc.i4.1
+                  IL_0047:  ret
                 }
                 """);
         }
@@ -1712,7 +1712,7 @@ public class C
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F]: Unexpected type on the stack. { Offset = 0x61, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F]: Unexpected type on the stack. { Offset = 0x69, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     [Main]: Return value missing on the stack. { Offset = 0x11 }
                     """
             });
@@ -1720,71 +1720,71 @@ public class C
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("C.F(int[])", """
                 {
-                  // Code size       98 (0x62)
+                  // Code size      106 (0x6a)
                   .maxstack  3
                   .locals init (int V_0,
-                                int V_1,
-                                object V_2,
-                                int V_3,
-                                int V_4,
-                                int V_5)
+                            int V_1,
+                            object V_2,
+                            int V_3,
+                            int V_4,
+                            int V_5)
                   IL_0000:  ldarg.0
                   IL_0001:  dup
                   IL_0002:  ldc.i4.0
-                  IL_0003:  ldelem.i4
-                  IL_0004:  pop
-                  IL_0005:  dup
-                  IL_0006:  ldc.i4.0
-                  IL_0007:  ldelem.i4
-                  IL_0008:  stloc.0
-                  IL_0009:  ldc.i4.1
-                  IL_000a:  call       "System.Threading.Tasks.Task<int> C.G(int)"
-                  IL_000f:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0014:  stloc.1
-                  IL_0015:  ldc.i4.0
-                  IL_0016:  ldelema    "int"
-                  IL_001b:  ldloc.0
-                  IL_001c:  ldloc.1
-                  IL_001d:  add
-                  IL_001e:  dup
-                  IL_001f:  stloc.3
-                  IL_0020:  stind.i4
-                  IL_0021:  ldloc.3
-                  IL_0022:  call       "object C.O(int)"
-                  IL_0027:  stloc.2
-                  IL_0028:  ldloc.2
-                  IL_0029:  brtrue.s   IL_0057
-                  IL_002b:  ldarg.0
-                  IL_002c:  dup
-                  IL_002d:  ldc.i4.1
-                  IL_002e:  ldelem.i4
-                  IL_002f:  pop
+                  IL_0003:  ldelema    "int"
+                  IL_0008:  pop
+                  IL_0009:  dup
+                  IL_000a:  ldc.i4.0
+                  IL_000b:  ldelem.i4
+                  IL_000c:  stloc.0
+                  IL_000d:  ldc.i4.1
+                  IL_000e:  call       "System.Threading.Tasks.Task<int> C.G(int)"
+                  IL_0013:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0018:  stloc.1
+                  IL_0019:  ldc.i4.0
+                  IL_001a:  ldelema    "int"
+                  IL_001f:  ldloc.0
+                  IL_0020:  ldloc.1
+                  IL_0021:  add
+                  IL_0022:  dup
+                  IL_0023:  stloc.3
+                  IL_0024:  stind.i4
+                  IL_0025:  ldloc.3
+                  IL_0026:  call       "object C.O(int)"
+                  IL_002b:  stloc.2
+                  IL_002c:  ldloc.2
+                  IL_002d:  brtrue.s   IL_005f
+                  IL_002f:  ldarg.0
                   IL_0030:  dup
                   IL_0031:  ldc.i4.1
-                  IL_0032:  ldelem.i4
-                  IL_0033:  stloc.3
-                  IL_0034:  ldc.i4.2
-                  IL_0035:  call       "System.Threading.Tasks.Task<int> C.G(int)"
-                  IL_003a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_003f:  stloc.s    V_4
-                  IL_0041:  ldc.i4.1
-                  IL_0042:  ldelema    "int"
-                  IL_0047:  ldloc.3
-                  IL_0048:  ldloc.s    V_4
-                  IL_004a:  add
-                  IL_004b:  dup
-                  IL_004c:  stloc.s    V_5
-                  IL_004e:  stind.i4
-                  IL_004f:  ldloc.s    V_5
-                  IL_0051:  box        "int"
-                  IL_0056:  stloc.2
-                  IL_0057:  ldc.i4.0
-                  IL_0058:  ldloc.2
-                  IL_0059:  ldc.i4.4
-                  IL_005a:  call       "int C.H(int, object, int)"
-                  IL_005f:  pop
-                  IL_0060:  ldc.i4.1
-                  IL_0061:  ret
+                  IL_0032:  ldelema    "int"
+                  IL_0037:  pop
+                  IL_0038:  dup
+                  IL_0039:  ldc.i4.1
+                  IL_003a:  ldelem.i4
+                  IL_003b:  stloc.3
+                  IL_003c:  ldc.i4.2
+                  IL_003d:  call       "System.Threading.Tasks.Task<int> C.G(int)"
+                  IL_0042:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0047:  stloc.s    V_4
+                  IL_0049:  ldc.i4.1
+                  IL_004a:  ldelema    "int"
+                  IL_004f:  ldloc.3
+                  IL_0050:  ldloc.s    V_4
+                  IL_0052:  add
+                  IL_0053:  dup
+                  IL_0054:  stloc.s    V_5
+                  IL_0056:  stind.i4
+                  IL_0057:  ldloc.s    V_5
+                  IL_0059:  box        "int"
+                  IL_005e:  stloc.2
+                  IL_005f:  ldc.i4.0
+                  IL_0060:  ldloc.2
+                  IL_0061:  ldc.i4.4
+                  IL_0062:  call       "int C.H(int, object, int)"
+                  IL_0067:  pop
+                  IL_0068:  ldc.i4.1
+                  IL_0069:  ret
                 }
                 """);
         }
@@ -2093,14 +2093,14 @@ public class Test
             var verifier = CompileAndVerify(comp, verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F]: Unexpected type on the stack. { Offset = 0x5f, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F]: Unexpected type on the stack. { Offset = 0x67, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Test.F(int[])", """
                 {
-                  // Code size       96 (0x60)
+                  // Code size      104 (0x68)
                   .maxstack  3
                   .locals init (int V_0,
                                 int V_1,
@@ -2111,58 +2111,58 @@ public class Test
                   IL_0000:  ldarg.0
                   IL_0001:  dup
                   IL_0002:  ldc.i4.0
-                  IL_0003:  ldelem.i4
-                  IL_0004:  pop
-                  IL_0005:  dup
-                  IL_0006:  ldc.i4.0
-                  IL_0007:  ldelem.i4
-                  IL_0008:  stloc.0
-                  IL_0009:  call       "System.Threading.Tasks.Task<int> Test.G()"
-                  IL_000e:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0013:  stloc.1
-                  IL_0014:  ldc.i4.0
-                  IL_0015:  ldelema    "int"
-                  IL_001a:  ldloc.0
-                  IL_001b:  ldloc.1
-                  IL_001c:  add
-                  IL_001d:  dup
-                  IL_001e:  stloc.3
-                  IL_001f:  stind.i4
-                  IL_0020:  ldloc.3
-                  IL_0021:  call       "bool Test.B(int)"
-                  IL_0026:  stloc.2
-                  IL_0027:  ldloc.2
-                  IL_0028:  brtrue.s   IL_0055
-                  IL_002a:  ldarg.0
-                  IL_002b:  dup
-                  IL_002c:  ldc.i4.1
-                  IL_002d:  ldelem.i4
-                  IL_002e:  pop
+                  IL_0003:  ldelema    "int"
+                  IL_0008:  pop
+                  IL_0009:  dup
+                  IL_000a:  ldc.i4.0
+                  IL_000b:  ldelem.i4
+                  IL_000c:  stloc.0
+                  IL_000d:  call       "System.Threading.Tasks.Task<int> Test.G()"
+                  IL_0012:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0017:  stloc.1
+                  IL_0018:  ldc.i4.0
+                  IL_0019:  ldelema    "int"
+                  IL_001e:  ldloc.0
+                  IL_001f:  ldloc.1
+                  IL_0020:  add
+                  IL_0021:  dup
+                  IL_0022:  stloc.3
+                  IL_0023:  stind.i4
+                  IL_0024:  ldloc.3
+                  IL_0025:  call       "bool Test.B(int)"
+                  IL_002a:  stloc.2
+                  IL_002b:  ldloc.2
+                  IL_002c:  brtrue.s   IL_005d
+                  IL_002e:  ldarg.0
                   IL_002f:  dup
                   IL_0030:  ldc.i4.1
-                  IL_0031:  ldelem.i4
-                  IL_0032:  stloc.3
-                  IL_0033:  call       "System.Threading.Tasks.Task<int> Test.G()"
-                  IL_0038:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_003d:  stloc.s    V_4
-                  IL_003f:  ldc.i4.1
-                  IL_0040:  ldelema    "int"
-                  IL_0045:  ldloc.3
-                  IL_0046:  ldloc.s    V_4
-                  IL_0048:  add
-                  IL_0049:  dup
-                  IL_004a:  stloc.s    V_5
-                  IL_004c:  stind.i4
-                  IL_004d:  ldloc.s    V_5
-                  IL_004f:  call       "bool Test.B(int)"
-                  IL_0054:  stloc.2
-                  IL_0055:  ldc.i4.0
-                  IL_0056:  ldloc.2
-                  IL_0057:  ldc.i4.4
-                  IL_0058:  call       "int Test.H(int, bool, int)"
-                  IL_005d:  pop
-                  IL_005e:  ldc.i4.1
-                  IL_005f:  ret
+                  IL_0031:  ldelema    "int"
+                  IL_0036:  pop
+                  IL_0037:  dup
+                  IL_0038:  ldc.i4.1
+                  IL_0039:  ldelem.i4
+                  IL_003a:  stloc.3
+                  IL_003b:  call       "System.Threading.Tasks.Task<int> Test.G()"
+                  IL_0040:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0045:  stloc.s    V_4
+                  IL_0047:  ldc.i4.1
+                  IL_0048:  ldelema    "int"
+                  IL_004d:  ldloc.3
+                  IL_004e:  ldloc.s    V_4
+                  IL_0050:  add
+                  IL_0051:  dup
+                  IL_0052:  stloc.s    V_5
+                  IL_0054:  stind.i4
+                  IL_0055:  ldloc.s    V_5
+                  IL_0057:  call       "bool Test.B(int)"
+                  IL_005c:  stloc.2
+                  IL_005d:  ldc.i4.0
+                  IL_005e:  ldloc.2
+                  IL_005f:  ldc.i4.4
+                  IL_0060:  call       "int Test.H(int, bool, int)"
+                  IL_0065:  pop
+                  IL_0066:  ldc.i4.1
+                  IL_0067:  ret
                 }
                 """);
         }
@@ -2963,14 +2963,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0x5b }
+                    [Run]: Return value missing on the stack. { Offset = 0x5f }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run<T>(T)", """
                 {
-                  // Code size       92 (0x5c)
+                  // Code size       96 (0x60)
                   .maxstack  4
                   .locals init (int V_0, //tests
                                 int V_1,
@@ -2992,45 +2992,45 @@ class Driver
                     IL_0010:  dup
                     IL_0011:  dup
                     IL_0012:  ldc.i4.0
-                    IL_0013:  ldelem.i4
-                    IL_0014:  pop
-                    IL_0015:  dup
-                    IL_0016:  ldc.i4.0
-                    IL_0017:  ldelem.i4
-                    IL_0018:  stloc.1
-                    IL_0019:  ldarg.0
-                    IL_001a:  ldc.i4.4
-                    IL_001b:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0020:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_0025:  stloc.2
-                    IL_0026:  ldc.i4.0
-                    IL_0027:  ldelema    "int"
-                    IL_002c:  ldloc.1
-                    IL_002d:  ldloc.2
-                    IL_002e:  add
-                    IL_002f:  stind.i4
-                    IL_0030:  ldc.i4.0
-                    IL_0031:  ldelem.i4
-                    IL_0032:  ldc.i4.8
-                    IL_0033:  bne.un.s   IL_0041
-                    IL_0035:  ldsfld     "int Driver.Count"
-                    IL_003a:  ldc.i4.1
-                    IL_003b:  add
-                    IL_003c:  stsfld     "int Driver.Count"
-                    IL_0041:  leave.s    IL_005b
+                    IL_0013:  ldelema    "int"
+                    IL_0018:  pop
+                    IL_0019:  dup
+                    IL_001a:  ldc.i4.0
+                    IL_001b:  ldelem.i4
+                    IL_001c:  stloc.1
+                    IL_001d:  ldarg.0
+                    IL_001e:  ldc.i4.4
+                    IL_001f:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0024:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0029:  stloc.2
+                    IL_002a:  ldc.i4.0
+                    IL_002b:  ldelema    "int"
+                    IL_0030:  ldloc.1
+                    IL_0031:  ldloc.2
+                    IL_0032:  add
+                    IL_0033:  stind.i4
+                    IL_0034:  ldc.i4.0
+                    IL_0035:  ldelem.i4
+                    IL_0036:  ldc.i4.8
+                    IL_0037:  bne.un.s   IL_0045
+                    IL_0039:  ldsfld     "int Driver.Count"
+                    IL_003e:  ldc.i4.1
+                    IL_003f:  add
+                    IL_0040:  stsfld     "int Driver.Count"
+                    IL_0045:  leave.s    IL_005f
                   }
                   finally
                   {
-                    IL_0043:  ldsfld     "int Driver.Count"
-                    IL_0048:  ldloc.0
-                    IL_0049:  sub
-                    IL_004a:  stsfld     "int Driver.Result"
-                    IL_004f:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_0054:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_0059:  pop
-                    IL_005a:  endfinally
+                    IL_0047:  ldsfld     "int Driver.Count"
+                    IL_004c:  ldloc.0
+                    IL_004d:  sub
+                    IL_004e:  stsfld     "int Driver.Result"
+                    IL_0053:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_0058:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_005d:  pop
+                    IL_005e:  endfinally
                   }
-                  IL_005b:  ret
+                  IL_005f:  ret
                 }
                 """);
         }
@@ -3161,14 +3161,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0x5f }
+                    [Run]: Return value missing on the stack. { Offset = 0x63 }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run<T>(T)", """
                 {
-                  // Code size       96 (0x60)
+                  // Code size      100 (0x64)
                   .maxstack  4
                   .locals init (int V_0, //tests
                                 int[] V_1, //arr
@@ -3192,48 +3192,48 @@ class Driver
                     IL_0011:  ldloc.1
                     IL_0012:  dup
                     IL_0013:  ldc.i4.1
-                    IL_0014:  ldelem.i4
-                    IL_0015:  pop
-                    IL_0016:  dup
-                    IL_0017:  ldc.i4.1
-                    IL_0018:  ldelem.i4
-                    IL_0019:  stloc.2
-                    IL_001a:  ldarg.0
-                    IL_001b:  ldloc.1
-                    IL_001c:  ldc.i4.0
-                    IL_001d:  ldelem.i4
-                    IL_001e:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0023:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_0028:  stloc.3
-                    IL_0029:  ldc.i4.1
-                    IL_002a:  ldelema    "int"
-                    IL_002f:  ldloc.2
-                    IL_0030:  ldloc.3
-                    IL_0031:  add
-                    IL_0032:  stind.i4
-                    IL_0033:  ldloc.1
-                    IL_0034:  ldc.i4.1
-                    IL_0035:  ldelem.i4
-                    IL_0036:  ldc.i4.8
-                    IL_0037:  bne.un.s   IL_0045
-                    IL_0039:  ldsfld     "int Driver.Count"
-                    IL_003e:  ldc.i4.1
-                    IL_003f:  add
-                    IL_0040:  stsfld     "int Driver.Count"
-                    IL_0045:  leave.s    IL_005f
+                    IL_0014:  ldelema    "int"
+                    IL_0019:  pop
+                    IL_001a:  dup
+                    IL_001b:  ldc.i4.1
+                    IL_001c:  ldelem.i4
+                    IL_001d:  stloc.2
+                    IL_001e:  ldarg.0
+                    IL_001f:  ldloc.1
+                    IL_0020:  ldc.i4.0
+                    IL_0021:  ldelem.i4
+                    IL_0022:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0027:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_002c:  stloc.3
+                    IL_002d:  ldc.i4.1
+                    IL_002e:  ldelema    "int"
+                    IL_0033:  ldloc.2
+                    IL_0034:  ldloc.3
+                    IL_0035:  add
+                    IL_0036:  stind.i4
+                    IL_0037:  ldloc.1
+                    IL_0038:  ldc.i4.1
+                    IL_0039:  ldelem.i4
+                    IL_003a:  ldc.i4.8
+                    IL_003b:  bne.un.s   IL_0049
+                    IL_003d:  ldsfld     "int Driver.Count"
+                    IL_0042:  ldc.i4.1
+                    IL_0043:  add
+                    IL_0044:  stsfld     "int Driver.Count"
+                    IL_0049:  leave.s    IL_0063
                   }
                   finally
                   {
-                    IL_0047:  ldsfld     "int Driver.Count"
-                    IL_004c:  ldloc.0
-                    IL_004d:  sub
-                    IL_004e:  stsfld     "int Driver.Result"
-                    IL_0053:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_0058:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_005d:  pop
-                    IL_005e:  endfinally
+                    IL_004b:  ldsfld     "int Driver.Count"
+                    IL_0050:  ldloc.0
+                    IL_0051:  sub
+                    IL_0052:  stsfld     "int Driver.Result"
+                    IL_0057:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_005c:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_0061:  pop
+                    IL_0062:  endfinally
                   }
-                  IL_005f:  ret
+                  IL_0063:  ret
                 }
                 """);
         }
@@ -3374,14 +3374,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0xa8 }
+                    [Run]: Return value missing on the stack. { Offset = 0xac }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run<T>(T)", """
                 {
-                  // Code size      169 (0xa9)
+                  // Code size      173 (0xad)
                   .maxstack  4
                   .locals init (int[] V_0,
                                 int V_1, //tests
@@ -3411,83 +3411,83 @@ class Driver
                     IL_0015:  stloc.0
                     IL_0016:  ldloc.0
                     IL_0017:  ldc.i4.1
-                    IL_0018:  ldelem.i4
-                    IL_0019:  pop
-                    IL_001a:  ldloc.0
-                    IL_001b:  ldc.i4.1
-                    IL_001c:  ldelem.i4
-                    IL_001d:  stloc.2
-                    IL_001e:  dup
-                    IL_001f:  stloc.s    V_4
-                    IL_0021:  ldarg.0
-                    IL_0022:  ldc.i4.0
-                    IL_0023:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0028:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_002d:  stloc.s    V_5
-                    IL_002f:  ldarg.0
-                    IL_0030:  ldloc.s    V_4
-                    IL_0032:  ldloc.s    V_5
-                    IL_0034:  ldelem.i4
-                    IL_0035:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_003a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_003f:  stloc.3
-                    IL_0040:  ldloc.0
-                    IL_0041:  ldc.i4.1
-                    IL_0042:  ldelema    "int"
-                    IL_0047:  ldloc.2
-                    IL_0048:  ldloc.3
-                    IL_0049:  add
-                    IL_004a:  stind.i4
-                    IL_004b:  dup
-                    IL_004c:  ldc.i4.1
-                    IL_004d:  ldelem.i4
-                    IL_004e:  ldc.i4.s   16
-                    IL_0050:  bne.un.s   IL_005e
-                    IL_0052:  ldsfld     "int Driver.Count"
-                    IL_0057:  ldc.i4.1
-                    IL_0058:  add
-                    IL_0059:  stsfld     "int Driver.Count"
-                    IL_005e:  ldloc.1
-                    IL_005f:  ldc.i4.1
-                    IL_0060:  add
-                    IL_0061:  stloc.1
-                    IL_0062:  dup
-                    IL_0063:  ldarg.0
-                    IL_0064:  ldc.i4.2
-                    IL_0065:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_006a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_006f:  stloc.3
-                    IL_0070:  ldloc.3
-                    IL_0071:  ldelema    "int"
-                    IL_0076:  dup
-                    IL_0077:  ldind.i4
-                    IL_0078:  stloc.2
-                    IL_0079:  ldloc.2
-                    IL_007a:  ldc.i4.1
-                    IL_007b:  add
-                    IL_007c:  stind.i4
-                    IL_007d:  ldc.i4.2
-                    IL_007e:  ldelem.i4
-                    IL_007f:  ldc.i4.1
-                    IL_0080:  bne.un.s   IL_008e
-                    IL_0082:  ldsfld     "int Driver.Count"
-                    IL_0087:  ldc.i4.1
-                    IL_0088:  add
-                    IL_0089:  stsfld     "int Driver.Count"
-                    IL_008e:  leave.s    IL_00a8
+                    IL_0018:  ldelema    "int"
+                    IL_001d:  pop
+                    IL_001e:  ldloc.0
+                    IL_001f:  ldc.i4.1
+                    IL_0020:  ldelem.i4
+                    IL_0021:  stloc.2
+                    IL_0022:  dup
+                    IL_0023:  stloc.s    V_4
+                    IL_0025:  ldarg.0
+                    IL_0026:  ldc.i4.0
+                    IL_0027:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_002c:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0031:  stloc.s    V_5
+                    IL_0033:  ldarg.0
+                    IL_0034:  ldloc.s    V_4
+                    IL_0036:  ldloc.s    V_5
+                    IL_0038:  ldelem.i4
+                    IL_0039:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_003e:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0043:  stloc.3
+                    IL_0044:  ldloc.0
+                    IL_0045:  ldc.i4.1
+                    IL_0046:  ldelema    "int"
+                    IL_004b:  ldloc.2
+                    IL_004c:  ldloc.3
+                    IL_004d:  add
+                    IL_004e:  stind.i4
+                    IL_004f:  dup
+                    IL_0050:  ldc.i4.1
+                    IL_0051:  ldelem.i4
+                    IL_0052:  ldc.i4.s   16
+                    IL_0054:  bne.un.s   IL_0062
+                    IL_0056:  ldsfld     "int Driver.Count"
+                    IL_005b:  ldc.i4.1
+                    IL_005c:  add
+                    IL_005d:  stsfld     "int Driver.Count"
+                    IL_0062:  ldloc.1
+                    IL_0063:  ldc.i4.1
+                    IL_0064:  add
+                    IL_0065:  stloc.1
+                    IL_0066:  dup
+                    IL_0067:  ldarg.0
+                    IL_0068:  ldc.i4.2
+                    IL_0069:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_006e:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0073:  stloc.3
+                    IL_0074:  ldloc.3
+                    IL_0075:  ldelema    "int"
+                    IL_007a:  dup
+                    IL_007b:  ldind.i4
+                    IL_007c:  stloc.2
+                    IL_007d:  ldloc.2
+                    IL_007e:  ldc.i4.1
+                    IL_007f:  add
+                    IL_0080:  stind.i4
+                    IL_0081:  ldc.i4.2
+                    IL_0082:  ldelem.i4
+                    IL_0083:  ldc.i4.1
+                    IL_0084:  bne.un.s   IL_0092
+                    IL_0086:  ldsfld     "int Driver.Count"
+                    IL_008b:  ldc.i4.1
+                    IL_008c:  add
+                    IL_008d:  stsfld     "int Driver.Count"
+                    IL_0092:  leave.s    IL_00ac
                   }
                   finally
                   {
-                    IL_0090:  ldsfld     "int Driver.Count"
-                    IL_0095:  ldloc.1
-                    IL_0096:  sub
-                    IL_0097:  stsfld     "int Driver.Result"
-                    IL_009c:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_00a1:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_00a6:  pop
-                    IL_00a7:  endfinally
+                    IL_0094:  ldsfld     "int Driver.Count"
+                    IL_0099:  ldloc.1
+                    IL_009a:  sub
+                    IL_009b:  stsfld     "int Driver.Result"
+                    IL_00a0:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_00a5:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_00aa:  pop
+                    IL_00ab:  endfinally
                   }
-                  IL_00a8:  ret
+                  IL_00ac:  ret
                 }
                 """);
         }
@@ -3915,7 +3915,7 @@ class Driver
                     IL_0065:  dup
                     IL_0066:  ldc.i4.0
                     IL_0067:  ldc.i4.0
-                    IL_0068:  call       "int[*,*].Get"
+                    IL_0068:  call       "int[*,*].Address"
                     IL_006d:  pop
                     IL_006e:  dup
                     IL_006f:  ldc.i4.0
@@ -3952,7 +3952,7 @@ class Driver
                     IL_00ab:  dup
                     IL_00ac:  ldc.i4.1
                     IL_00ad:  ldc.i4.1
-                    IL_00ae:  call       "int[*,*].Get"
+                    IL_00ae:  call       "int[*,*].Address"
                     IL_00b3:  pop
                     IL_00b4:  dup
                     IL_00b5:  ldc.i4.1
@@ -3992,7 +3992,7 @@ class Driver
                     IL_00f8:  dup
                     IL_00f9:  ldc.i4.1
                     IL_00fa:  ldc.i4.1
-                    IL_00fb:  call       "int[*,*].Get"
+                    IL_00fb:  call       "int[*,*].Address"
                     IL_0100:  pop
                     IL_0101:  dup
                     IL_0102:  ldc.i4.1
@@ -4635,49 +4635,49 @@ class Driver
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [Run]: Return value missing on the stack. { Offset = 0x51 }
+                    [Run]: Return value missing on the stack. { Offset = 0x55 }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Driver.Run()", """
                 {
-                  // Code size       82 (0x52)
+                  // Code size       86 (0x56)
                   .maxstack  4
                   .locals init (int V_0,
-                                int V_1)
+                            int V_1)
                   IL_0000:  ldc.i4.1
                   IL_0001:  newarr     "int"
                   IL_0006:  stsfld     "int[] Driver.arr"
                   IL_000b:  ldsfld     "int[] Driver.arr"
                   IL_0010:  dup
                   IL_0011:  ldc.i4.0
-                  IL_0012:  ldelem.i4
-                  IL_0013:  pop
-                  IL_0014:  dup
-                  IL_0015:  ldc.i4.0
-                  IL_0016:  ldelem.i4
-                  IL_0017:  stloc.0
-                  IL_0018:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_001d:  ldsfld     "System.Func<int> Driver.<>c.<>9__1_0"
-                  IL_0022:  dup
-                  IL_0023:  brtrue.s   IL_003c
-                  IL_0025:  pop
-                  IL_0026:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_002b:  ldftn      "int Driver.<>c.<Run>b__1_0()"
-                  IL_0031:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_0036:  dup
-                  IL_0037:  stsfld     "System.Func<int> Driver.<>c.<>9__1_0"
-                  IL_003c:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_0041:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0046:  stloc.1
-                  IL_0047:  ldc.i4.0
-                  IL_0048:  ldelema    "int"
-                  IL_004d:  ldloc.0
-                  IL_004e:  ldloc.1
-                  IL_004f:  add
-                  IL_0050:  stind.i4
-                  IL_0051:  ret
+                  IL_0012:  ldelema    "int"
+                  IL_0017:  pop
+                  IL_0018:  dup
+                  IL_0019:  ldc.i4.0
+                  IL_001a:  ldelem.i4
+                  IL_001b:  stloc.0
+                  IL_001c:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_0021:  ldsfld     "System.Func<int> Driver.<>c.<>9__1_0"
+                  IL_0026:  dup
+                  IL_0027:  brtrue.s   IL_0040
+                  IL_0029:  pop
+                  IL_002a:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_002f:  ldftn      "int Driver.<>c.<Run>b__1_0()"
+                  IL_0035:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_003a:  dup
+                  IL_003b:  stsfld     "System.Func<int> Driver.<>c.<>9__1_0"
+                  IL_0040:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_0045:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_004a:  stloc.1
+                  IL_004b:  ldc.i4.0
+                  IL_004c:  ldelema    "int"
+                  IL_0051:  ldloc.0
+                  IL_0052:  ldloc.1
+                  IL_0053:  add
+                  IL_0054:  stind.i4
+                  IL_0055:  ret
                 }
                 """);
         }
@@ -4714,14 +4714,14 @@ class Driver
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [Run]: Return value missing on the stack. { Offset = 0x82 }
+                    [Run]: Return value missing on the stack. { Offset = 0x86 }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Driver.Run()", """
                 {
-                  // Code size      131 (0x83)
+                  // Code size      135 (0x87)
                   .maxstack  4
                   .locals init (int V_0,
                                 int V_1,
@@ -4748,32 +4748,32 @@ class Driver
                   IL_0040:  stloc.0
                   IL_0041:  dup
                   IL_0042:  ldloc.0
-                  IL_0043:  ldelem.i4
-                  IL_0044:  pop
-                  IL_0045:  dup
-                  IL_0046:  ldloc.0
-                  IL_0047:  ldelem.i4
-                  IL_0048:  stloc.2
-                  IL_0049:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_004e:  ldsfld     "System.Func<int> Driver.<>c.<>9__1_1"
-                  IL_0053:  dup
-                  IL_0054:  brtrue.s   IL_006d
-                  IL_0056:  pop
-                  IL_0057:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_005c:  ldftn      "int Driver.<>c.<Run>b__1_1()"
-                  IL_0062:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_0067:  dup
-                  IL_0068:  stsfld     "System.Func<int> Driver.<>c.<>9__1_1"
-                  IL_006d:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_0072:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0077:  stloc.3
-                  IL_0078:  ldloc.0
-                  IL_0079:  ldelema    "int"
-                  IL_007e:  ldloc.2
-                  IL_007f:  ldloc.3
-                  IL_0080:  add
-                  IL_0081:  stind.i4
-                  IL_0082:  ret
+                  IL_0043:  ldelema    "int"
+                  IL_0048:  pop
+                  IL_0049:  dup
+                  IL_004a:  ldloc.0
+                  IL_004b:  ldelem.i4
+                  IL_004c:  stloc.2
+                  IL_004d:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_0052:  ldsfld     "System.Func<int> Driver.<>c.<>9__1_1"
+                  IL_0057:  dup
+                  IL_0058:  brtrue.s   IL_0071
+                  IL_005a:  pop
+                  IL_005b:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_0060:  ldftn      "int Driver.<>c.<Run>b__1_1()"
+                  IL_0066:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_006b:  dup
+                  IL_006c:  stsfld     "System.Func<int> Driver.<>c.<>9__1_1"
+                  IL_0071:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_0076:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_007b:  stloc.3
+                  IL_007c:  ldloc.0
+                  IL_007d:  ldelema    "int"
+                  IL_0082:  ldloc.2
+                  IL_0083:  ldloc.3
+                  IL_0084:  add
+                  IL_0085:  stind.i4
+                  IL_0086:  ret
                 }
                 """);
         }
@@ -4820,14 +4820,14 @@ class Driver
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [Run]: Unexpected type on the stack. { Offset = 0xe2, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [Run]: Unexpected type on the stack. { Offset = 0xec, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Driver.Run()", """
                 {
-                  // Code size      227 (0xe3)
+                  // Code size      237 (0xed)
                   .maxstack  5
                   .locals init (int V_0,
                                 int V_1,
@@ -4861,52 +4861,54 @@ class Driver
                   IL_0042:  dup
                   IL_0043:  ldloc.1
                   IL_0044:  ldelema    "S2"
-                  IL_0049:  pop
-                  IL_004a:  dup
-                  IL_004b:  ldloc.1
-                  IL_004c:  ldelema    "S2"
-                  IL_0051:  ldflda     "S1 S2.s1"
-                  IL_0056:  ldfld      "int S1.x"
-                  IL_005b:  stloc.3
-                  IL_005c:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_0061:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_1"
-                  IL_0066:  dup
-                  IL_0067:  brtrue.s   IL_0080
-                  IL_0069:  pop
-                  IL_006a:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_006f:  ldftn      "int Driver.<>c.<Run>b__0_1()"
-                  IL_0075:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_007a:  dup
-                  IL_007b:  stsfld     "System.Func<int> Driver.<>c.<>9__0_1"
-                  IL_0080:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_0085:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_008a:  stloc.s    V_4
-                  IL_008c:  ldloc.1
-                  IL_008d:  ldelema    "S2"
-                  IL_0092:  ldflda     "S1 S2.s1"
-                  IL_0097:  ldflda     "int S1.x"
-                  IL_009c:  ldloc.3
-                  IL_009d:  ldloc.s    V_4
-                  IL_009f:  add
-                  IL_00a0:  stind.i4
-                  IL_00a1:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_00a6:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_2"
-                  IL_00ab:  dup
-                  IL_00ac:  brtrue.s   IL_00c5
-                  IL_00ae:  pop
-                  IL_00af:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_00b4:  ldftn      "int Driver.<>c.<Run>b__0_2()"
-                  IL_00ba:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_00bf:  dup
-                  IL_00c0:  stsfld     "System.Func<int> Driver.<>c.<>9__0_2"
-                  IL_00c5:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_00ca:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_00cf:  stloc.s    V_4
-                  IL_00d1:  ldloc.s    V_4
-                  IL_00d3:  ldelema    "S2"
-                  IL_00d8:  ldflda     "S1 S2.s1"
-                  IL_00dd:  ldfld      "int S1.x"
-                  IL_00e2:  ret
+                  IL_0049:  ldflda     "S1 S2.s1"
+                  IL_004e:  ldflda     "int S1.x"
+                  IL_0053:  pop
+                  IL_0054:  dup
+                  IL_0055:  ldloc.1
+                  IL_0056:  ldelema    "S2"
+                  IL_005b:  ldflda     "S1 S2.s1"
+                  IL_0060:  ldfld      "int S1.x"
+                  IL_0065:  stloc.3
+                  IL_0066:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_006b:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_1"
+                  IL_0070:  dup
+                  IL_0071:  brtrue.s   IL_008a
+                  IL_0073:  pop
+                  IL_0074:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_0079:  ldftn      "int Driver.<>c.<Run>b__0_1()"
+                  IL_007f:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_0084:  dup
+                  IL_0085:  stsfld     "System.Func<int> Driver.<>c.<>9__0_1"
+                  IL_008a:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_008f:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0094:  stloc.s    V_4
+                  IL_0096:  ldloc.1
+                  IL_0097:  ldelema    "S2"
+                  IL_009c:  ldflda     "S1 S2.s1"
+                  IL_00a1:  ldflda     "int S1.x"
+                  IL_00a6:  ldloc.3
+                  IL_00a7:  ldloc.s    V_4
+                  IL_00a9:  add
+                  IL_00aa:  stind.i4
+                  IL_00ab:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_00b0:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_2"
+                  IL_00b5:  dup
+                  IL_00b6:  brtrue.s   IL_00cf
+                  IL_00b8:  pop
+                  IL_00b9:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_00be:  ldftn      "int Driver.<>c.<Run>b__0_2()"
+                  IL_00c4:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_00c9:  dup
+                  IL_00ca:  stsfld     "System.Func<int> Driver.<>c.<>9__0_2"
+                  IL_00cf:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_00d4:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_00d9:  stloc.s    V_4
+                  IL_00db:  ldloc.s    V_4
+                  IL_00dd:  ldelema    "S2"
+                  IL_00e2:  ldflda     "S1 S2.s1"
+                  IL_00e7:  ldfld      "int S1.x"
+                  IL_00ec:  ret
                 }
                 """);
         }
@@ -4953,14 +4955,14 @@ class Driver
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [Run]: Unexpected type on the stack. { Offset = 0x168, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [Run]: Unexpected type on the stack. { Offset = 0x17c, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("Driver.Run()", """
                 {
-                  // Code size      361 (0x169)
+                  // Code size      381 (0x17d)
                   .maxstack  6
                   .locals init (int V_0,
                                 S2[] V_1,
@@ -5003,99 +5005,103 @@ class Driver
                   IL_0045:  ldloc.1
                   IL_0046:  ldloc.2
                   IL_0047:  ldelema    "S2"
-                  IL_004c:  pop
-                  IL_004d:  ldloc.1
-                  IL_004e:  ldloc.2
-                  IL_004f:  ldelema    "S2"
-                  IL_0054:  ldflda     "S1 S2.s1"
-                  IL_0059:  ldfld      "int S1.x"
-                  IL_005e:  stloc.s    V_7
-                  IL_0060:  dup
-                  IL_0061:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_0066:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_1"
-                  IL_006b:  dup
-                  IL_006c:  brtrue.s   IL_0085
-                  IL_006e:  pop
-                  IL_006f:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_0074:  ldftn      "int Driver.<>c.<Run>b__0_1()"
-                  IL_007a:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_007f:  dup
-                  IL_0080:  stsfld     "System.Func<int> Driver.<>c.<>9__0_1"
-                  IL_0085:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_008a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_008f:  stloc.s    V_8
-                  IL_0091:  ldloc.s    V_8
-                  IL_0093:  stloc.3
-                  IL_0094:  dup
-                  IL_0095:  ldloc.3
-                  IL_0096:  ldelema    "S2"
-                  IL_009b:  pop
-                  IL_009c:  stloc.s    V_4
-                  IL_009e:  ldloc.3
-                  IL_009f:  stloc.s    V_5
-                  IL_00a1:  ldloc.s    V_4
-                  IL_00a3:  ldloc.s    V_5
-                  IL_00a5:  ldelema    "S2"
-                  IL_00aa:  pop
+                  IL_004c:  ldflda     "S1 S2.s1"
+                  IL_0051:  ldflda     "int S1.x"
+                  IL_0056:  pop
+                  IL_0057:  ldloc.1
+                  IL_0058:  ldloc.2
+                  IL_0059:  ldelema    "S2"
+                  IL_005e:  ldflda     "S1 S2.s1"
+                  IL_0063:  ldfld      "int S1.x"
+                  IL_0068:  stloc.s    V_7
+                  IL_006a:  dup
+                  IL_006b:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_0070:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_1"
+                  IL_0075:  dup
+                  IL_0076:  brtrue.s   IL_008f
+                  IL_0078:  pop
+                  IL_0079:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_007e:  ldftn      "int Driver.<>c.<Run>b__0_1()"
+                  IL_0084:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_0089:  dup
+                  IL_008a:  stsfld     "System.Func<int> Driver.<>c.<>9__0_1"
+                  IL_008f:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_0094:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0099:  stloc.s    V_8
+                  IL_009b:  ldloc.s    V_8
+                  IL_009d:  stloc.3
+                  IL_009e:  dup
+                  IL_009f:  ldloc.3
+                  IL_00a0:  ldelema    "S2"
+                  IL_00a5:  pop
+                  IL_00a6:  stloc.s    V_4
+                  IL_00a8:  ldloc.3
+                  IL_00a9:  stloc.s    V_5
                   IL_00ab:  ldloc.s    V_4
                   IL_00ad:  ldloc.s    V_5
                   IL_00af:  ldelema    "S2"
                   IL_00b4:  ldflda     "S1 S2.s1"
-                  IL_00b9:  ldfld      "int S1.x"
-                  IL_00be:  stloc.s    V_10
-                  IL_00c0:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_00c5:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_2"
-                  IL_00ca:  dup
-                  IL_00cb:  brtrue.s   IL_00e4
-                  IL_00cd:  pop
-                  IL_00ce:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_00d3:  ldftn      "int Driver.<>c.<Run>b__0_2()"
-                  IL_00d9:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_00b9:  ldflda     "int S1.x"
+                  IL_00be:  pop
+                  IL_00bf:  ldloc.s    V_4
+                  IL_00c1:  ldloc.s    V_5
+                  IL_00c3:  ldelema    "S2"
+                  IL_00c8:  ldflda     "S1 S2.s1"
+                  IL_00cd:  ldfld      "int S1.x"
+                  IL_00d2:  stloc.s    V_10
+                  IL_00d4:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_00d9:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_2"
                   IL_00de:  dup
-                  IL_00df:  stsfld     "System.Func<int> Driver.<>c.<>9__0_2"
-                  IL_00e4:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_00e9:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_00ee:  stloc.s    V_11
-                  IL_00f0:  ldloc.1
-                  IL_00f1:  ldloc.2
-                  IL_00f2:  ldelema    "S2"
-                  IL_00f7:  ldflda     "S1 S2.s1"
-                  IL_00fc:  ldflda     "int S1.x"
-                  IL_0101:  ldloc.s    V_7
-                  IL_0103:  ldloc.s    V_4
-                  IL_0105:  ldloc.s    V_5
-                  IL_0107:  ldelema    "S2"
-                  IL_010c:  ldflda     "S1 S2.s1"
-                  IL_0111:  ldflda     "int S1.x"
-                  IL_0116:  stloc.s    V_9
-                  IL_0118:  ldloc.s    V_9
-                  IL_011a:  ldloc.s    V_10
-                  IL_011c:  ldloc.s    V_11
-                  IL_011e:  add
-                  IL_011f:  dup
-                  IL_0120:  stloc.s    V_12
-                  IL_0122:  stind.i4
-                  IL_0123:  ldloc.s    V_12
-                  IL_0125:  add
-                  IL_0126:  stind.i4
-                  IL_0127:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_012c:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_3"
-                  IL_0131:  dup
-                  IL_0132:  brtrue.s   IL_014b
-                  IL_0134:  pop
-                  IL_0135:  ldsfld     "Driver.<>c Driver.<>c.<>9"
-                  IL_013a:  ldftn      "int Driver.<>c.<Run>b__0_3()"
-                  IL_0140:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_00df:  brtrue.s   IL_00f8
+                  IL_00e1:  pop
+                  IL_00e2:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_00e7:  ldftn      "int Driver.<>c.<Run>b__0_2()"
+                  IL_00ed:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_00f2:  dup
+                  IL_00f3:  stsfld     "System.Func<int> Driver.<>c.<>9__0_2"
+                  IL_00f8:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_00fd:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0102:  stloc.s    V_11
+                  IL_0104:  ldloc.1
+                  IL_0105:  ldloc.2
+                  IL_0106:  ldelema    "S2"
+                  IL_010b:  ldflda     "S1 S2.s1"
+                  IL_0110:  ldflda     "int S1.x"
+                  IL_0115:  ldloc.s    V_7
+                  IL_0117:  ldloc.s    V_4
+                  IL_0119:  ldloc.s    V_5
+                  IL_011b:  ldelema    "S2"
+                  IL_0120:  ldflda     "S1 S2.s1"
+                  IL_0125:  ldflda     "int S1.x"
+                  IL_012a:  stloc.s    V_9
+                  IL_012c:  ldloc.s    V_9
+                  IL_012e:  ldloc.s    V_10
+                  IL_0130:  ldloc.s    V_11
+                  IL_0132:  add
+                  IL_0133:  dup
+                  IL_0134:  stloc.s    V_12
+                  IL_0136:  stind.i4
+                  IL_0137:  ldloc.s    V_12
+                  IL_0139:  add
+                  IL_013a:  stind.i4
+                  IL_013b:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_0140:  ldsfld     "System.Func<int> Driver.<>c.<>9__0_3"
                   IL_0145:  dup
-                  IL_0146:  stsfld     "System.Func<int> Driver.<>c.<>9__0_3"
-                  IL_014b:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_0150:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0155:  stloc.s    V_11
-                  IL_0157:  ldloc.s    V_11
-                  IL_0159:  ldelema    "S2"
-                  IL_015e:  ldflda     "S1 S2.s1"
-                  IL_0163:  ldfld      "int S1.x"
-                  IL_0168:  ret
+                  IL_0146:  brtrue.s   IL_015f
+                  IL_0148:  pop
+                  IL_0149:  ldsfld     "Driver.<>c Driver.<>c.<>9"
+                  IL_014e:  ldftn      "int Driver.<>c.<Run>b__0_3()"
+                  IL_0154:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_0159:  dup
+                  IL_015a:  stsfld     "System.Func<int> Driver.<>c.<>9__0_3"
+                  IL_015f:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_0164:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_0169:  stloc.s    V_11
+                  IL_016b:  ldloc.s    V_11
+                  IL_016d:  ldelema    "S2"
+                  IL_0172:  ldflda     "S1 S2.s1"
+                  IL_0177:  ldfld      "int S1.x"
+                  IL_017c:  ret
                 }
                 """);
         }
@@ -6902,14 +6908,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0x73 }
+                    [Run]: Return value missing on the stack. { Offset = 0x77 }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run()", """
                 {
-                  // Code size      116 (0x74)
+                  // Code size      120 (0x78)
                   .maxstack  4
                   .locals init (int V_0,
                                 int V_1, //tests
@@ -6939,45 +6945,45 @@ class Driver
                     IL_0026:  stloc.0
                     IL_0027:  dup
                     IL_0028:  ldloc.0
-                    IL_0029:  ldelem.i4
-                    IL_002a:  pop
-                    IL_002b:  dup
-                    IL_002c:  ldloc.0
-                    IL_002d:  ldelem.i4
-                    IL_002e:  stloc.3
-                    IL_002f:  ldarg.0
-                    IL_0030:  ldc.i4.4
-                    IL_0031:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0036:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_003b:  stloc.s    V_4
-                    IL_003d:  ldloc.0
-                    IL_003e:  ldelema    "int"
-                    IL_0043:  ldloc.3
-                    IL_0044:  ldloc.s    V_4
-                    IL_0046:  add
-                    IL_0047:  stind.i4
-                    IL_0048:  ldc.i4.0
-                    IL_0049:  ldelem.i4
-                    IL_004a:  ldc.i4.5
-                    IL_004b:  bne.un.s   IL_0059
-                    IL_004d:  ldsfld     "int Driver.Count"
-                    IL_0052:  ldc.i4.1
-                    IL_0053:  add
-                    IL_0054:  stsfld     "int Driver.Count"
-                    IL_0059:  leave.s    IL_0073
+                    IL_0029:  ldelema    "int"
+                    IL_002e:  pop
+                    IL_002f:  dup
+                    IL_0030:  ldloc.0
+                    IL_0031:  ldelem.i4
+                    IL_0032:  stloc.3
+                    IL_0033:  ldarg.0
+                    IL_0034:  ldc.i4.4
+                    IL_0035:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_003a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_003f:  stloc.s    V_4
+                    IL_0041:  ldloc.0
+                    IL_0042:  ldelema    "int"
+                    IL_0047:  ldloc.3
+                    IL_0048:  ldloc.s    V_4
+                    IL_004a:  add
+                    IL_004b:  stind.i4
+                    IL_004c:  ldc.i4.0
+                    IL_004d:  ldelem.i4
+                    IL_004e:  ldc.i4.5
+                    IL_004f:  bne.un.s   IL_005d
+                    IL_0051:  ldsfld     "int Driver.Count"
+                    IL_0056:  ldc.i4.1
+                    IL_0057:  add
+                    IL_0058:  stsfld     "int Driver.Count"
+                    IL_005d:  leave.s    IL_0077
                   }
                   finally
                   {
-                    IL_005b:  ldsfld     "int Driver.Count"
-                    IL_0060:  ldloc.1
-                    IL_0061:  sub
-                    IL_0062:  stsfld     "int Driver.Result"
-                    IL_0067:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_006c:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_0071:  pop
-                    IL_0072:  endfinally
+                    IL_005f:  ldsfld     "int Driver.Count"
+                    IL_0064:  ldloc.1
+                    IL_0065:  sub
+                    IL_0066:  stsfld     "int Driver.Result"
+                    IL_006b:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_0070:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_0075:  pop
+                    IL_0076:  endfinally
                   }
-                  IL_0073:  ret
+                  IL_0077:  ret
                 }
                 """);
         }
@@ -7100,14 +7106,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0x73 }
+                    [Run]: Return value missing on the stack. { Offset = 0x77 }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run()", """
                 {
-                  // Code size      116 (0x74)
+                  // Code size      120 (0x78)
                   .maxstack  4
                   .locals init (int V_0,
                                 int V_1, //tests
@@ -7137,45 +7143,45 @@ class Driver
                     IL_0026:  stloc.0
                     IL_0027:  dup
                     IL_0028:  ldloc.0
-                    IL_0029:  ldelem.i4
-                    IL_002a:  pop
-                    IL_002b:  dup
-                    IL_002c:  ldloc.0
-                    IL_002d:  ldelem.i4
-                    IL_002e:  stloc.3
-                    IL_002f:  ldarg.0
-                    IL_0030:  ldc.i4.4
-                    IL_0031:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0036:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_003b:  stloc.s    V_4
-                    IL_003d:  ldloc.0
-                    IL_003e:  ldelema    "int"
-                    IL_0043:  ldloc.3
-                    IL_0044:  ldloc.s    V_4
-                    IL_0046:  add
-                    IL_0047:  stind.i4
-                    IL_0048:  ldc.i4.0
-                    IL_0049:  ldelem.i4
-                    IL_004a:  ldc.i4.5
-                    IL_004b:  bne.un.s   IL_0059
-                    IL_004d:  ldsfld     "int Driver.Count"
-                    IL_0052:  ldc.i4.1
-                    IL_0053:  add
-                    IL_0054:  stsfld     "int Driver.Count"
-                    IL_0059:  leave.s    IL_0073
+                    IL_0029:  ldelema    "int"
+                    IL_002e:  pop
+                    IL_002f:  dup
+                    IL_0030:  ldloc.0
+                    IL_0031:  ldelem.i4
+                    IL_0032:  stloc.3
+                    IL_0033:  ldarg.0
+                    IL_0034:  ldc.i4.4
+                    IL_0035:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_003a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_003f:  stloc.s    V_4
+                    IL_0041:  ldloc.0
+                    IL_0042:  ldelema    "int"
+                    IL_0047:  ldloc.3
+                    IL_0048:  ldloc.s    V_4
+                    IL_004a:  add
+                    IL_004b:  stind.i4
+                    IL_004c:  ldc.i4.0
+                    IL_004d:  ldelem.i4
+                    IL_004e:  ldc.i4.5
+                    IL_004f:  bne.un.s   IL_005d
+                    IL_0051:  ldsfld     "int Driver.Count"
+                    IL_0056:  ldc.i4.1
+                    IL_0057:  add
+                    IL_0058:  stsfld     "int Driver.Count"
+                    IL_005d:  leave.s    IL_0077
                   }
                   finally
                   {
-                    IL_005b:  ldsfld     "int Driver.Count"
-                    IL_0060:  ldloc.1
-                    IL_0061:  sub
-                    IL_0062:  stsfld     "int Driver.Result"
-                    IL_0067:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_006c:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_0071:  pop
-                    IL_0072:  endfinally
+                    IL_005f:  ldsfld     "int Driver.Count"
+                    IL_0064:  ldloc.1
+                    IL_0065:  sub
+                    IL_0066:  stsfld     "int Driver.Result"
+                    IL_006b:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_0070:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_0075:  pop
+                    IL_0076:  endfinally
                   }
-                  IL_0073:  ret
+                  IL_0077:  ret
                 }
                 """);
         }
@@ -7336,14 +7342,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0xb7 }
+                    [Run]: Return value missing on the stack. { Offset = 0xbb }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run()", """
                 {
-                  // Code size      184 (0xb8)
+                  // Code size      188 (0xbc)
                   .maxstack  5
                   .locals init (TestCase V_0,
                                 int[] V_1,
@@ -7382,68 +7388,68 @@ class Driver
                     IL_0031:  stloc.2
                     IL_0032:  ldloc.1
                     IL_0033:  ldloc.2
-                    IL_0034:  ldelem.i4
-                    IL_0035:  pop
-                    IL_0036:  ldloc.1
-                    IL_0037:  ldloc.2
-                    IL_0038:  ldelem.i4
-                    IL_0039:  stloc.s    V_6
-                    IL_003b:  ldloca.s   V_0
-                    IL_003d:  ldc.i4.4
-                    IL_003e:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0043:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_0048:  stloc.s    V_7
-                    IL_004a:  ldloca.s   V_0
-                    IL_004c:  ldloc.1
-                    IL_004d:  ldloc.2
-                    IL_004e:  ldelema    "int"
-                    IL_0053:  stloc.s    V_5
-                    IL_0055:  ldloc.s    V_5
-                    IL_0057:  ldloc.s    V_6
-                    IL_0059:  ldloc.s    V_7
-                    IL_005b:  add
-                    IL_005c:  dup
-                    IL_005d:  stloc.s    V_8
-                    IL_005f:  stind.i4
-                    IL_0060:  ldloc.s    V_8
-                    IL_0062:  stfld      "int TestCase.val"
-                    IL_0067:  ldc.i4.0
-                    IL_0068:  ldelem.i4
-                    IL_0069:  ldc.i4.5
-                    IL_006a:  ceq
-                    IL_006c:  stloc.s    V_9
-                    IL_006e:  ldloc.s    V_9
-                    IL_0070:  brfalse.s  IL_008d
-                    IL_0072:  ldloc.0
-                    IL_0073:  ldfld      "int TestCase.val"
-                    IL_0078:  ldloca.s   V_0
-                    IL_007a:  ldc.i4.5
-                    IL_007b:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0080:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_0085:  stloc.s    V_7
-                    IL_0087:  ldloc.s    V_7
-                    IL_0089:  ceq
-                    IL_008b:  stloc.s    V_9
-                    IL_008d:  ldloc.s    V_9
-                    IL_008f:  brfalse.s  IL_009d
-                    IL_0091:  ldsfld     "int Driver.Count"
-                    IL_0096:  ldc.i4.1
-                    IL_0097:  add
-                    IL_0098:  stsfld     "int Driver.Count"
-                    IL_009d:  leave.s    IL_00b7
+                    IL_0034:  ldelema    "int"
+                    IL_0039:  pop
+                    IL_003a:  ldloc.1
+                    IL_003b:  ldloc.2
+                    IL_003c:  ldelem.i4
+                    IL_003d:  stloc.s    V_6
+                    IL_003f:  ldloca.s   V_0
+                    IL_0041:  ldc.i4.4
+                    IL_0042:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0047:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_004c:  stloc.s    V_7
+                    IL_004e:  ldloca.s   V_0
+                    IL_0050:  ldloc.1
+                    IL_0051:  ldloc.2
+                    IL_0052:  ldelema    "int"
+                    IL_0057:  stloc.s    V_5
+                    IL_0059:  ldloc.s    V_5
+                    IL_005b:  ldloc.s    V_6
+                    IL_005d:  ldloc.s    V_7
+                    IL_005f:  add
+                    IL_0060:  dup
+                    IL_0061:  stloc.s    V_8
+                    IL_0063:  stind.i4
+                    IL_0064:  ldloc.s    V_8
+                    IL_0066:  stfld      "int TestCase.val"
+                    IL_006b:  ldc.i4.0
+                    IL_006c:  ldelem.i4
+                    IL_006d:  ldc.i4.5
+                    IL_006e:  ceq
+                    IL_0070:  stloc.s    V_9
+                    IL_0072:  ldloc.s    V_9
+                    IL_0074:  brfalse.s  IL_0091
+                    IL_0076:  ldloc.0
+                    IL_0077:  ldfld      "int TestCase.val"
+                    IL_007c:  ldloca.s   V_0
+                    IL_007e:  ldc.i4.5
+                    IL_007f:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0084:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0089:  stloc.s    V_7
+                    IL_008b:  ldloc.s    V_7
+                    IL_008d:  ceq
+                    IL_008f:  stloc.s    V_9
+                    IL_0091:  ldloc.s    V_9
+                    IL_0093:  brfalse.s  IL_00a1
+                    IL_0095:  ldsfld     "int Driver.Count"
+                    IL_009a:  ldc.i4.1
+                    IL_009b:  add
+                    IL_009c:  stsfld     "int Driver.Count"
+                    IL_00a1:  leave.s    IL_00bb
                   }
                   finally
                   {
-                    IL_009f:  ldsfld     "int Driver.Count"
-                    IL_00a4:  ldloc.3
-                    IL_00a5:  sub
-                    IL_00a6:  stsfld     "int Driver.Result"
-                    IL_00ab:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_00b0:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_00b5:  pop
-                    IL_00b6:  endfinally
+                    IL_00a3:  ldsfld     "int Driver.Count"
+                    IL_00a8:  ldloc.3
+                    IL_00a9:  sub
+                    IL_00aa:  stsfld     "int Driver.Result"
+                    IL_00af:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_00b4:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_00b9:  pop
+                    IL_00ba:  endfinally
                   }
-                  IL_00b7:  ret
+                  IL_00bb:  ret
                 }
                 """);
         }
@@ -7943,14 +7949,14 @@ class Driver
             {
                 ILVerifyMessage = """
                     [GetVal]: Unexpected type on the stack. { Offset = 0xc, Found = value 'T', Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<T0>' }
-                    [Run]: Return value missing on the stack. { Offset = 0x1c2 }
+                    [Run]: Return value missing on the stack. { Offset = 0x1cc }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("TestCase.Run()", """
                 {
-                  // Code size      451 (0x1c3)
+                  // Code size      461 (0x1cd)
                   .maxstack  3
                   .locals init (int V_0,
                                 int V_1,
@@ -8011,137 +8017,139 @@ class Driver
                     IL_0079:  dup
                     IL_007a:  ldc.i4.0
                     IL_007b:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0080:  pop
-                    IL_0081:  dup
-                    IL_0082:  ldc.i4.0
-                    IL_0083:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0088:  ldfld      "int TestCase.PrivClass.ValueT.Field"
-                    IL_008d:  stloc.3
-                    IL_008e:  ldarg.0
-                    IL_008f:  ldc.i4.4
-                    IL_0090:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0095:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_009a:  stloc.s    V_4
-                    IL_009c:  ldc.i4.0
-                    IL_009d:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_00a2:  ldflda     "int TestCase.PrivClass.ValueT.Field"
-                    IL_00a7:  ldloc.3
-                    IL_00a8:  ldloc.s    V_4
-                    IL_00aa:  add
-                    IL_00ab:  stind.i4
-                    IL_00ac:  ldarg.0
-                    IL_00ad:  ldfld      "TestCase.PrivClass TestCase.myClass"
-                    IL_00b2:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
-                    IL_00b7:  ldc.i4.0
-                    IL_00b8:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_00bd:  ldfld      "int TestCase.PrivClass.ValueT.Field"
-                    IL_00c2:  ldc.i4.8
-                    IL_00c3:  bne.un.s   IL_00d1
-                    IL_00c5:  ldsfld     "int Driver.Count"
-                    IL_00ca:  ldc.i4.1
-                    IL_00cb:  add
-                    IL_00cc:  stsfld     "int Driver.Count"
-                    IL_00d1:  ldloc.2
-                    IL_00d2:  ldc.i4.1
-                    IL_00d3:  add
-                    IL_00d4:  stloc.2
-                    IL_00d5:  ldarg.0
-                    IL_00d6:  ldfld      "TestCase.PrivClass TestCase.myClass"
-                    IL_00db:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
-                    IL_00e0:  ldarg.0
-                    IL_00e1:  ldc.i4.1
-                    IL_00e2:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_00e7:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_00ec:  stloc.s    V_4
-                    IL_00ee:  ldloc.s    V_4
-                    IL_00f0:  stloc.0
-                    IL_00f1:  dup
-                    IL_00f2:  ldloc.0
-                    IL_00f3:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_00f8:  pop
-                    IL_00f9:  ldloc.0
-                    IL_00fa:  stloc.1
-                    IL_00fb:  dup
-                    IL_00fc:  ldloc.1
-                    IL_00fd:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0102:  pop
-                    IL_0103:  dup
-                    IL_0104:  ldloc.1
-                    IL_0105:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_010a:  ldfld      "int TestCase.PrivClass.ValueT.Field"
-                    IL_010f:  stloc.3
-                    IL_0110:  ldarg.0
-                    IL_0111:  ldc.i4.4
-                    IL_0112:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0117:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_011c:  stloc.s    V_5
-                    IL_011e:  ldloc.1
-                    IL_011f:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0124:  ldflda     "int TestCase.PrivClass.ValueT.Field"
-                    IL_0129:  ldloc.3
-                    IL_012a:  ldloc.s    V_5
-                    IL_012c:  add
-                    IL_012d:  stind.i4
-                    IL_012e:  ldarg.0
-                    IL_012f:  ldfld      "TestCase.PrivClass TestCase.myClass"
-                    IL_0134:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
-                    IL_0139:  ldc.i4.1
-                    IL_013a:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_013f:  ldfld      "int TestCase.PrivClass.ValueT.Field"
-                    IL_0144:  ldc.i4.4
-                    IL_0145:  bne.un.s   IL_0153
-                    IL_0147:  ldsfld     "int Driver.Count"
-                    IL_014c:  ldc.i4.1
-                    IL_014d:  add
-                    IL_014e:  stsfld     "int Driver.Count"
-                    IL_0153:  ldloc.2
-                    IL_0154:  ldc.i4.1
-                    IL_0155:  add
-                    IL_0156:  stloc.2
-                    IL_0157:  ldarg.0
-                    IL_0158:  ldfld      "TestCase.PrivClass TestCase.myClass"
-                    IL_015d:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
-                    IL_0162:  ldarg.0
-                    IL_0163:  ldc.i4.1
-                    IL_0164:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
-                    IL_0169:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                    IL_016e:  stloc.s    V_5
-                    IL_0170:  ldloc.s    V_5
-                    IL_0172:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0177:  ldflda     "int TestCase.PrivClass.ValueT.Field"
-                    IL_017c:  dup
-                    IL_017d:  ldind.i4
-                    IL_017e:  stloc.3
-                    IL_017f:  ldloc.3
-                    IL_0180:  ldc.i4.1
-                    IL_0181:  add
-                    IL_0182:  stind.i4
-                    IL_0183:  ldarg.0
-                    IL_0184:  ldfld      "TestCase.PrivClass TestCase.myClass"
-                    IL_0189:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
-                    IL_018e:  ldc.i4.1
-                    IL_018f:  ldelema    "TestCase.PrivClass.ValueT"
-                    IL_0194:  ldfld      "int TestCase.PrivClass.ValueT.Field"
-                    IL_0199:  ldc.i4.5
-                    IL_019a:  bne.un.s   IL_01a8
-                    IL_019c:  ldsfld     "int Driver.Count"
-                    IL_01a1:  ldc.i4.1
-                    IL_01a2:  add
-                    IL_01a3:  stsfld     "int Driver.Count"
-                    IL_01a8:  leave.s    IL_01c2
+                    IL_0080:  ldflda     "int TestCase.PrivClass.ValueT.Field"
+                    IL_0085:  pop
+                    IL_0086:  dup
+                    IL_0087:  ldc.i4.0
+                    IL_0088:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_008d:  ldfld      "int TestCase.PrivClass.ValueT.Field"
+                    IL_0092:  stloc.3
+                    IL_0093:  ldarg.0
+                    IL_0094:  ldc.i4.4
+                    IL_0095:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_009a:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_009f:  stloc.s    V_4
+                    IL_00a1:  ldc.i4.0
+                    IL_00a2:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_00a7:  ldflda     "int TestCase.PrivClass.ValueT.Field"
+                    IL_00ac:  ldloc.3
+                    IL_00ad:  ldloc.s    V_4
+                    IL_00af:  add
+                    IL_00b0:  stind.i4
+                    IL_00b1:  ldarg.0
+                    IL_00b2:  ldfld      "TestCase.PrivClass TestCase.myClass"
+                    IL_00b7:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
+                    IL_00bc:  ldc.i4.0
+                    IL_00bd:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_00c2:  ldfld      "int TestCase.PrivClass.ValueT.Field"
+                    IL_00c7:  ldc.i4.8
+                    IL_00c8:  bne.un.s   IL_00d6
+                    IL_00ca:  ldsfld     "int Driver.Count"
+                    IL_00cf:  ldc.i4.1
+                    IL_00d0:  add
+                    IL_00d1:  stsfld     "int Driver.Count"
+                    IL_00d6:  ldloc.2
+                    IL_00d7:  ldc.i4.1
+                    IL_00d8:  add
+                    IL_00d9:  stloc.2
+                    IL_00da:  ldarg.0
+                    IL_00db:  ldfld      "TestCase.PrivClass TestCase.myClass"
+                    IL_00e0:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
+                    IL_00e5:  ldarg.0
+                    IL_00e6:  ldc.i4.1
+                    IL_00e7:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_00ec:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_00f1:  stloc.s    V_4
+                    IL_00f3:  ldloc.s    V_4
+                    IL_00f5:  stloc.0
+                    IL_00f6:  dup
+                    IL_00f7:  ldloc.0
+                    IL_00f8:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_00fd:  pop
+                    IL_00fe:  ldloc.0
+                    IL_00ff:  stloc.1
+                    IL_0100:  dup
+                    IL_0101:  ldloc.1
+                    IL_0102:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_0107:  ldflda     "int TestCase.PrivClass.ValueT.Field"
+                    IL_010c:  pop
+                    IL_010d:  dup
+                    IL_010e:  ldloc.1
+                    IL_010f:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_0114:  ldfld      "int TestCase.PrivClass.ValueT.Field"
+                    IL_0119:  stloc.3
+                    IL_011a:  ldarg.0
+                    IL_011b:  ldc.i4.4
+                    IL_011c:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0121:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0126:  stloc.s    V_5
+                    IL_0128:  ldloc.1
+                    IL_0129:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_012e:  ldflda     "int TestCase.PrivClass.ValueT.Field"
+                    IL_0133:  ldloc.3
+                    IL_0134:  ldloc.s    V_5
+                    IL_0136:  add
+                    IL_0137:  stind.i4
+                    IL_0138:  ldarg.0
+                    IL_0139:  ldfld      "TestCase.PrivClass TestCase.myClass"
+                    IL_013e:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
+                    IL_0143:  ldc.i4.1
+                    IL_0144:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_0149:  ldfld      "int TestCase.PrivClass.ValueT.Field"
+                    IL_014e:  ldc.i4.4
+                    IL_014f:  bne.un.s   IL_015d
+                    IL_0151:  ldsfld     "int Driver.Count"
+                    IL_0156:  ldc.i4.1
+                    IL_0157:  add
+                    IL_0158:  stsfld     "int Driver.Count"
+                    IL_015d:  ldloc.2
+                    IL_015e:  ldc.i4.1
+                    IL_015f:  add
+                    IL_0160:  stloc.2
+                    IL_0161:  ldarg.0
+                    IL_0162:  ldfld      "TestCase.PrivClass TestCase.myClass"
+                    IL_0167:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
+                    IL_016c:  ldarg.0
+                    IL_016d:  ldc.i4.1
+                    IL_016e:  call       "System.Threading.Tasks.Task<int> TestCase.GetVal<int>(int)"
+                    IL_0173:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                    IL_0178:  stloc.s    V_5
+                    IL_017a:  ldloc.s    V_5
+                    IL_017c:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_0181:  ldflda     "int TestCase.PrivClass.ValueT.Field"
+                    IL_0186:  dup
+                    IL_0187:  ldind.i4
+                    IL_0188:  stloc.3
+                    IL_0189:  ldloc.3
+                    IL_018a:  ldc.i4.1
+                    IL_018b:  add
+                    IL_018c:  stind.i4
+                    IL_018d:  ldarg.0
+                    IL_018e:  ldfld      "TestCase.PrivClass TestCase.myClass"
+                    IL_0193:  ldfld      "TestCase.PrivClass.ValueT[] TestCase.PrivClass.arr"
+                    IL_0198:  ldc.i4.1
+                    IL_0199:  ldelema    "TestCase.PrivClass.ValueT"
+                    IL_019e:  ldfld      "int TestCase.PrivClass.ValueT.Field"
+                    IL_01a3:  ldc.i4.5
+                    IL_01a4:  bne.un.s   IL_01b2
+                    IL_01a6:  ldsfld     "int Driver.Count"
+                    IL_01ab:  ldc.i4.1
+                    IL_01ac:  add
+                    IL_01ad:  stsfld     "int Driver.Count"
+                    IL_01b2:  leave.s    IL_01cc
                   }
                   finally
                   {
-                    IL_01aa:  ldsfld     "int Driver.Count"
-                    IL_01af:  ldloc.2
-                    IL_01b0:  sub
-                    IL_01b1:  stsfld     "int Driver.Result"
-                    IL_01b6:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
-                    IL_01bb:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
-                    IL_01c0:  pop
-                    IL_01c1:  endfinally
+                    IL_01b4:  ldsfld     "int Driver.Count"
+                    IL_01b9:  ldloc.2
+                    IL_01ba:  sub
+                    IL_01bb:  stsfld     "int Driver.Result"
+                    IL_01c0:  ldsfld     "System.Threading.AutoResetEvent Driver.CompletedSignal"
+                    IL_01c5:  callvirt   "bool System.Threading.EventWaitHandle.Set()"
+                    IL_01ca:  pop
+                    IL_01cb:  endfinally
                   }
-                  IL_01c2:  ret
+                  IL_01cc:  ret
                 }
                 """);
         }
@@ -9722,14 +9730,14 @@ class C
             var verifier = CompileAndVerify(comp, expectedOutput: RuntimeAsyncTestHelpers.ExpectedOutput(expectedOutput), verify: Verification.Fails with
             {
                 ILVerifyMessage = """
-                    [F2]: Unexpected type on the stack. { Offset = 0x6d, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
+                    [F2]: Unexpected type on the stack. { Offset = 0x71, Found = Int32, Expected = ref '[System.Runtime]System.Threading.Tasks.Task`1<int32>' }
                     """
             });
 
             verifier.VerifyDiagnostics();
             verifier.VerifyIL("C.F2()", """
                 {
-                  // Code size      110 (0x6e)
+                  // Code size      114 (0x72)
                   .maxstack  5
                   .locals init (C.<>c__DisplayClass2_0 V_0, //CS$<>8__locals0
                                 int V_1,
@@ -9748,33 +9756,33 @@ class C
                   IL_001a:  ldfld      "int[] C.<>c__DisplayClass2_0.x"
                   IL_001f:  dup
                   IL_0020:  ldc.i4.0
-                  IL_0021:  ldelem.i4
-                  IL_0022:  pop
-                  IL_0023:  call       "int C.F0()"
-                  IL_0028:  stloc.1
-                  IL_0029:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
-                  IL_002e:  ldsfld     "System.Func<int> C.<>c.<>9__2_1"
-                  IL_0033:  dup
-                  IL_0034:  brtrue.s   IL_004d
-                  IL_0036:  pop
-                  IL_0037:  ldsfld     "C.<>c C.<>c.<>9"
-                  IL_003c:  ldftn      "int C.<>c.<F2>b__2_1()"
-                  IL_0042:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
-                  IL_0047:  dup
-                  IL_0048:  stsfld     "System.Func<int> C.<>c.<>9__2_1"
-                  IL_004d:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
-                  IL_0052:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
-                  IL_0057:  stloc.2
-                  IL_0058:  ldc.i4.0
-                  IL_0059:  ldelema    "int"
-                  IL_005e:  ldloc.1
-                  IL_005f:  ldloc.2
-                  IL_0060:  call       "void C.F1(ref int, int, int)"
-                  IL_0065:  ldloc.0
-                  IL_0066:  ldfld      "int[] C.<>c__DisplayClass2_0.x"
-                  IL_006b:  ldc.i4.0
-                  IL_006c:  ldelem.i4
-                  IL_006d:  ret
+                  IL_0021:  ldelema    "int"
+                  IL_0026:  pop
+                  IL_0027:  call       "int C.F0()"
+                  IL_002c:  stloc.1
+                  IL_002d:  call       "System.Threading.Tasks.TaskFactory System.Threading.Tasks.Task.Factory.get"
+                  IL_0032:  ldsfld     "System.Func<int> C.<>c.<>9__2_1"
+                  IL_0037:  dup
+                  IL_0038:  brtrue.s   IL_0051
+                  IL_003a:  pop
+                  IL_003b:  ldsfld     "C.<>c C.<>c.<>9"
+                  IL_0040:  ldftn      "int C.<>c.<F2>b__2_1()"
+                  IL_0046:  newobj     "System.Func<int>..ctor(object, System.IntPtr)"
+                  IL_004b:  dup
+                  IL_004c:  stsfld     "System.Func<int> C.<>c.<>9__2_1"
+                  IL_0051:  callvirt   "System.Threading.Tasks.Task<int> System.Threading.Tasks.TaskFactory.StartNew<int>(System.Func<int>)"
+                  IL_0056:  call       "int System.Runtime.CompilerServices.AsyncHelpers.Await<int>(System.Threading.Tasks.Task<int>)"
+                  IL_005b:  stloc.2
+                  IL_005c:  ldc.i4.0
+                  IL_005d:  ldelema    "int"
+                  IL_0062:  ldloc.1
+                  IL_0063:  ldloc.2
+                  IL_0064:  call       "void C.F1(ref int, int, int)"
+                  IL_0069:  ldloc.0
+                  IL_006a:  ldfld      "int[] C.<>c__DisplayClass2_0.x"
+                  IL_006f:  ldc.i4.0
+                  IL_0070:  ldelem.i4
+                  IL_0071:  ret
                 }
                 """);
         }

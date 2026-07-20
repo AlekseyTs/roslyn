@@ -671,12 +671,13 @@
   </Node>
 
   <!--
-    Represents an array access that comes from the RHS of an unused ref (non-readonly) assignment.
-    Needed so we can emit with correct side effects (runtime element type check).
+    Represents an access that comes from the RHS of an unused ref assignment to a local.
+    Needed so we can emit with correct side effects (runtime array element type check, etc.).
   -->
-  <Node Name="BoundRefArrayAccess" Base="BoundExpression">
-    <Field Name="Type" Type="TypeSymbol?" Override="true" Null="always"/>
-    <Field Name="ArrayAccess" Type="BoundArrayAccess" Null="disallow"/>
+  <Node Name="BoundRefAssignmentRHS" Base="BoundExpression">
+    <Field Name="Type" Type="TypeSymbol" Override="true" Null="disallow"/>
+    <Field Name="RefKind" Type="RefKind"/>
+    <Field Name="Expression" Type="BoundExpression" Null="disallow"/>
   </Node>
 
   <!--
@@ -931,15 +932,6 @@
     <Field Name="Operand" Type="BoundExpression"/>
     <Field Name="ConversionMethod" Type="MethodSymbol"/>
   </Node>
-
-  <!--
-  <Node Name="BoundRefValueOperator" Base="BoundExpression">
-    <Field Name="Type" Type="TypeSymbol" Override="true" Null="disallow"/>
-
-    <Field Name="Operand" Type="BoundExpression"/>
-    <Field Name="SourceType" Type="BoundTypeExpression"/>
-  </Node>
-  -->
 
   <Node Name="BoundArgList" Base="BoundExpression">
     <!-- This is the "__arglist" expression that may appear inside a varargs method. -->
