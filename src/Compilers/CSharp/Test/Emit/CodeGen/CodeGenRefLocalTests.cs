@@ -2322,6 +2322,702 @@ class Program
 }");
         }
 
+        [Theory]
+        [CombinatorialData]
+        public void RefDiscardAssignment_01_Parameter([CombinatorialValues("in", "ref", "ref readonly")] string modifier)
+        {
+            var source = @"
+class C
+{
+    void M(" + modifier + @" byte b1)
+    {
+        _ = ref b1;
+    }
+}
+";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+    // Code size        5 (0x5)
+    .maxstack  1
+    IL_0000:  nop
+    IL_0001:  ldarg.1
+    IL_0002:  ldind.u1
+    IL_0003:  pop
+    IL_0004:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+    // Code size        4 (0x4)
+    .maxstack  1
+    IL_0000:  ldarg.1
+    IL_0001:  ldind.u1
+    IL_0002:  pop
+    IL_0003:  ret
+}
+""");
+        }
+
+        [Theory]
+        [CombinatorialData]
+        public void RefDiscardAssignment_02_Local([CombinatorialValues("ref", "ref readonly")] string modifier)
+        {
+            var source = @"
+class C
+{
+    void M()
+    {
+        " + modifier + @" byte b1 = ref GetRef();
+        _ = ref b1;
+    }
+
+    static ref byte GetRef() => throw null;
+}
+";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+    // Code size       11 (0xb)
+    .maxstack  1
+    .locals init (byte& V_0) //b1
+    IL_0000:  nop
+    IL_0001:  call       "ref byte C.GetRef()"
+    IL_0006:  stloc.0
+    IL_0007:  ldloc.0
+    IL_0008:  ldind.u1
+    IL_0009:  pop
+    IL_000a:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+    // Code size        8 (0x8)
+    .maxstack  1
+    IL_0000:  call       "ref byte C.GetRef()"
+    IL_0005:  ldind.u1
+    IL_0006:  pop
+    IL_0007:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_03_Field()
+        {
+            var source = """
+class C
+{
+    void M()
+    {
+        _ = ref GetRef().F;
+    }
+
+    static ref S GetRef() => throw null;
+}
+
+struct S
+{
+    public byte F;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size        8 (0x8)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  call       "ref S C.GetRef()"
+  IL_0006:  pop
+  IL_0007:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size        7 (0x7)
+  .maxstack  1
+  IL_0000:  call       "ref S C.GetRef()"
+  IL_0005:  pop
+  IL_0006:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_04_Field()
+        {
+            var source = """
+class C
+{
+    void M()
+    {
+        _ = ref GetRef().F;
+    }
+
+    static ref readonly S GetRef() => throw null;
+}
+
+struct S
+{
+    public byte F;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size        8 (0x8)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  call       "ref readonly S C.GetRef()"
+  IL_0006:  pop
+  IL_0007:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size        7 (0x7)
+  .maxstack  1
+  IL_0000:  call       "ref readonly S C.GetRef()"
+  IL_0005:  pop
+  IL_0006:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_05_Field()
+        {
+            var source = """
+class C
+{
+    void M()
+    {
+        _ = ref GetRef().F;
+    }
+
+    static ref S GetRef() => throw null;
+}
+
+struct S
+{
+    readonly public byte F;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size        8 (0x8)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  call       "ref S C.GetRef()"
+  IL_0006:  pop
+  IL_0007:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size        7 (0x7)
+  .maxstack  1
+  IL_0000:  call       "ref S C.GetRef()"
+  IL_0005:  pop
+  IL_0006:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_06_RefReturn()
+        {
+            var source = @"
+class Program
+{
+    static int dummy;
+
+    static ref int F()
+    {
+        return ref dummy;
+    }
+
+    static void Main()
+    {
+        Test();
+        System.Console.WriteLine(""Done"");
+    }
+
+    static void Test()
+    {
+        _ = ref F();
+    }
+}
+";
+
+            CompileAndVerify(source, expectedOutput: "Done", options: TestOptions.ReleaseExe).VerifyDiagnostics().
+                VerifyIL("Program.Test",
+@"
+{
+  // Code size        7 (0x7)
+  .maxstack  1
+  IL_0000:  call       ""ref int Program.F()""
+  IL_0005:  pop
+  IL_0006:  ret
+}
+");
+            CompileAndVerify(source, expectedOutput: "Done", options: TestOptions.DebugExe, verify: Verification.Fails).VerifyDiagnostics().
+                VerifyIL("Program.Test",
+@"
+{
+  // Code size        8 (0x8)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  call       ""ref int Program.F()""
+  IL_0006:  pop
+  IL_0007:  ret
+}
+");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_07_RefReturn()
+        {
+            var source = @"
+class Program
+{
+    static int dummy;
+
+    static ref readonly int F()
+    {
+        return ref dummy;
+    }
+
+    static void Main()
+    {
+        Test();
+        System.Console.WriteLine(""Done"");
+    }
+
+    static void Test()
+    {
+        _ = ref F();
+    }
+}
+";
+
+            CompileAndVerify(source, expectedOutput: "Done", options: TestOptions.ReleaseExe).VerifyDiagnostics().
+                VerifyIL("Program.Test",
+@"
+{
+  // Code size        7 (0x7)
+  .maxstack  1
+  IL_0000:  call       ""ref readonly int Program.F()""
+  IL_0005:  pop
+  IL_0006:  ret
+}
+");
+            CompileAndVerify(source, expectedOutput: "Done", options: TestOptions.DebugExe, verify: Verification.Fails).VerifyDiagnostics().
+                VerifyIL("Program.Test",
+@"
+{
+  // Code size        8 (0x8)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  call       ""ref readonly int Program.F()""
+  IL_0006:  pop
+  IL_0007:  ret
+}
+");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_08_Conditional()
+        {
+            var source = """
+class C
+{
+    void M(bool b)
+    {
+        _ = ref b ? ref GetRef1() : ref GetRef2();
+    }
+
+    static ref byte GetRef1() => throw null;
+    static ref byte GetRef2() => throw null;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size       19 (0x13)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       "ref byte C.GetRef2()"
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0012
+  IL_000c:  call       "ref byte C.GetRef1()"
+  IL_0011:  pop
+  IL_0012:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size       17 (0x11)
+  .maxstack  1
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       "ref byte C.GetRef2()"
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  call       "ref byte C.GetRef1()"
+  IL_000f:  pop
+  IL_0010:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_09_Conditional()
+        {
+            var source = """
+class C
+{
+    void M(bool b)
+    {
+        _ = ref b ? ref GetRef1() : ref GetRef2();
+    }
+
+    static ref readonly byte GetRef1() => throw null;
+    static ref readonly byte GetRef2() => throw null;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size       19 (0x13)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       "ref readonly byte C.GetRef2()"
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0012
+  IL_000c:  call       "ref readonly byte C.GetRef1()"
+  IL_0011:  pop
+  IL_0012:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size       17 (0x11)
+  .maxstack  1
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       "ref readonly byte C.GetRef2()"
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  call       "ref readonly byte C.GetRef1()"
+  IL_000f:  pop
+  IL_0010:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_10_Conditional()
+        {
+            var source = """
+class C
+{
+    void M(bool b)
+    {
+        _ = ref b ? ref GetRef1() : ref GetRef2();
+    }
+
+    static ref readonly byte GetRef1() => throw null;
+    static ref byte GetRef2() => throw null;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size       19 (0x13)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       "ref byte C.GetRef2()"
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0012
+  IL_000c:  call       "ref readonly byte C.GetRef1()"
+  IL_0011:  pop
+  IL_0012:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size       17 (0x11)
+  .maxstack  1
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       "ref byte C.GetRef2()"
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  call       "ref readonly byte C.GetRef1()"
+  IL_000f:  pop
+  IL_0010:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_11_Conditional()
+        {
+            var source = """
+class C
+{
+    void M(bool b, ref byte b1)
+    {
+        _ = ref b ? ref b1 : ref GetRef2();
+    }
+
+    static ref byte GetRef2() => throw null;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size       16 (0x10)
+  .maxstack  1
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       "ref byte C.GetRef2()"
+  IL_0009:  pop
+  IL_000a:  br.s       IL_000f
+  IL_000c:  ldarg.2
+  IL_000d:  ldind.u1
+  IL_000e:  pop
+  IL_000f:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size       14 (0xe)
+  .maxstack  1
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       "ref byte C.GetRef2()"
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  ldarg.2
+  IL_000b:  ldind.u1
+  IL_000c:  pop
+  IL_000d:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_12_Conditional()
+        {
+            var source = """
+class C
+{
+    void M(bool b)
+    {
+        ref byte b1 = ref GetRef1();
+        _ = ref b ? ref b1 : ref GetRef2();
+    }
+
+    static ref byte GetRef1() => throw null;
+    static ref byte GetRef2() => throw null;
+}
+""";
+            CompileAndVerify(source, options: TestOptions.DebugDll).VerifyIL("C.M", """
+{
+  // Code size       22 (0x16)
+  .maxstack  1
+  .locals init (byte& V_0) //b1
+  IL_0000:  nop
+  IL_0001:  call       "ref byte C.GetRef1()"
+  IL_0006:  stloc.0
+  IL_0007:  ldarg.1
+  IL_0008:  brtrue.s   IL_0012
+  IL_000a:  call       "ref byte C.GetRef2()"
+  IL_000f:  pop
+  IL_0010:  br.s       IL_0015
+  IL_0012:  ldloc.0
+  IL_0013:  ldind.u1
+  IL_0014:  pop
+  IL_0015:  ret
+}
+""");
+            CompileAndVerify(source, options: TestOptions.ReleaseDll).VerifyIL("C.M", """
+{
+  // Code size       20 (0x14)
+  .maxstack  1
+  .locals init (byte& V_0) //b1
+  IL_0000:  call       "ref byte C.GetRef1()"
+  IL_0005:  stloc.0
+  IL_0006:  ldarg.1
+  IL_0007:  brtrue.s   IL_0010
+  IL_0009:  call       "ref byte C.GetRef2()"
+  IL_000e:  pop
+  IL_000f:  ret
+  IL_0010:  ldloc.0
+  IL_0011:  ldind.u1
+  IL_0012:  pop
+  IL_0013:  ret
+}
+""");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_13_Conditional()
+        {
+            var text = @"
+class Program
+{
+    static void M(int[] a, bool b)
+    {
+        _ = ref b ? ref a[0] : ref GetRef2();
+    }
+
+    static ref int GetRef2() => throw null;
+}
+";
+
+            CompileAndVerify(text, options: TestOptions.DebugDll).VerifyIL("Program.M", @"
+{
+  // Code size       17 (0x11)
+  .maxstack  2
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       ""ref int Program.GetRef2()""
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0010
+  IL_000c:  ldarg.0
+  IL_000d:  ldc.i4.0
+  IL_000e:  ldelem.i4
+  IL_000f:  pop
+  IL_0010:  ret
+}
+");
+
+            CompileAndVerify(text, options: TestOptions.ReleaseDll).VerifyIL("Program.M", @"
+{
+  // Code size       15 (0xf)
+  .maxstack  2
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       ""ref int Program.GetRef2()""
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  ldarg.0
+  IL_000b:  ldc.i4.0
+  IL_000c:  ldelem.i4
+  IL_000d:  pop
+  IL_000e:  ret
+}
+");
+        }
+
+        [Fact]
+        public void RefDiscardAssignment_14_Conditional()
+        {
+            var text = @"
+class Program
+{
+    static void M(object[] a, bool b)
+    {
+        _ = ref b ? ref a[0] : ref GetRef2();
+    }
+
+    static ref object GetRef2() => throw null;
+}
+";
+
+            CompileAndVerify(text, options: TestOptions.DebugDll).VerifyIL("Program.M", @"
+{
+  // Code size       17 (0x11)
+  .maxstack  2
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       ""ref object Program.GetRef2()""
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0010
+  IL_000c:  ldarg.0
+  IL_000d:  ldc.i4.0
+  IL_000e:  ldelem.ref
+  IL_000f:  pop
+  IL_0010:  ret
+}
+");
+
+            CompileAndVerify(text, options: TestOptions.ReleaseDll).VerifyIL("Program.M", @"
+{
+  // Code size       15 (0xf)
+  .maxstack  2
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       ""ref object Program.GetRef2()""
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  ldarg.0
+  IL_000b:  ldc.i4.0
+  IL_000c:  ldelem.ref
+  IL_000d:  pop
+  IL_000e:  ret
+}
+");
+        }
+
+        [Theory, CombinatorialData]
+        public void RefDiscardAssignment_15_Conditional(
+            [CombinatorialValues("", "where T : class", "where T : struct")] string constraints)
+        {
+            var text = $$"""
+class Program
+{
+    static void M<T>(T[] a, bool b) {{constraints}}
+    {
+        _ = ref b ? ref a[0] : ref GetRef2<T>();
+    }
+
+    static ref T GetRef2<T>() => throw null;
+}
+""";
+
+            CompileAndVerify(text, options: TestOptions.DebugDll).VerifyIL("Program.M<T>", @"
+{
+  // Code size       23 (0x17)
+  .maxstack  2
+  IL_0000:  nop
+  IL_0001:  ldarg.1
+  IL_0002:  brtrue.s   IL_000c
+  IL_0004:  call       ""ref T Program.GetRef2<T>()""
+  IL_0009:  pop
+  IL_000a:  br.s       IL_0016
+  IL_000c:  ldarg.0
+  IL_000d:  ldc.i4.0
+  IL_000e:  readonly.
+  IL_0010:  ldelema    ""T""
+  IL_0015:  pop
+  IL_0016:  ret
+}
+");
+
+            CompileAndVerify(text, options: TestOptions.ReleaseDll).VerifyIL("Program.M<T>", @"
+{
+  // Code size       21 (0x15)
+  .maxstack  2
+  IL_0000:  ldarg.1
+  IL_0001:  brtrue.s   IL_000a
+  IL_0003:  call       ""ref T Program.GetRef2<T>()""
+  IL_0008:  pop
+  IL_0009:  ret
+  IL_000a:  ldarg.0
+  IL_000b:  ldc.i4.0
+  IL_000c:  readonly.
+  IL_000e:  ldelema    ""T""
+  IL_0013:  pop
+  IL_0014:  ret
+}
+");
+        }
+
         [Fact]
         public void RefAssignRefParameter()
         {
