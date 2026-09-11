@@ -458,7 +458,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression? rewrittenReceiver,
             MethodSymbol method,
             ImmutableArray<BoundExpression> rewrittenArguments,
-            ImmutableArray<RefKind> argumentRefKinds,
             LookupResultKind resultKind,
             ImmutableArray<LocalSymbol> temps)
         {
@@ -545,97 +544,112 @@ namespace Microsoft.CodeAnalysis.CSharp
                 rewrittenReceiver: rewrittenReceiver,
                 method: method,
                 rewrittenArguments: rewrittenArguments,
-                argumentRefKinds: default(ImmutableArray<RefKind>),
                 resultKind: LookupResultKind.Viable,
                 temps: default);
         }
 
-        private static bool IsSafeForReordering(BoundExpression expression, RefKind kind)
+        private static bool IsSafeForReordering(BoundExpression expression)
         {
             // To be safe for reordering an expression must not cause any observable side effect *or
             // observe any side effect*. Accessing a local by value, for example, is possibly not
             // safe for reordering because reading a local can give a different result if reordered
             // with respect to a write elsewhere.
+            RefKind kind = RefKind.None;
 
-            var current = expression;
-            while (true)
+            if (expression is BoundRefExpression refExpr)
             {
-                if (current.ConstantValueOpt != null)
-                {
-                    return true;
-                }
+                kind = refExpr.RefKind;
+                Debug.Assert(kind != RefKind.None);
+                expression = refExpr.Expression;
+            }
 
-                switch (current.Kind)
-                {
-                    default:
-                        return false;
-                    case BoundKind.Parameter:
-                        Debug.Assert(!IsCapturedPrimaryConstructorParameter(expression));
-                        goto case BoundKind.Local;
+            var result = isSafeForReordering(expression, kind);
 
-                    case BoundKind.Local:
-                        // A ref to a local variable or formal parameter is safe to reorder; it
-                        // never has a side effect or consumes one.
-                        return kind != RefKind.None;
-                    case BoundKind.PassByCopy:
-                        return IsSafeForReordering(((BoundPassByCopy)current).Expression, kind);
-                    case BoundKind.Conversion:
-                        {
-                            BoundConversion conv = (BoundConversion)current;
-                            switch (conv.ConversionKind)
+            Debug.Assert(!result || kind != RefKind.None);
+            return result;
+
+            static bool isSafeForReordering(BoundExpression expression, RefKind kind)
+            {
+                var current = expression;
+                while (true)
+                {
+                    if (current.ConstantValueOpt != null)
+                    {
+                        return true;
+                    }
+
+                    switch (current.Kind)
+                    {
+                        default:
+                            return false;
+                        case BoundKind.Parameter:
+                            Debug.Assert(!IsCapturedPrimaryConstructorParameter(expression));
+                            goto case BoundKind.Local;
+
+                        case BoundKind.Local:
+                            // A ref to a local variable or formal parameter is safe to reorder; it
+                            // never has a side effect or consumes one.
+                            return kind != RefKind.None;
+                        case BoundKind.PassByCopy:
+                            return isSafeForReordering(((BoundPassByCopy)current).Expression, kind);
+                        case BoundKind.Conversion:
                             {
-                                case ConversionKind.AnonymousFunction:
-                                case ConversionKind.ImplicitConstant:
-                                case ConversionKind.MethodGroup:
-                                case ConversionKind.NullLiteral:
-                                case ConversionKind.DefaultLiteral:
-                                    return true;
+                                BoundConversion conv = (BoundConversion)current;
+                                switch (conv.ConversionKind)
+                                {
+                                    case ConversionKind.AnonymousFunction:
+                                    case ConversionKind.ImplicitConstant:
+                                    case ConversionKind.MethodGroup:
+                                    case ConversionKind.NullLiteral:
+                                    case ConversionKind.DefaultLiteral:
+                                        return true;
 
-                                case ConversionKind.Boxing:
-                                case ConversionKind.ImplicitDynamic:
-                                case ConversionKind.ExplicitDynamic:
-                                case ConversionKind.ExplicitEnumeration:
-                                case ConversionKind.ExplicitNullable:
-                                case ConversionKind.ExplicitNumeric:
-                                case ConversionKind.ExplicitReference:
-                                case ConversionKind.Identity:
-                                case ConversionKind.ImplicitEnumeration:
-                                case ConversionKind.ImplicitNullable:
-                                case ConversionKind.ImplicitNumeric:
-                                case ConversionKind.ImplicitReference:
-                                case ConversionKind.Unboxing:
-                                case ConversionKind.ExplicitPointerToInteger:
-                                case ConversionKind.ExplicitPointerToPointer:
-                                case ConversionKind.ImplicitPointerToVoid:
-                                case ConversionKind.ImplicitNullToPointer:
-                                case ConversionKind.ExplicitIntegerToPointer:
-                                    current = conv.Operand;
-                                    break;
+                                    case ConversionKind.Boxing:
+                                    case ConversionKind.ImplicitDynamic:
+                                    case ConversionKind.ExplicitDynamic:
+                                    case ConversionKind.ExplicitEnumeration:
+                                    case ConversionKind.ExplicitNullable:
+                                    case ConversionKind.ExplicitNumeric:
+                                    case ConversionKind.ExplicitReference:
+                                    case ConversionKind.Identity:
+                                    case ConversionKind.ImplicitEnumeration:
+                                    case ConversionKind.ImplicitNullable:
+                                    case ConversionKind.ImplicitNumeric:
+                                    case ConversionKind.ImplicitReference:
+                                    case ConversionKind.Unboxing:
+                                    case ConversionKind.ExplicitPointerToInteger:
+                                    case ConversionKind.ExplicitPointerToPointer:
+                                    case ConversionKind.ImplicitPointerToVoid:
+                                    case ConversionKind.ImplicitNullToPointer:
+                                    case ConversionKind.ExplicitIntegerToPointer:
+                                        current = conv.Operand;
+                                        break;
 
-                                case ConversionKind.ExplicitUserDefined:
-                                case ConversionKind.ImplicitUserDefined:
-                                // expression trees rewrite this later.
-                                // it is a kind of user defined conversions on IntPtr and in some cases can fail
-                                case ConversionKind.IntPtr:
-                                case ConversionKind.ImplicitThrow:
-                                    return false;
+                                    case ConversionKind.ExplicitUserDefined:
+                                    case ConversionKind.ImplicitUserDefined:
+                                    // expression trees rewrite this later.
+                                    // it is a kind of user defined conversions on IntPtr and in some cases can fail
+                                    case ConversionKind.IntPtr:
+                                    case ConversionKind.ImplicitThrow:
+                                        return false;
 
-                                case ConversionKind.Union:
-                                    Debug.Assert(false, "Not expected to survive lowering.");
-                                    return false;
+                                    case ConversionKind.Union:
+                                        Debug.Assert(false, "Not expected to survive lowering.");
+                                        return false;
 
-                                default:
-                                    // when this assert is hit, examine whether such conversion kind is 
-                                    // 1) actually expected to get this far
-                                    // 2) figure if it is possibly not producing or consuming any sideeffects (rare case)
-                                    // 3) add a case for it
-                                    Debug.Assert(false, "Unexpected conversion kind" + conv.ConversionKind);
+                                    default:
+                                        // when this assert is hit, examine whether such conversion kind is 
+                                        // 1) actually expected to get this far
+                                        // 2) figure if it is possibly not producing or consuming any sideeffects (rare case)
+                                        // 3) add a case for it
+                                        Debug.Assert(false, "Unexpected conversion kind" + conv.ConversionKind);
 
-                                    // it is safe to assume that conversion is not reorderable
-                                    return false;
+                                        // it is safe to assume that conversion is not reorderable
+                                        return false;
+                                }
+                                break;
                             }
-                            break;
-                        }
+                    }
                 }
             }
         }
@@ -668,12 +682,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<BoundExpression> arguments,
             Symbol methodOrIndexer,
             ImmutableArray<int> argsToParamsOpt,
-            ImmutableArray<RefKind> argumentRefKindsOpt,
             ArrayBuilder<BoundExpression>? storesOpt,
             ref ArrayBuilder<LocalSymbol>? tempsOpt,
             BoundExpression? firstRewrittenArgument = null)
         {
-            Debug.Assert(argumentRefKindsOpt.IsDefault || argumentRefKindsOpt.Length == arguments.Length);
             var requiresInstanceReceiver = methodOrIndexer.RequiresInstanceReceiver() && methodOrIndexer is not MethodSymbol { MethodKind: MethodKind.Constructor } and not FunctionPointerMethodSymbol;
             Debug.Assert(!requiresInstanceReceiver || rewrittenReceiver != null || _inExpressionLambda);
             Debug.Assert(!forceReceiverCapturing || (requiresInstanceReceiver && rewrittenReceiver != null && storesOpt is object));
@@ -1062,7 +1074,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             Symbol methodOrIndexer,
             bool expanded,
             ImmutableArray<int> argsToParamsOpt,
-            ref ImmutableArray<RefKind> argumentRefKindsOpt,
             [NotNull] ref ArrayBuilder<LocalSymbol>? temps,
             bool invokedAsExtensionMethod = false)
         {
@@ -1339,18 +1350,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private static ImmutableArray<RefKind> GetRefKindsOrNull(ArrayBuilder<RefKind> refKinds)
-        {
-            foreach (var refKind in refKinds)
-            {
-                if (refKind != RefKind.None)
-                {
-                    return refKinds.ToImmutable();
-                }
-            }
-            return default(ImmutableArray<RefKind>);
-        }
-
         private delegate BoundExpression ParamsArrayElementRewriter<TArg>(BoundExpression element, ref TArg arg);
         private static BoundExpression RewriteParamsArray<TArg>(BoundExpression paramsArray, ParamsArrayElementRewriter<TArg> elementRewriter, ref TArg arg)
         {
@@ -1401,14 +1400,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool expanded,
             ImmutableArray<int> argsToParamsOpt,
             ImmutableArray<ParameterSymbol> parameters,
-            ImmutableArray<RefKind> argumentRefKinds,
             ImmutableArray<BoundExpression> rewrittenArguments,
             bool forceLambdaSpilling,
             /* out */ BoundExpression[] arguments,
-            /* out */ ArrayBuilder<RefKind> refKinds,
             /* out */ ArrayBuilder<BoundAssignmentOperator> storesToTemps)
         {
-            Debug.Assert(refKinds.Count == arguments.Length);
             Debug.Assert(storesToTemps.Count == 0);
             Debug.Assert(rewrittenArguments.Length == parameters.Length);
             Debug.Assert(rewrittenArguments.Count(a => a.IsParamsArrayOrCollection) <= (expanded ? 1 : 0));
@@ -1417,7 +1413,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 BoundExpression argument = rewrittenArguments[a];
                 int p = (!argsToParamsOpt.IsDefault) ? argsToParamsOpt[a] : a;
-                RefKind argRefKind = argumentRefKinds.RefKinds(a);
                 RefKind paramRefKind = parameters[p].RefKind;
 
                 Debug.Assert(arguments[p] == null);
@@ -1426,8 +1421,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     Debug.Assert(expanded);
                     Debug.Assert(p == parameters.Length - 1);
-                    Debug.Assert(argRefKind == RefKind.None);
-                    refKinds[p] = argRefKind;
+                    Debug.Assert(argument is not BoundRefExpression);
 
                     if (a == rewrittenArguments.Length - 1)
                     {
@@ -1442,7 +1436,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         arguments[p] = RewriteParamsArray(
                                            argument,
                                            static (BoundExpression element, ref (LocalRewriter rewriter, bool forceLambdaSpilling, ArrayBuilder<BoundAssignmentOperator> storesToTemps) arg) =>
-                                               arg.rewriter.StoreArgumentToTempIfNecessary(arg.forceLambdaSpilling, arg.storesToTemps, element, RefKind.None, RefKind.None),
+                                               storeArgumentToTempIfNecessary(arg.rewriter, arg.forceLambdaSpilling, arg.storesToTemps, element, RefKind.None, paramType: null),
                                            ref arg);
 
                         Debug.Assert(arguments[p].IsParamsArrayOrCollection);
@@ -1451,34 +1445,77 @@ namespace Microsoft.CodeAnalysis.CSharp
                     continue;
                 }
 
-                arguments[p] = StoreArgumentToTempIfNecessary(forceLambdaSpilling, storesToTemps, argument, argRefKind, paramRefKind);
-                refKinds[p] = GetEffectiveRefKind(paramRefKind, argRefKind, parameters[p].Type, comRefKindMismatchPossible: true);
+                arguments[p] = storeArgumentToTempIfNecessary(this, forceLambdaSpilling, storesToTemps, argument, paramRefKind, parameters[p].Type);
             }
 
             return;
-        }
 
-        private BoundExpression StoreArgumentToTempIfNecessary(bool forceLambdaSpilling, ArrayBuilder<BoundAssignmentOperator> storesToTemps, BoundExpression argument, RefKind argRefKind, RefKind paramRefKind)
-        {
-            if ((!forceLambdaSpilling || !isLambdaConversion(argument)) &&
-                IsSafeForReordering(argument, argRefKind))
+            static BoundExpression storeArgumentToTempIfNecessary(LocalRewriter rewriter, bool forceLambdaSpilling, ArrayBuilder<BoundAssignmentOperator> storesToTemps, BoundExpression argument, RefKind paramRefKind, TypeSymbol? paramType)
             {
-                return argument;
-            }
-            else
-            {
-                var temp = _factory.StoreToTemp(
-                    argument,
-                    out BoundAssignmentOperator assignment,
-                    refKind: paramRefKind is RefKind.In or RefKind.RefReadOnlyParameter
-                        ? (argRefKind == RefKind.None ? RefKind.In : RefKindExtensions.StrictIn)
-                        : argRefKind);
-                storesToTemps.Add(assignment);
-                return temp;
-            }
+                if ((!forceLambdaSpilling || !isLambdaConversion(argument)) &&
+                    IsSafeForReordering(argument))
+                {
+                    Debug.Assert(argument is BoundRefExpression);
+                    return argument;
+                }
+                else
+                {
+                    BoundLocal temp;
+                    BoundAssignmentOperator assignment;
 
-            bool isLambdaConversion(BoundExpression expr)
-                => expr is BoundConversion conv && conv.ConversionKind == ConversionKind.AnonymousFunction;
+                    if (argument is not BoundRefExpression refExpression)
+                    {
+                        if (paramRefKind is RefKind.In or RefKind.RefReadOnlyParameter)
+                        {
+                            if (!CodeGenerator.HasHome(argument,
+                                                CodeGenerator.AddressKind.ReadOnly,
+                                                rewriter._factory.CurrentFunction,
+                                                rewriter._factory.Compilation.IsPeVerifyCompatEnabled,
+                                                stackLocalsOpt: null))
+                            {
+                                // If there was an explicit 'in' on the argument then we should have verified
+                                // earlier that we always have a home.
+                                Debug.Assert(argument.GetRefKind() != RefKind.In);
+
+                                temp = rewriter._factory.StoreToTemp(argument, out assignment);
+                                storesToTemps.Add(assignment);
+                                return new BoundRefExpression(temp.Syntax, RefKind.None, temp, temp.Type).MakeCompilerGenerated();
+                            }
+                            else
+                            {
+                                argument = new BoundRefExpression(argument.Syntax, RefKind.None, argument, argument.Type).MakeCompilerGenerated();
+                            }
+                        }
+                        else if (paramRefKind is RefKind.Ref)
+                        {
+                            // For interpolated string handlers, we allow struct handlers to be passed as ref without a `ref`
+                            // keyword
+                            if (paramType is NamedTypeSymbol { IsInterpolatedStringHandlerType: true, IsValueType: true })
+                            {
+                                argument = new BoundRefExpression(argument.Syntax, RefKind.Ref, argument, argument.Type).MakeCompilerGenerated();
+                            }
+                        }
+                    }
+                    else if (refExpression.RefKind == RefKind.Ref && paramRefKind is RefKind.In or RefKind.RefReadOnlyParameter)
+                    {
+                        argument = refExpression.Update(RefKind.In, refExpression.Expression, refExpression.Type);
+                    }
+
+                    Debug.Assert(argument is not BoundRefExpression { RefKind: RefKind.None or RefKind.RefReadOnlyParameter });
+                    RefKind tempRefKind = argument is BoundRefExpression { RefKind: var argRefKind } ? argRefKind : RefKind.None;
+
+                    temp = rewriter._factory.StoreToTemp(
+                        argument,
+                        out assignment,
+                        refKind: tempRefKind);
+                    storesToTemps.Add(assignment);
+
+                    return tempRefKind == RefKind.None ? temp : new BoundRefExpression(temp.Syntax, tempRefKind, temp, temp.Type).MakeCompilerGenerated();
+                }
+
+                bool isLambdaConversion(BoundExpression expr)
+                    => expr is BoundConversion conv && conv.ConversionKind == ConversionKind.AnonymousFunction;
+            }
         }
 
         private BoundExpression CreateEmptyArray(SyntaxNode syntax, ArrayTypeSymbol arrayType)

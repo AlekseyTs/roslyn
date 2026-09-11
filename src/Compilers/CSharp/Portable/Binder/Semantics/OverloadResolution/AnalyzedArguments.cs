@@ -14,7 +14,6 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         public readonly ArrayBuilder<BoundExpression> Arguments;
         public readonly ArrayBuilder<(string Name, Location Location)?> Names;
-        public readonly ArrayBuilder<RefKind> RefKinds;
         public bool IncludesReceiverAsArgument;
         private ThreeState _lazyHasDynamicArgument;
 
@@ -22,14 +21,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             this.Arguments = new ArrayBuilder<BoundExpression>(32);
             this.Names = new ArrayBuilder<(string, Location)?>(32);
-            this.RefKinds = new ArrayBuilder<RefKind>(32);
         }
 
         public void Clear()
         {
             this.Arguments.Clear();
             this.Names.Clear();
-            this.RefKinds.Clear();
             this.IncludesReceiverAsArgument = false;
             _lazyHasDynamicArgument = ThreeState.Unknown;
         }

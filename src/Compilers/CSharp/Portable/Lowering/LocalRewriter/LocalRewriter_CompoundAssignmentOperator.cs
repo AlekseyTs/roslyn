@@ -472,7 +472,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             PropertySymbol indexer,
             bool expanded,
             ImmutableArray<int> argsToParamsOpt,
-            ref ImmutableArray<RefKind> argumentRefKinds,
             ArrayBuilder<BoundExpression> stores,
             ArrayBuilder<LocalSymbol> temps)
         {
@@ -487,7 +486,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 expanded,
                 argsToParamsOpt,
                 parameters,
-                argumentRefKinds,
                 rewrittenArguments,
                 forceLambdaSpilling: true, // lambdas must produce exactly one delegate so they must be spilled into a temp
                 actualArguments,
@@ -527,7 +525,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             storesToTemps.Free();
-            argumentRefKinds = GetRefKindsOrNull(refKinds);
             refKinds.Free();
 
             return rewrittenArguments;

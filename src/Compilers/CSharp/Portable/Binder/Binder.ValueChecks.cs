@@ -638,16 +638,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var argumentsBuilder = ArrayBuilder<BoundExpression>.GetInstance(accessorForDefaultArguments.ParameterCount);
                 argumentsBuilder.AddRange(indexerAccess.Arguments);
 
-                ArrayBuilder<RefKind>? refKindsBuilderOpt;
-                if (!indexerAccess.ArgumentRefKindsOpt.IsDefaultOrEmpty)
-                {
-                    refKindsBuilderOpt = ArrayBuilder<RefKind>.GetInstance(accessorForDefaultArguments.ParameterCount);
-                    refKindsBuilderOpt.AddRange(indexerAccess.ArgumentRefKindsOpt);
-                }
-                else
-                {
-                    refKindsBuilderOpt = null;
-                }
                 var argsToParams = indexerAccess.ArgsToParamsOpt;
 
                 // It is possible for the indexer 'value' parameter from metadata to have a default value, but the compiler will not use it.
@@ -686,7 +676,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
 
                     BoundExpression? extensionReceiver = indexer.IsExtensionBlockMember() ? indexerAccess.ReceiverOpt : null;
-                    BindDefaultArguments(indexerAccess.Syntax, parameters, extensionReceiver, argumentsBuilder, refKindsBuilderOpt, namesBuilder, ref argsToParams, out defaultArguments, indexerAccess.Expanded, enableCallerInfo: true, diagnostics: diagnostics);
+                    BindDefaultArguments(indexerAccess.Syntax, parameters, extensionReceiver, argumentsBuilder, namesBuilder, ref argsToParams, out defaultArguments, indexerAccess.Expanded, enableCallerInfo: true, diagnostics: diagnostics);
 
                     if (namesBuilder is object)
                     {

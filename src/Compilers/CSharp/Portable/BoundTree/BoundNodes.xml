@@ -435,7 +435,6 @@
     <Field Name="Type" Type="TypeSymbol" Override="true" Null="disallow"/>
     <Field Name="InvokedExpression" Type="BoundExpression"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     <Field Name="ResultKind" PropertyOverrides="true" Type="LookupResultKind" />
   </Node>
 
@@ -680,6 +679,15 @@
     <Field Name="ArrayAccess" Type="BoundArrayAccess" Null="disallow"/>
   </Node>
 
+  <Node Name="BoundRefExpression" Base="BoundExpression" HasValidate="true">
+    <!--
+    Could be RefKind.None when kind is determined from usage.
+    For example, an argument for an 'in' parameter might not include a RefKindKeyword
+    -->
+    <Field Name="RefKind" Type="RefKind"/>
+    <Field Name="Expression" Type="BoundExpression" Null="disallow"/>
+  </Node>
+  
   <!--
   Represents an operation that is special in both IL and Expression trees -
   getting length of a one-dimensional 0-based array (vector)
@@ -955,7 +963,6 @@
     <Field Name="Type" Type="TypeSymbol?" Override="true"/>
 
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
   </Node>
 
   <!-- 
@@ -1729,7 +1736,7 @@
   </AbstractNode>
 
   <!-- Use this in the event that the sequence point must be applied to expression.-->
-  <Node Name="BoundSequencePointExpression" Base="BoundExpression">
+  <Node Name="BoundSequencePointExpression" Base="BoundExpression" HasValidate="true">
     <Field Name="Expression" Type="BoundExpression" Null="disallow"/>
   </Node>
 
@@ -1742,7 +1749,7 @@
   The sequence node is both SCOPE and EXTENT of these locals. 
   As a result non-intersecting sequences can reuse variable slots.
   -->
-  <Node Name="BoundSequence" Base="BoundExpression">
+  <Node Name="BoundSequence" Base="BoundExpression" HasValidate="true">
     <!-- Non-null type is required for this node kind -->
     <Field Name="Type" Type="TypeSymbol" Override="true" Null="disallow"/>
 
@@ -1790,7 +1797,6 @@
   <Node Name="BoundDynamicInvocation" Base="BoundDynamicInvocableBase">
     <Field Name="Type" Type="TypeSymbol" Override="true" Null="disallow"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     
     <!-- If the receiver is statically typed the set of applicable methods that may be invoked at runtime. Empty otherwise. -->
     <Field Name="ApplicableMethods" Type="ImmutableArray&lt;MethodSymbol&gt;" />
@@ -1865,7 +1871,6 @@
     <Field Name="Method" Type="MethodSymbol"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     <Field Name="IsDelegateCall" Type="bool"/>
     <Field Name="Expanded" Type="bool"/>
     <Field Name="InvokedAsExtensionMethod" Type="bool"/>
@@ -1921,7 +1926,6 @@
     <Field Name="Type" Type="TypeSymbol?" Override="true" Null="always"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;(string Name, Location Location)?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     <Field Name="InitializerOpt" Type="InitializerExpressionSyntax?" Null="allow"/>
     <Field Name="Binder" Type="Binder" Null="disallow"/>
   </Node>
@@ -1944,7 +1948,6 @@
     
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;" PropertyOverrides="true"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow" PropertyOverrides="true"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow" PropertyOverrides="true"/>
     <Field Name="Expanded" Type="bool" PropertyOverrides="true"/>
     <Field Name="ArgsToParamsOpt" Type="ImmutableArray&lt;int&gt;" Null="allow" PropertyOverrides="true"/>
     <Field Name="DefaultArguments" Type="BitVector" PropertyOverrides="true"/>
@@ -1971,7 +1974,6 @@
     <!-- With-arguments support for collection expression with(...) syntax -->
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;(string Name, Location Location)?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
   </Node>
   
   <Node Name="BoundCollectionExpression" Base="BoundCollectionExpressionBase" HasValidate="true">
@@ -2061,7 +2063,6 @@
     <Field Name="Name" Type="string" Null="disallow"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;" PropertyOverrides="true"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow" PropertyOverrides="true"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow" PropertyOverrides="true"/>
     <Field Name="InitializerExpressionOpt" Type="BoundObjectInitializerExpressionBase?" PropertyOverrides="true"/>
     <Field Name="ApplicableMethods" Type="ImmutableArray&lt;MethodSymbol&gt;" />
     <Field Name="WasTargetTyped" Type="bool" PropertyOverrides="true"/>
@@ -2094,7 +2095,6 @@
     <Field Name="MemberSymbol" Type="Symbol?"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     <Field Name="Expanded" Type="bool"/>
     <Field Name="ArgsToParamsOpt" Type="ImmutableArray&lt;int&gt;" Null="allow"/>
     <Field Name="DefaultArguments" Type="BitVector" />
@@ -2288,7 +2288,6 @@
     <Field Name="Indexer" Type="PropertySymbol"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
     <Field Name="Expanded" Type="bool"/>
     <Field Name="AccessorKind" Type="AccessorKind" />
     <Field Name="ArgsToParamsOpt" Type="ImmutableArray&lt;int&gt;" Null="allow"/>
@@ -2344,7 +2343,6 @@
     <Field Name="Receiver" Type="BoundExpression"/>
     <Field Name="Arguments" Type="ImmutableArray&lt;BoundExpression&gt;"/>
     <Field Name="ArgumentNamesOpt" Type="ImmutableArray&lt;string?&gt;" Null="allow"/>
-    <Field Name="ArgumentRefKindsOpt" Type="ImmutableArray&lt;RefKind&gt;" Null="allow"/>
 
     <!-- If the receiver is statically typed the set of applicable methods that may be invoked at runtime. Empty otherwise. -->
     <Field Name="ApplicableIndexers" Type="ImmutableArray&lt;PropertySymbol&gt;" />

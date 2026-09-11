@@ -217,7 +217,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                             disposeMethod.Parameters,
                             extensionReceiver: null,
                             argumentsBuilder,
-                            argumentRefKindsBuilder: null,
                             namesBuilder: null,
                             ref argsToParams,
                             out BitVector defaultArguments,

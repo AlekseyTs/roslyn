@@ -554,7 +554,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal BoundObjectCreationExpression Update(
             MethodSymbol constructor,
             ImmutableArray<BoundExpression> newArguments,
-            ImmutableArray<RefKind> newRefKinds,
             BoundObjectInitializerExpressionBase? newInitializerExpression,
             TypeSymbol? changeTypeOpt = null)
         {
@@ -562,7 +561,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 constructor: constructor,
                 arguments: newArguments,
                 argumentNamesOpt: default(ImmutableArray<string?>),
-                argumentRefKindsOpt: newRefKinds,
                 expanded: false,
                 argsToParamsOpt: default(ImmutableArray<int>),
                 defaultArguments: default(BitVector),

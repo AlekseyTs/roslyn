@@ -1663,6 +1663,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             MethodSymbol? containingMethod = this.CurrentFunction;
             Debug.Assert(containingMethod is { });
             Debug.Assert(kind != SynthesizedLocalKind.UserDefined);
+            Debug.Assert((refKind == RefKind.None) == argument is not BoundRefExpression);
 
             switch (refKind)
             {
@@ -1671,19 +1672,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     break;
 
                 case RefKind.In:
-                    if (!CodeGenerator.HasHome(argument,
-                                        CodeGenerator.AddressKind.ReadOnly,
-                                        containingMethod,
-                                        Compilation.IsPeVerifyCompatEnabled,
-                                        stackLocalsOpt: null))
-                    {
-                        // If there was an explicit 'in' on the argument then we should have verified
-                        // earlier that we always have a home.
-                        Debug.Assert(argument.GetRefKind() != RefKind.In);
-                        refKind = RefKind.None;
-                    }
-                    break;
-                case RefKindExtensions.StrictIn:
                 case RefKind.None:
                 case RefKind.Ref:
                     break;

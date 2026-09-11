@@ -118,17 +118,15 @@ internal sealed class ModuleCancellationInstrumenter(
     public override void InterceptCallAndAdjustArguments(
         ref MethodSymbol method,
         ref BoundExpression? receiver,
-        ref ImmutableArray<BoundExpression> arguments,
-        ref ImmutableArray<RefKind> argumentRefKindsOpt)
+        ref ImmutableArray<BoundExpression> arguments)
     {
-        Previous.InterceptCallAndAdjustArguments(ref method, ref receiver, ref arguments, ref argumentRefKindsOpt);
+        Previous.InterceptCallAndAdjustArguments(ref method, ref receiver, ref arguments);
 
         // If the target method is defined within this module it is already being instrumented to be cancellable.
         // However, if we are calling Invoke method of a delegate or a virtual/interface method we can't determine whether
         // or not the target is in the current module. Hence we replace the cancellation token for all calls.
 
-        if (arguments is [.., { Type: { } lastArgumentType } lastArgument] &&
-            (argumentRefKindsOpt.IsDefault || argumentRefKindsOpt is [.., RefKind.None]) &&
+        if (arguments is [.., (not BoundRefExpression) and { Type: { } lastArgumentType } lastArgument] &&
             lastArgumentType.Equals(_throwMethod.ContainingType, TypeCompareKind.ConsiderEverything))
         {
             // The last argument is a CancellationToken. Replace it with the module-level token.
@@ -142,7 +140,6 @@ internal sealed class ModuleCancellationInstrumenter(
             // Invoke the other overload instead and pass in module-level token. 
             method = cancellableOverload;
             arguments = [.. arguments, _factory.ModuleCancellationToken()];
-            argumentRefKindsOpt = argumentRefKindsOpt.IsDefault ? default : [.. argumentRefKindsOpt, RefKind.None];
         }
     }
 

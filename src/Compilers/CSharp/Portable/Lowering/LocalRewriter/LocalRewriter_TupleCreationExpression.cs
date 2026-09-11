@@ -100,7 +100,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     currentCreation.Constructor,
                     currentCreation.Arguments,
                     currentCreation.ArgumentNamesOpt,
-                    currentCreation.ArgumentRefKindsOpt,
                     currentCreation.Expanded,
                     currentCreation.ArgsToParamsOpt,
                     currentCreation.DefaultArguments,

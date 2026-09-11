@@ -497,8 +497,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         interpolatedStringHandlerType,
                         diagnostics,
                         isHandlerConversion: false,
-                        additionalConstructorArguments: default,
-                        additionalConstructorRefKinds: default);
+                        additionalConstructorArguments: default);
 
                     // Now that the parts have been bound, reconstruct the binary operators.
                     convertedBinaryOperator = UpdateBinaryOperatorWithInterpolatedContents(binaryOperator, appendCalls, data, binaryOperator.Syntax, diagnostics);
@@ -556,8 +555,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression unconvertedExpression,
             NamedTypeSymbol interpolatedStringHandlerType,
             BindingDiagnosticBag diagnostics,
-            ImmutableArray<BoundInterpolatedStringArgumentPlaceholder> additionalConstructorArguments = default,
-            ImmutableArray<RefKind> additionalConstructorRefKinds = default)
+            ImmutableArray<BoundExpression> additionalConstructorArguments = default)
             => unconvertedExpression switch
             {
                 BoundUnconvertedInterpolatedString interpolatedString => BindUnconvertedInterpolatedStringToHandlerType(
@@ -565,9 +563,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     interpolatedStringHandlerType,
                     diagnostics,
                     isHandlerConversion: true,
-                    additionalConstructorArguments,
-                    additionalConstructorRefKinds),
-                BoundBinaryOperator binary => BindUnconvertedBinaryOperatorToInterpolatedStringHandlerType(binary, interpolatedStringHandlerType, diagnostics, additionalConstructorArguments, additionalConstructorRefKinds),
+                    additionalConstructorArguments),
+                BoundBinaryOperator binary => BindUnconvertedBinaryOperatorToInterpolatedStringHandlerType(binary, interpolatedStringHandlerType, diagnostics, additionalConstructorArguments),
                 _ => throw ExceptionUtilities.UnexpectedValue(unconvertedExpression.Kind)
             };
 
@@ -576,16 +573,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             NamedTypeSymbol interpolatedStringHandlerType,
             BindingDiagnosticBag diagnostics,
             bool isHandlerConversion,
-            ImmutableArray<BoundInterpolatedStringArgumentPlaceholder> additionalConstructorArguments = default,
-            ImmutableArray<RefKind> additionalConstructorRefKinds = default)
+            ImmutableArray<BoundExpression> additionalConstructorArguments = default)
         {
             var (appendCalls, interpolationData) = BindUnconvertedInterpolatedPartsToHandlerType(
                 unconvertedInterpolatedString.Syntax,
                 ImmutableArray.Create(unconvertedInterpolatedString.Parts),
                 interpolatedStringHandlerType, diagnostics,
                 isHandlerConversion,
-                additionalConstructorArguments,
-                additionalConstructorRefKinds);
+                additionalConstructorArguments);
 
             Debug.Assert(appendCalls.Length == 1);
 
@@ -602,8 +597,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundBinaryOperator binaryOperator,
             NamedTypeSymbol interpolatedStringHandlerType,
             BindingDiagnosticBag diagnostics,
-            ImmutableArray<BoundInterpolatedStringArgumentPlaceholder> additionalConstructorArguments,
-            ImmutableArray<RefKind> additionalConstructorRefKinds)
+            ImmutableArray<BoundExpression> additionalConstructorArguments)
         {
             Debug.Assert(binaryOperator.IsUnconvertedInterpolatedStringAddition);
 
@@ -622,8 +616,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 interpolatedStringHandlerType,
                 diagnostics,
                 isHandlerConversion: true,
-                additionalConstructorArguments,
-                additionalConstructorRefKinds);
+                additionalConstructorArguments);
 
             var result = UpdateBinaryOperatorWithInterpolatedContents(binaryOperator, appendCalls, data, binaryOperator.Syntax, diagnostics);
             return result;
@@ -635,14 +628,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             NamedTypeSymbol interpolatedStringHandlerType,
             BindingDiagnosticBag diagnostics,
             bool isHandlerConversion,
-            ImmutableArray<BoundInterpolatedStringArgumentPlaceholder> additionalConstructorArguments,
-            ImmutableArray<RefKind> additionalConstructorRefKinds)
+            ImmutableArray<BoundExpression> additionalConstructorArguments)
         {
-            Debug.Assert(additionalConstructorArguments.IsDefault
-                ? additionalConstructorRefKinds.IsDefault
-                : additionalConstructorArguments.Length == additionalConstructorRefKinds.Length);
             additionalConstructorArguments = additionalConstructorArguments.NullToEmpty();
-            additionalConstructorRefKinds = additionalConstructorRefKinds.NullToEmpty();
+            Debug.Assert(additionalConstructorArguments.All(static (a) => a is BoundInterpolatedStringArgumentPlaceholder or BoundRefExpression { Expression: BoundInterpolatedStringArgumentPlaceholder }));
 
             ReportUseSite(interpolatedStringHandlerType, diagnostics, syntax);
 
@@ -712,24 +701,18 @@ namespace Microsoft.CodeAnalysis.CSharp
             int constructorArgumentLength = 3 + additionalConstructorArguments.Length;
             var argumentsBuilder = ArrayBuilder<BoundExpression>.GetInstance(constructorArgumentLength);
 
-            var refKindsBuilder = ArrayBuilder<RefKind>.GetInstance(constructorArgumentLength);
-            refKindsBuilder.Add(RefKind.None);
-            refKindsBuilder.Add(RefKind.None);
-            refKindsBuilder.AddRange(additionalConstructorRefKinds);
-
             // Add the trailing out validity parameter for the first attempt.Note that we intentionally use `diagnostics` for resolving System.Boolean,
             // because we want to track that we're using the type no matter what.
             var boolType = GetSpecialType(SpecialType.System_Boolean, diagnostics, syntax);
             var trailingConstructorValidityPlaceholder =
                 new BoundInterpolatedStringArgumentPlaceholder(syntax, BoundInterpolatedStringArgumentPlaceholder.TrailingConstructorValidityParameter, boolType)
                 { WasCompilerGenerated = true };
-            var outConstructorAdditionalArguments = additionalConstructorArguments.Add(trailingConstructorValidityPlaceholder);
-            refKindsBuilder.Add(RefKind.Out);
+            var outConstructorAdditionalArguments = additionalConstructorArguments.Add(new BoundRefExpression(syntax, RefKind.Out, trailingConstructorValidityPlaceholder, boolType).MakeCompilerGenerated());
             populateArguments(syntax, outConstructorAdditionalArguments, baseStringLength, numFormatHoles, intType, argumentsBuilder);
 
             BoundExpression constructorCall;
             var outConstructorDiagnostics = BindingDiagnosticBag.GetInstance(withDiagnostics: true, withDependencies: diagnostics.AccumulatesDependencies);
-            var outConstructorCall = MakeConstructorInvocation(interpolatedStringHandlerType, argumentsBuilder, refKindsBuilder, syntax, outConstructorDiagnostics);
+            var outConstructorCall = MakeConstructorInvocation(interpolatedStringHandlerType, argumentsBuilder, syntax, outConstructorDiagnostics);
             if (outConstructorCall is not BoundObjectCreationExpression { ResultKind: LookupResultKind.Viable })
             {
                 // MakeConstructorInvocation can call CoerceArguments on the builder if overload resolution succeeded ignoring accessibility, which
@@ -738,10 +721,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 // Try again without an out parameter.
                 populateArguments(syntax, additionalConstructorArguments, baseStringLength, numFormatHoles, intType, argumentsBuilder);
-                refKindsBuilder.RemoveLast();
 
                 var nonOutConstructorDiagnostics = BindingDiagnosticBag.GetInstance(template: outConstructorDiagnostics);
-                BoundExpression nonOutConstructorCall = MakeConstructorInvocation(interpolatedStringHandlerType, argumentsBuilder, refKindsBuilder, syntax, nonOutConstructorDiagnostics);
+                BoundExpression nonOutConstructorCall = MakeConstructorInvocation(interpolatedStringHandlerType, argumentsBuilder, syntax, nonOutConstructorDiagnostics);
 
                 if (nonOutConstructorCall is BoundObjectCreationExpression { ResultKind: LookupResultKind.Viable })
                 {
@@ -794,7 +776,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             argumentsBuilder.Free();
-            refKindsBuilder.Free();
 
             Debug.Assert(constructorCall.HasErrors || constructorCall is BoundObjectCreationExpression or BoundDynamicObjectCreationExpression);
 
@@ -808,13 +789,13 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 interpolatedStringHandlerType,
                                 constructorCall,
                                 usesBoolReturn,
-                                additionalConstructorArguments.NullToEmpty(),
+                                additionalConstructorArguments.SelectAsArray(static (a) => (BoundInterpolatedStringArgumentPlaceholder)(a is BoundRefExpression { Expression: var expression } ? expression : a)),
                                 positionInfo,
                                 implicitBuilderReceiver);
 
             return (appendCallsArray, interpolationData);
 
-            static void populateArguments(SyntaxNode syntax, ImmutableArray<BoundInterpolatedStringArgumentPlaceholder> additionalConstructorArguments, int baseStringLength, int numFormatHoles, NamedTypeSymbol intType, ArrayBuilder<BoundExpression> argumentsBuilder)
+            static void populateArguments(SyntaxNode syntax, ImmutableArray<BoundExpression> additionalConstructorArguments, int baseStringLength, int numFormatHoles, NamedTypeSymbol intType, ArrayBuilder<BoundExpression> argumentsBuilder)
             {
                 // literalLength
                 argumentsBuilder.Add(new BoundLiteral(syntax, ConstantValue.Create(baseStringLength), intType) { WasCompilerGenerated = true });

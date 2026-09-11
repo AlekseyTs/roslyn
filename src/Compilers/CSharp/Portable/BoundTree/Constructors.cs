@@ -124,7 +124,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             MethodSymbol method,
             ImmutableArray<BoundExpression> arguments,
             ImmutableArray<string?> namedArguments,
-            ImmutableArray<RefKind> refKinds,
             bool isDelegateCall,
             bool invokedAsExtensionMethod,
             ImmutableArray<MethodSymbol> originalMethods,
@@ -275,7 +274,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             PropertySymbol indexer,
             ImmutableArray<BoundExpression> arguments,
             ImmutableArray<string?> namedArguments,
-            ImmutableArray<RefKind> refKinds,
             ImmutableArray<PropertySymbol> originalIndexers)
         {
             return new BoundIndexerAccess(
@@ -285,7 +283,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 indexer,
                 arguments,
                 namedArguments,
-                refKinds,
                 expanded: false,
                 accessorKind: AccessorKind.Unknown,
                 argsToParamsOpt: default(ImmutableArray<int>),
@@ -301,14 +298,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             PropertySymbol indexer,
             ImmutableArray<BoundExpression> arguments,
             ImmutableArray<string?> argumentNamesOpt,
-            ImmutableArray<RefKind> argumentRefKindsOpt,
             bool expanded,
             AccessorKind accessorKind,
             ImmutableArray<int> argsToParamsOpt,
             BitVector defaultArguments,
             TypeSymbol type,
             bool hasErrors = false) :
-            this(syntax, receiverOpt, initialBindingReceiverIsSubjectToCloning, indexer, arguments, argumentNamesOpt, argumentRefKindsOpt, expanded, accessorKind, argsToParamsOpt, defaultArguments, originalIndexersOpt: default, type, hasErrors)
+            this(syntax, receiverOpt, initialBindingReceiverIsSubjectToCloning, indexer, arguments, argumentNamesOpt, expanded, accessorKind, argsToParamsOpt, defaultArguments, originalIndexersOpt: default, type, hasErrors)
         { }
 
         public BoundIndexerAccess Update(BoundExpression? receiverOpt,
@@ -316,13 +312,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                                          PropertySymbol indexer,
                                          ImmutableArray<BoundExpression> arguments,
                                          ImmutableArray<string?> argumentNamesOpt,
-                                         ImmutableArray<RefKind> argumentRefKindsOpt,
                                          bool expanded,
                                          AccessorKind accessorKind,
                                          ImmutableArray<int> argsToParamsOpt,
                                          BitVector defaultArguments,
                                          TypeSymbol type)
-            => Update(receiverOpt, initialBindingReceiverIsSubjectToCloning, indexer, arguments, argumentNamesOpt, argumentRefKindsOpt, expanded, accessorKind, argsToParamsOpt, defaultArguments, this.OriginalIndexersOpt, type);
+            => Update(receiverOpt, initialBindingReceiverIsSubjectToCloning, indexer, arguments, argumentNamesOpt, expanded, accessorKind, argsToParamsOpt, defaultArguments, this.OriginalIndexersOpt, type);
     }
 
     internal sealed partial class BoundConversion

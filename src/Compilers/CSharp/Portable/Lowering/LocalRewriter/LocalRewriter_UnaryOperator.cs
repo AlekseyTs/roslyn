@@ -1032,7 +1032,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 case BoundKind.IndexerAccess:
                     var indexerAccess = (BoundIndexerAccess)transformedExpression;
-                    return MakePropertyGetAccess(transformedExpression.Syntax, indexerAccess.ReceiverOpt, indexerAccess.Indexer, indexerAccess.Arguments, indexerAccess.ArgumentRefKindsOpt);
+                    return MakePropertyGetAccess(transformedExpression.Syntax, indexerAccess.ReceiverOpt, indexerAccess.Indexer, indexerAccess.Arguments);
 
                 case BoundKind.DynamicIndexerAccess:
                     var dynamicIndexerAccess = (BoundDynamicIndexerAccess)transformedExpression;
@@ -1040,8 +1040,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         dynamicIndexerAccess,
                         dynamicIndexerAccess.Receiver,
                         dynamicIndexerAccess.Arguments,
-                        dynamicIndexerAccess.ArgumentNamesOpt,
-                        dynamicIndexerAccess.ArgumentRefKindsOpt);
+                        dynamicIndexerAccess.ArgumentNamesOpt);
 
                 default:
                     return transformedExpression;

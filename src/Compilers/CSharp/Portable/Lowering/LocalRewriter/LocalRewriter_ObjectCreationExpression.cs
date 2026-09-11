@@ -18,7 +18,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // There are no target types for dynamic object creation scenarios, so there should be no implicit handler conversions
             AssertNoImplicitInterpolatedStringHandlerConversions(node.Arguments);
             var loweredArguments = VisitList(node.Arguments);
-            var constructorInvocation = _dynamicFactory.MakeDynamicConstructorInvocation(node.Syntax, node.Type, loweredArguments, node.ArgumentNamesOpt, node.ArgumentRefKindsOpt).ToExpression();
+            var constructorInvocation = _dynamicFactory.MakeDynamicConstructorInvocation(node.Syntax, node.Type, loweredArguments, node.ArgumentNamesOpt).ToExpression();
 
             if (node.InitializerExpressionOpt == null || node.InitializerExpressionOpt.HasErrors)
             {
@@ -40,7 +40,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             // NOTE: This is done later by MakeArguments, for now we just lower each argument.
             BoundExpression? receiverDiscard = null;
 
-            ImmutableArray<RefKind> argumentRefKindsOpt = node.ArgumentRefKindsOpt;
             ArrayBuilder<LocalSymbol>? tempsBuilder = null;
             ImmutableArray<BoundExpression> rewrittenArguments = VisitArgumentsAndCaptureReceiverIfNeeded(
                 ref receiverDiscard,
@@ -48,7 +47,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 node.Arguments,
                 constructor,
                 node.ArgsToParamsOpt,
-                argumentRefKindsOpt,
                 storesOpt: null,
                 ref tempsBuilder);
 
@@ -61,7 +59,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 constructor,
                 node.Expanded,
                 node.ArgsToParamsOpt,
-                ref argumentRefKindsOpt,
                 ref tempsBuilder);
 
             BoundExpression rewrittenObjectCreation;
@@ -74,7 +71,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     throw ExceptionUtilities.UnexpectedValue(temps.Length);
                 }
 
-                rewrittenObjectCreation = node.Update(constructor, rewrittenArguments, argumentRefKindsOpt, MakeObjectCreationInitializerForExpressionTree(node.InitializerExpressionOpt), changeTypeOpt: constructor.ContainingType);
+                rewrittenObjectCreation = node.Update(constructor, rewrittenArguments, MakeObjectCreationInitializerForExpressionTree(node.InitializerExpressionOpt), changeTypeOpt: constructor.ContainingType);
 
                 if (node.Type.IsInterfaceType())
                 {
@@ -88,10 +85,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (Instrument)
             {
                 BoundExpression? receiver = null;
-                Instrumenter.InterceptCallAndAdjustArguments(ref constructor, ref receiver, ref rewrittenArguments, ref argumentRefKindsOpt);
+                Instrumenter.InterceptCallAndAdjustArguments(ref constructor, ref receiver, ref rewrittenArguments);
             }
 
-            rewrittenObjectCreation = node.Update(constructor, rewrittenArguments, argumentRefKindsOpt, newInitializerExpression: null, changeTypeOpt: constructor.ContainingType);
+            rewrittenObjectCreation = node.Update(constructor, rewrittenArguments, newInitializerExpression: null, changeTypeOpt: constructor.ContainingType);
 
             // replace "new S()" with a default struct ctor with "default(S)"
             if (constructor.IsDefaultValueTypeConstructor())

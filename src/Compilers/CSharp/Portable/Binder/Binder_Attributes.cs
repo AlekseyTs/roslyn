@@ -239,7 +239,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                         attributeConstructor.Parameters,
                         extensionReceiver: null,
                         analyzedArguments.ConstructorArguments.Arguments,
-                        argumentRefKindsBuilder: null,
                         analyzedArguments.ConstructorArguments.Names,
                         ref argsToParamsOpt,
                         out defaultArguments,

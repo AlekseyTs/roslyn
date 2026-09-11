@@ -334,8 +334,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             SyntaxNode syntax,
             TypeSymbol type,
             ImmutableArray<BoundExpression> loweredArguments,
-            ImmutableArray<string?> argumentNames,
-            ImmutableArray<RefKind> refKinds)
+            ImmutableArray<string?> argumentNames)
         {
             _factory.Syntax = syntax;
 
@@ -436,8 +435,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal LoweredDynamicOperation MakeDynamicGetIndex(
             BoundExpression loweredReceiver,
             ImmutableArray<BoundExpression> loweredArguments,
-            ImmutableArray<string?> argumentNames,
-            ImmutableArray<RefKind> refKinds)
+            ImmutableArray<string?> argumentNames)
         {
             _factory.Syntax = loweredReceiver.Syntax;
 
@@ -463,7 +461,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression loweredReceiver,
             ImmutableArray<BoundExpression> loweredArguments,
             ImmutableArray<string?> argumentNames,
-            ImmutableArray<RefKind> refKinds,
             BoundExpression loweredRight,
             bool isCompoundAssignment = false,
             bool isChecked = false)

@@ -317,8 +317,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             ImmutableArray<BoundExpression> arguments = analyzedArguments.Arguments.ToImmutable();
-            ImmutableArray<RefKind> refKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
-            return new BoundArgListOperator(node, arguments, refKinds, null, hasErrors);
+            return new BoundArgListOperator(node, arguments, null, hasErrors);
         }
 
         /// <summary>
@@ -486,14 +485,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             ImmutableArray<BoundExpression> argArray = BuildArgumentsForDynamicInvocation(arguments, diagnostics);
-            var refKindsArray = arguments.RefKinds.ToImmutableOrNull();
 
-            hasErrors &= ReportBadDynamicArguments(node, receiver, argArray, refKindsArray, diagnostics, queryClause);
+            hasErrors &= ReportBadDynamicArguments(node, receiver, argArray, diagnostics, queryClause);
 
             return new BoundDynamicInvocation(
                 node,
                 arguments.GetNames(),
-                refKindsArray,
                 applicableMethods,
                 expression,
                 argArray,
@@ -552,7 +549,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             SyntaxNode node,
             BoundExpression? receiver,
             ImmutableArray<BoundExpression> arguments,
-            ImmutableArray<RefKind> refKinds,
             BindingDiagnosticBag diagnostics,
             CSharpSyntaxNode? queryClause)
         {
@@ -567,15 +563,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 hasErrors = true;
             }
 
-            if (!refKinds.IsDefault)
+            for (int argIndex = 0; argIndex < arguments.Length; argIndex++)
             {
-                for (int argIndex = 0; argIndex < refKinds.Length; argIndex++)
+                if (arguments[argIndex] is BoundRefExpression { RefKind: RefKind.In, Expression: var expression })
                 {
-                    if (refKinds[argIndex] == RefKind.In)
-                    {
-                        Error(diagnostics, ErrorCode.ERR_InDynamicMethodArg, arguments[argIndex].Syntax);
-                        hasErrors = true;
-                    }
+                    Error(diagnostics, ErrorCode.ERR_InDynamicMethodArg, expression.Syntax);
+                    hasErrors = true;
                 }
             }
 
@@ -1248,11 +1241,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     analyzedArguments.Names.RemoveAt(0);
                 }
 
-                if (analyzedArguments.RefKinds is { Count: > 0 })
-                {
-                    analyzedArguments.RefKinds.RemoveAt(0);
-                }
-
                 Debug.Assert(methodResult.Result.ConversionForArg(0).Exists);
                 methodResult = methodResult.WithResult(methodResult.Result.WithoutReceiverArgument());
             }
@@ -1278,7 +1266,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var expanded = methodResult.Result.Kind == MemberResolutionKind.ApplicableInExpandedForm;
             var extensionReceiver = isExtensionBlockMethod && !method.IsStatic ? receiver : null;
-            BindDefaultArguments(node, method.Parameters, extensionReceiver, analyzedArguments.Arguments, analyzedArguments.RefKinds, analyzedArguments.Names, ref argsToParams, out var defaultArguments, expanded, enableCallerInfo: true, diagnostics);
+            BindDefaultArguments(node, method.Parameters, extensionReceiver, analyzedArguments.Arguments, analyzedArguments.Names, ref argsToParams, out var defaultArguments, expanded, enableCallerInfo: true, diagnostics);
 
             // Note: we specifically want to do final validation (7.6.5.1) without checking delegate compatibility (15.2),
             // so we're calling MethodGroupFinalValidation directly, rather than via MethodGroupConversionHasErrors.
@@ -1299,15 +1287,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                     // This helper method will also replace it with a BoundBadExpression if it was invalid.
                     receiverArgument = CheckValue(receiverArgument, BindValueKind.RefOrOut, diagnostics);
 
-                    if (analyzedArguments.RefKinds.Count == 0)
-                    {
-                        analyzedArguments.RefKinds.Count = analyzedArguments.Arguments.Count;
-                    }
-
                     // receiver of a `ref` extension method is a `ref` argument. (and we have checked above that it can be passed as a Ref)
                     // we need to adjust the argument refkind as if we had a `ref` modifier in a call.
-                    analyzedArguments.RefKinds[0] = RefKind.Ref;
                     CheckFeatureAvailability(receiverArgument.Syntax, MessageID.IDS_FeatureRefExtensionMethods, diagnostics);
+                    receiverArgument = new BoundRefExpression(receiverArgument.Syntax, RefKind.Ref, receiverArgument, receiverArgument.Type).MakeCompilerGenerated();
                 }
                 else if (receiverParameter.RefKind == RefKind.In)
                 {
@@ -1333,7 +1316,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             var argNames = analyzedArguments.GetNames();
-            var argRefKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
             var args = analyzedArguments.Arguments.ToImmutable();
 
             if (!gotError && method.RequiresInstanceReceiver && receiver != null && receiver.Kind == BoundKind.ThisReference && receiver.WasCompilerGenerated)
@@ -1387,7 +1369,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            return new BoundCall(node, receiver, initialBindingReceiverIsSubjectToCloning: ReceiverIsSubjectToCloning(receiver, method), method, args, argNames, argRefKinds, isDelegateCall: isDelegateCall,
+            return new BoundCall(node, receiver, initialBindingReceiverIsSubjectToCloning: ReceiverIsSubjectToCloning(receiver, method), method, args, argNames, isDelegateCall: isDelegateCall,
                         expanded: expanded, invokedAsExtensionMethod: invokedAsExtensionMethod,
                         argsToParamsOpt: argsToParams, defaultArguments, resultKind: LookupResultKind.Viable, type: returnType, hasErrors: gotError);
         }
@@ -1556,7 +1538,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<ParameterSymbol> parameters,
             BoundExpression? extensionReceiver,
             ArrayBuilder<BoundExpression> argumentsBuilder,
-            ArrayBuilder<RefKind>? argumentRefKindsBuilder,
             ArrayBuilder<(string Name, Location Location)?>? namesBuilder,
             ref ImmutableArray<int> argsToParamsOpt,
             out BitVector defaultArguments,
@@ -1595,7 +1576,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (!haveDefaultArguments && !expanded)
             {
                 Debug.Assert(argumentsBuilder.Count >= parameters.Length); // Accounting for arglist cases
-                Debug.Assert(argumentRefKindsBuilder is null || argumentRefKindsBuilder.Count == 0 || argumentRefKindsBuilder.Count == argumentsBuilder.Count);
                 Debug.Assert(namesBuilder is null || namesBuilder.Count == 0 || namesBuilder.Count == argumentsBuilder.Count);
                 Debug.Assert(argsToParamsOpt.IsDefault || argsToParamsOpt.Length == argumentsBuilder.Count);
                 defaultArguments = default;
@@ -1639,11 +1619,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                         defaultArguments[argumentsBuilder.Count] = true;
                         argumentsBuilder.Add(bindDefaultArgument(node, parameter, containingMember, enableCallerInfo, diagnostics, extensionReceiver, argumentsBuilder, argumentsCount, argsToParamsOpt));
 
-                        if (argumentRefKindsBuilder is { Count: > 0 })
-                        {
-                            argumentRefKindsBuilder.Add(RefKind.None);
-                        }
-
                         argsToParamsBuilder?.Add(parameter.Ordinal);
                         if (namesBuilder?.Count > 0)
                         {
@@ -1664,11 +1639,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 argumentsBuilder.Add(collection);
                 argsToParamsBuilder?.Add(paramsIndex);
 
-                if (argumentRefKindsBuilder is { Count: > 0 })
-                {
-                    argumentRefKindsBuilder.Add(RefKind.None);
-                }
-
                 if (namesBuilder is { Count: > 0 })
                 {
                     namesBuilder.Add(null);
@@ -1676,7 +1646,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             Debug.Assert(argumentsBuilder.Count == parameters.Length);
-            Debug.Assert(argumentRefKindsBuilder is null || argumentRefKindsBuilder.Count == 0 || argumentRefKindsBuilder.Count == parameters.Length);
             Debug.Assert(namesBuilder is null || namesBuilder.Count == 0 || namesBuilder.Count == parameters.Length);
             Debug.Assert(argsToParamsBuilder is null || argsToParamsBuilder.Count == parameters.Length);
 
@@ -2115,9 +2084,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             args = BuildArgumentsForErrorRecovery(analyzedArguments, methods, buildArgumentsForErrorRecoveryDiagnostics);
             var argNames = analyzedArguments.GetNames();
-            var argRefKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
             receiver = BindToTypeForErrorRecovery(receiver);
-            return BoundCall.ErrorCall(node, receiver, method, args, argNames, argRefKinds, isDelegate, invokedAsExtensionMethod: invokedAsExtensionMethod, originalMethods: methods, resultKind: resultKind, binder: this);
+            return BoundCall.ErrorCall(node, receiver, method, args, argNames, isDelegate, invokedAsExtensionMethod: invokedAsExtensionMethod, originalMethods: methods, resultKind: resultKind, binder: this);
         }
 
         private static bool IsUnboundGeneric(MethodSymbol method)
@@ -2355,10 +2323,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var args = BuildArgumentsForErrorRecovery(analyzedArguments);
             var argNames = analyzedArguments.GetNames();
-            var argRefKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
             var originalMethods = (expr.Kind == BoundKind.MethodGroup) ? ((BoundMethodGroup)expr).Methods : ImmutableArray<MethodSymbol>.Empty;
 
-            return BoundCall.ErrorCall(node, expr, method, args, argNames, argRefKinds, isDelegateCall: false, invokedAsExtensionMethod: false, originalMethods: originalMethods, resultKind: resultKind, binder: this);
+            return BoundCall.ErrorCall(node, expr, method, args, argNames, isDelegateCall: false, invokedAsExtensionMethod: false, originalMethods: originalMethods, resultKind: resultKind, binder: this);
         }
 
         private static TypeSymbol GetCommonTypeOrReturnType<TMember>(ImmutableArray<TMember> members)
@@ -2597,7 +2564,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     node,
                     boundExpression,
                     BuildArgumentsForErrorRecovery(analyzedArguments, StaticCast<MethodSymbol>.From(methods), BindingDiagnosticBag.Discarded),
-                    analyzedArguments.RefKinds.ToImmutableOrNull(),
                     LookupResultKind.OverloadResolutionFailure,
                     funcPtr.Signature.ReturnType,
                     hasErrors: true);
@@ -2612,7 +2578,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             CheckAndCoerceArguments(node, methodResult, analyzedArguments, diagnostics, receiver: null, invokedAsExtensionMethod: false, argsToParamsOpt: out _);
 
             var args = analyzedArguments.Arguments.ToImmutable();
-            var refKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
 
             bool hasErrors = ReportUnsafeIfNotAllowed(node, diagnostics, disallowedUnder: MemorySafetyRules.Legacy) ||
                 ReportUnsafeIfNotAllowed(node, diagnostics, disallowedUnder: MemorySafetyRules.Updated);
@@ -2620,7 +2585,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 node,
                 boundExpression,
                 args,
-                refKinds,
                 LookupResultKind.Viable,
                 funcPtr.Signature.ReturnType,
                 hasErrors);

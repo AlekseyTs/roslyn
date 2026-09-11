@@ -441,14 +441,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                     if (isExtension)
                     {
                         // Create a set of arguments for overload resolution including the receiver.
-                        CombineExtensionMethodArguments(left, originalArguments: null, analyzedArguments);
-
-                        if (leftType.IsValueType)
-                        {
-                            Debug.Assert(analyzedArguments.RefKinds.Count == 0);
-                            analyzedArguments.RefKinds.Add(RefKind.Ref);
-                            analyzedArguments.RefKinds.Add(RefKind.None);
-                        }
+                        CombineExtensionMethodArguments(
+                            leftType.IsValueType ? new BoundRefExpression(left.Syntax, RefKind.Ref, left, leftType).MakeCompilerGenerated() : left,
+                            originalArguments: null, analyzedArguments);
                     }
 
                     analyzedArguments.Arguments.Add(right);
@@ -3551,13 +3546,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                     if (isExtension)
                     {
                         // Create a set of arguments for overload resolution including the receiver.
-                        CombineExtensionMethodArguments(operand, originalArguments: null, analyzedArguments);
-
-                        if (operandType.IsValueType)
-                        {
-                            Debug.Assert(analyzedArguments.RefKinds.Count == 0);
-                            analyzedArguments.RefKinds.Add(RefKind.Ref);
-                        }
+                        CombineExtensionMethodArguments(
+                            operandType.IsValueType ? new BoundRefExpression(operand.Syntax, RefKind.Ref, operand, operandType).MakeCompilerGenerated() : operand,
+                            originalArguments: null, analyzedArguments);
                     }
                 }
 

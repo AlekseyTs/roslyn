@@ -509,7 +509,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 #endif
 
             ArrayBuilder<LocalSymbol>? temps = null;
-            ImmutableArray<RefKind> argumentRefKindsOpt = default;
 
             var rewrittenArguments = VisitArgumentsAndCaptureReceiverIfNeeded(
                 ref expression,
@@ -517,7 +516,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 methodArgumentInfo.Arguments,
                 method,
                 argsToParamsOpt: default,
-                argumentRefKindsOpt: argumentRefKindsOpt,
                 storesOpt: null,
                 ref temps,
                 firstRewrittenArgument: firstRewrittenArgument);
@@ -527,11 +525,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 method,
                 methodArgumentInfo.Expanded,
                 argsToParamsOpt: default,
-                ref argumentRefKindsOpt,
                 ref temps,
                 invokedAsExtensionMethod: method.IsExtensionMethod);
 
-            return MakeCall(null, syntax, expression, method, rewrittenArguments, argumentRefKindsOpt, LookupResultKind.Viable, temps.ToImmutableAndFree());
+            return MakeCall(null, syntax, expression, method, rewrittenArguments, LookupResultKind.Viable, temps.ToImmutableAndFree());
         }
     }
 }

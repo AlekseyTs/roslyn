@@ -164,10 +164,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         public override void InterceptCallAndAdjustArguments(
             ref MethodSymbol method,
             ref BoundExpression? receiver,
-            ref ImmutableArray<BoundExpression> arguments,
-            ref ImmutableArray<RefKind> argumentRefKindsOpt)
+            ref ImmutableArray<BoundExpression> arguments)
         {
-            Previous.InterceptCallAndAdjustArguments(ref method, ref receiver, ref arguments, ref argumentRefKindsOpt);
+            Previous.InterceptCallAndAdjustArguments(ref method, ref receiver, ref arguments);
         }
 
         public override BoundExpression InstrumentObjectCreationExpression(BoundObjectCreationExpression original, BoundExpression rewritten)

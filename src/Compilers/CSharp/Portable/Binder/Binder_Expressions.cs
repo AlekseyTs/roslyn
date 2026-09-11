@@ -3430,6 +3430,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                         result.RefKinds.Add(RefKind.None);
                     }
                 }
+
+                boundArgumentExpression = new BoundRefExpression(argumentSyntax, refKind, boundArgumentExpression, boundArgumentExpression.Type).MakeCompilerGenerated();
             }
 
             if (hasRefKinds)
@@ -3850,8 +3852,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     handlerArgumentIndexes = handlerArgumentIndexesBuilder.ToImmutableAndFree();
                 }
 
-                var argumentPlaceholdersBuilder = ArrayBuilder<BoundInterpolatedStringArgumentPlaceholder>.GetInstance(handlerArgumentIndexes.Length);
-                var argumentRefKindsBuilder = ArrayBuilder<RefKind>.GetInstance(handlerArgumentIndexes.Length);
+                var argumentPlaceholdersBuilder = ArrayBuilder<BoundExpression>.GetInstance(handlerArgumentIndexes.Length);
                 bool hasErrors = false;
 
                 // Now, go through all the specified arguments and see if any were specified _after_ the interpolated string, and construct
@@ -3943,25 +3944,34 @@ namespace Microsoft.CodeAnalysis.CSharp
                             throw ExceptionUtilities.UnexpectedValue(argumentIndex);
                     }
 
-                    argumentPlaceholdersBuilder.Add(
-                        (BoundInterpolatedStringArgumentPlaceholder)(new BoundInterpolatedStringArgumentPlaceholder(
+                    BoundExpression argument = (BoundInterpolatedStringArgumentPlaceholder)(new BoundInterpolatedStringArgumentPlaceholder(
                             placeholderSyntax,
                             argumentIndex,
                             placeholderType,
                             hasErrors: argumentIndex == BoundInterpolatedStringArgumentPlaceholder.UnspecifiedParameter)
-                        { WasCompilerGenerated = true }.WithSuppression(isSuppressed)));
+                    { WasCompilerGenerated = true }.WithSuppression(isSuppressed));
+
                     // We use the parameter refkind, rather than what the argument was actually passed with, because that will suppress duplicated errors
                     // about arguments being passed with the wrong RefKind. The user will have already gotten an error about mismatched RefKinds or it will
                     // be a place where refkinds are allowed to differ
-                    argumentRefKindsBuilder.Add(refKind == RefKind.RefReadOnlyParameter ? RefKind.In : refKind);
+                    if (refKind == RefKind.RefReadOnlyParameter)
+                    {
+                        refKind = RefKind.In;
+                    }
+
+                    if (refKind != RefKind.None)
+                    {
+                        argument = new BoundRefExpression(argument.Syntax, refKind, argument, argument.Type).MakeCompilerGenerated();
+                    }
+
+                    argumentPlaceholdersBuilder.Add(argument);
                 }
 
                 var interpolatedString = BindUnconvertedInterpolatedExpressionToHandlerType(
                     unconvertedString,
                     (NamedTypeSymbol)handlerType,
                     diagnostics,
-                    additionalConstructorArguments: argumentPlaceholdersBuilder.ToImmutableAndFree(),
-                    additionalConstructorRefKinds: argumentRefKindsBuilder.ToImmutableAndFree());
+                    additionalConstructorArguments: argumentPlaceholdersBuilder.ToImmutableAndFree());
 
                 return new BoundConversion(
                     interpolatedString.Syntax,
@@ -5163,7 +5173,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 Debug.Assert(!resultMember.IsExtensionBlockMember());
-                BindDefaultArguments(nonNullSyntax, resultMember.Parameters, extensionReceiver: null, analyzedArguments.Arguments, analyzedArguments.RefKinds, analyzedArguments.Names, ref argsToParamsOpt, out var defaultArguments, expanded, enableCallerInfo, diagnostics);
+                BindDefaultArguments(nonNullSyntax, resultMember.Parameters, extensionReceiver: null, analyzedArguments.Arguments, analyzedArguments.Names, ref argsToParamsOpt, out var defaultArguments, expanded, enableCallerInfo, diagnostics);
 
                 var arguments = analyzedArguments.Arguments.ToImmutable();
                 var refKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
@@ -5540,7 +5550,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 diagnostics.Add(ErrorCode.ERR_BadCtorArgCount, node.Location, type, 0);
                 hasErrors = true;
             }
-            else if (analyzedArguments.Names.Count != 0 || analyzedArguments.RefKinds.Count != 0 || analyzedArguments.Arguments.Count != 1)
+            else if (analyzedArguments.Names.Count != 0 || analyzedArguments.Arguments.Count != 1 || analyzedArguments.Arguments[0] is BoundRefExpression)
             {
                 // Use a smaller span that excludes the parens.
                 var argSyntax = analyzedArguments.Arguments[0].Syntax;
@@ -5732,7 +5742,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         private BoundExpression MakeConstructorInvocation(
             NamedTypeSymbol type,
             ArrayBuilder<BoundExpression> arguments,
-            ArrayBuilder<RefKind> refKinds,
             SyntaxNode node,
             BindingDiagnosticBag diagnostics)
         {
@@ -5742,7 +5751,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             try
             {
                 analyzedArguments.Arguments.AddRange(arguments);
-                analyzedArguments.RefKinds.AddRange(refKinds);
 
                 if (type.IsStatic)
                 {
@@ -6881,7 +6889,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
 
                     var argArray = BuildArgumentsForDynamicInvocation(analyzedArguments, diagnostics);
-                    var refKindsArray = analyzedArguments.RefKinds.ToImmutableOrNull();
 
                     hasErrors &= ReportBadDynamicArguments(node, receiver: null, argArray, refKindsArray, diagnostics, queryClause: null);
 
@@ -6988,10 +6995,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                 null;
 
             var expanded = memberResolutionResult.Result.Kind == MemberResolutionKind.ApplicableInExpandedForm;
-            BindDefaultArguments(node, method.Parameters, extensionReceiver: null, analyzedArguments.Arguments, analyzedArguments.RefKinds, analyzedArguments.Names, ref argToParams, out var defaultArguments, expanded, enableCallerInfo: true, diagnostics: diagnostics);
+            BindDefaultArguments(node, method.Parameters, extensionReceiver: null, analyzedArguments.Arguments, analyzedArguments.Names, ref argToParams, out var defaultArguments, expanded, enableCallerInfo: true, diagnostics: diagnostics);
 
             var arguments = analyzedArguments.Arguments.ToImmutable();
-            var refKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
             BoundObjectInitializerExpressionBase boundInitializerOpt;
             boundInitializerOpt = MakeBoundInitializerOpt(typeNode, type, initializerSyntaxOpt, initializerTypeOpt, diagnostics);
             var creation = new BoundObjectCreationExpression(
@@ -8606,7 +8612,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(receiver != null);
             Debug.Assert(extensionMethodArguments.Arguments.Count == 0);
             Debug.Assert(extensionMethodArguments.Names.Count == 0);
-            Debug.Assert(extensionMethodArguments.RefKinds.Count == 0);
 
             extensionMethodArguments.IncludesReceiverAsArgument = true;
             extensionMethodArguments.Arguments.Add(receiver);
@@ -8620,12 +8625,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 extensionMethodArguments.Names.Add(null);
                 extensionMethodArguments.Names.AddRange(originalArguments.Names);
-            }
-
-            if (originalArguments?.RefKinds.Count > 0)
-            {
-                extensionMethodArguments.RefKinds.Add(RefKind.None);
-                extensionMethodArguments.RefKinds.AddRange(originalArguments.RefKinds);
             }
         }
 
@@ -9777,7 +9776,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             ImmutableArray<string?> argumentNames = analyzedArguments.GetNames();
-            ImmutableArray<RefKind> argumentRefKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
 
             MemberResolutionResult<PropertySymbol> resolutionResult = result.ValidResult;
             Debug.Assert(resolutionResult.Result.ConversionForArg(0).Exists);
@@ -11090,9 +11088,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             var argArray = BuildArgumentsForDynamicInvocation(arguments, diagnostics);
-            var refKindsArray = arguments.RefKinds.ToImmutableOrNull();
 
-            hasErrors &= ReportBadDynamicArguments(syntax, receiver, argArray, refKindsArray, diagnostics, queryClause: null);
+            hasErrors &= ReportBadDynamicArguments(syntax, receiver, argArray, diagnostics, queryClause: null);
 
             return new BoundDynamicIndexerAccess(
                 syntax,
@@ -11154,7 +11151,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundExpression propertyAccess;
             ImmutableArray<string> argumentNames = analyzedArguments.GetNames();
-            ImmutableArray<RefKind> argumentRefKinds = analyzedArguments.RefKinds.ToImmutableOrNull();
             if (!overloadResolutionResult.Succeeded)
             {
                 ImmutableArray<PropertySymbol> candidates = propertyGroup.ToImmutable();

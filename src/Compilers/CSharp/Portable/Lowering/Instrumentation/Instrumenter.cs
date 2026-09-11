@@ -238,8 +238,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         public virtual void InterceptCallAndAdjustArguments(
             ref MethodSymbol method,
             ref BoundExpression? receiver,
-            ref ImmutableArray<BoundExpression> arguments,
-            ref ImmutableArray<RefKind> argumentRefKindsOpt)
+            ref ImmutableArray<BoundExpression> arguments)
         {
         }
 

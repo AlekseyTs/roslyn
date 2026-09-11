@@ -12,21 +12,6 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    internal static partial class OperatorKindExtensions
-    {
-        public static RefKind RefKinds(this ImmutableArray<RefKind> ArgumentRefKinds, int index)
-        {
-            if (!ArgumentRefKinds.IsDefault && index < ArgumentRefKinds.Length)
-            {
-                return ArgumentRefKinds[index];
-            }
-            else
-            {
-                return RefKind.None;
-            }
-        }
-    }
-
     internal static partial class BoundExpressionExtensions
     {
         public static bool NullableAlwaysHasValue(this BoundExpression expr)

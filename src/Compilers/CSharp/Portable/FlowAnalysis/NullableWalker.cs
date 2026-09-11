@@ -7541,7 +7541,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression node,
             TypeSymbol? receiverType,
             ImmutableArray<BoundExpression> arguments,
-            ImmutableArray<RefKind> refKindsOpt,
             PropertySymbol? property,
             ImmutableArray<int> argsToParamsOpt,
             BitVector defaultArguments,
@@ -12236,7 +12235,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // Update indexer based on inferred receiver type
                 indexer = (PropertySymbol)AsMemberOfType(receiverType, indexer);
 
-                VisitPropertyArguments(node, receiverType, node.Arguments, node.ArgumentRefKindsOpt, indexer, node.ArgsToParamsOpt, node.DefaultArguments, node.Expanded);
+                VisitPropertyArguments(node, receiverType, node.Arguments, indexer, node.ArgsToParamsOpt, node.DefaultArguments, node.Expanded);
             }
 
             var resultType = ApplyUnconditionalAnnotations(indexer.TypeWithAnnotations.ToTypeWithState(), GetRValueAnnotations(indexer));

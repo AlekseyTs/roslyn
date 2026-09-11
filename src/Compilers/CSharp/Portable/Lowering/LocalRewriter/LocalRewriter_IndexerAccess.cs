@@ -44,15 +44,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             AssertNoImplicitInterpolatedStringHandlerConversions(node.Arguments);
             var loweredArguments = VisitList(node.Arguments);
 
-            return MakeDynamicGetIndex(node, loweredReceiver, loweredArguments, node.ArgumentNamesOpt, node.ArgumentRefKindsOpt);
+            return MakeDynamicGetIndex(node, loweredReceiver, loweredArguments, node.ArgumentNamesOpt);
         }
 
         private BoundExpression MakeDynamicGetIndex(
             BoundDynamicIndexerAccess node,
             BoundExpression loweredReceiver,
             ImmutableArray<BoundExpression> loweredArguments,
-            ImmutableArray<string?> argumentNames,
-            ImmutableArray<RefKind> refKinds)
+            ImmutableArray<string?> argumentNames)
         {
             // If we are calling a method on a NoPIA type, we need to embed all methods/properties
             // with the matching name of this dynamic invocation.
@@ -91,7 +90,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 indexer,
                 node.Arguments,
                 node.ArgumentNamesOpt,
-                node.ArgumentRefKindsOpt,
                 node.Expanded,
                 node.ArgsToParamsOpt,
                 node.DefaultArguments,
@@ -106,7 +104,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             PropertySymbol indexer,
             ImmutableArray<BoundExpression> arguments,
             ImmutableArray<string?> argumentNamesOpt,
-            ImmutableArray<RefKind> argumentRefKindsOpt,
             bool expanded,
             ImmutableArray<int> argsToParamsOpt,
             BitVector defaultArguments,
@@ -134,7 +131,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                         indexer,
                         arguments,
                         argumentNamesOpt,
-                        argumentRefKindsOpt,
                         expanded,
                         indexerExpr.AccessorKind,
                         argsToParamsOpt,
@@ -147,7 +143,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                         indexer,
                         arguments,
                         argumentNamesOpt,
-                        argumentRefKindsOpt,
                         expanded,
                         member.AccessorKind,
                         argsToParamsOpt,
@@ -187,7 +182,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     arguments,
                     indexer,
                     argsToParamsOpt,
-                    argumentRefKindsOpt,
                     storesOpt,
                     ref temps);
 
@@ -201,7 +195,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     // Store everything that is non-trivial into a temporary; record the
                     // stores in storesToTemps and make the actual argument a reference to the temp.
-                    rewrittenArguments = ExtractSideEffectsFromArguments(rewrittenArguments, indexer, expanded, argsToParamsOpt, ref argumentRefKindsOpt, storesOpt, temps);
+                    rewrittenArguments = ExtractSideEffectsFromArguments(rewrittenArguments, indexer, expanded, argsToParamsOpt, storesOpt, temps);
                 }
                 else
                 {
@@ -210,12 +204,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                         indexer,
                         expanded,
                         argsToParamsOpt,
-                        ref argumentRefKindsOpt,
                         ref temps);
                 }
 
                 var sideEffects = storesOpt is null ? [] : storesOpt.ToImmutableAndFree();
-                BoundExpression call = MakePropertyGetAccess(syntax, rewrittenReceiver, indexer, rewrittenArguments, argumentRefKindsOpt, getMethod);
+                BoundExpression call = MakePropertyGetAccess(syntax, rewrittenReceiver, indexer, rewrittenArguments, getMethod);
 
                 Debug.Assert(call.Type is not null);
 
@@ -658,7 +651,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                         indexerAccess.Arguments,
                         indexerAccess.Indexer,
                         indexerAccess.ArgsToParamsOpt,
-                        indexerAccess.ArgumentRefKindsOpt,
                         storesOpt: null,
                         ref locals!);
 
@@ -666,7 +658,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     rewrittenIndexerAccess = indexerAccess.Update(
                         receiver, initialBindingReceiverIsSubjectToCloning: ThreeState.Unknown, indexerAccess.Indexer, rewrittenArguments,
-                        indexerAccess.ArgumentNamesOpt, indexerAccess.ArgumentRefKindsOpt,
+                        indexerAccess.ArgumentNamesOpt,
                         indexerAccess.Expanded,
                         indexerAccess.AccessorKind,
                         indexerAccess.ArgsToParamsOpt,

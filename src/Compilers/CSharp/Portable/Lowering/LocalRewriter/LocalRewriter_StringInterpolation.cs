@@ -41,14 +41,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (data.HasTrailingHandlerValidityParameter)
             {
 #if DEBUG
-                for (int i = construction.ArgumentRefKindsOpt.Length - 1; i >= 0; i--)
+                for (int i = construction.Arguments.Length - 1; i >= 0; i--)
                 {
-                    if (construction.ArgumentRefKindsOpt[i] == RefKind.Out)
+                    if (construction.Arguments[i] is BoundRefExpression { RefKind: RefKind.Out })
                     {
                         break;
                     }
 
-                    Debug.Assert(construction.ArgumentRefKindsOpt[i] == RefKind.None);
+                    Debug.Assert(construction.Arguments[i] is not BoundRefExpression);
                     Debug.Assert(construction.DefaultArguments[i]);
                 }
 #endif

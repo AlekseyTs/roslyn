@@ -20,7 +20,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             // be involved.
             AssertNoImplicitInterpolatedStringHandlerConversions(node.Arguments, allowConversionsWithNoContext: true);
             MethodSymbol functionPointer = node.FunctionPointer.Signature;
-            var argumentRefKindsOpt = node.ArgumentRefKindsOpt;
             BoundExpression? discardedReceiver = null;
             ArrayBuilder<LocalSymbol>? temps = null;
             var rewrittenArgs = VisitArgumentsAndCaptureReceiverIfNeeded(
@@ -29,7 +28,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 node.Arguments,
                 functionPointer,
                 argsToParamsOpt: default,
-                argumentRefKindsOpt: argumentRefKindsOpt,
                 storesOpt: null,
                 ref temps);
 
@@ -45,11 +43,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 functionPointer,
                 expanded: false,
                 argsToParamsOpt: default,
-                ref argumentRefKindsOpt,
                 ref temps,
                 invokedAsExtensionMethod: false);
 
-            BoundExpression rewrittenInvocation = node.Update(rewrittenExpression, rewrittenArgs, argumentRefKindsOpt, node.ResultKind, node.Type);
+            BoundExpression rewrittenInvocation = node.Update(rewrittenExpression, rewrittenArgs, node.ResultKind, node.Type);
 
             if (temps.Count == 0)
             {
